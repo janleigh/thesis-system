@@ -1,0 +1,6 @@
+__pycache__/
+.gradle
+*.db
+context/
+data/
+.pytest_cache
