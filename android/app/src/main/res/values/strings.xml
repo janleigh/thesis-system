@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">Keystroke Auth</string>
+    <string name="ime_label">Keystroke Authenticator</string>
+    <string name="title_dashboard">Behavioral Biometrics</string>
+    <string name="subtitle_dashboard">Continuous Authentication System</string>
+    <string name="btn_enable_keyboard">Enable Keyboard</string>
+    <string name="btn_start_enrollment">Start Enrollment</string>
+    <string name="btn_reset_profile">Reset Profile</string>
+    <string name="btn_view_logs">View Logs</string>
+    <string name="label_status">Status</string>
+    <string name="label_keystrokes">Keystrokes</string>
+    <string name="label_enrollment">Enrollment Progress</string>
+    <string name="label_risk_score">Risk Score</string>
+    <string name="label_ocsvm_score">OCSVM</string>
+    <string name="label_mahal_score">Mahalanobis</string>
+    <string name="label_composite">Composite</string>
+    <string name="label_action">Action</string>
+    <string name="label_test_input">Type here to test...</string>
+    <string name="status_pending">PENDING</string>
+    <string name="status_ready">READY</string>
+    <string name="status_active">ACTIVE</string>
+    <string name="status_not_enrolled">Not Enrolled</string>
+    <string name="hint_type_here">Start typing to capture biometric data...</string>
+</resources>

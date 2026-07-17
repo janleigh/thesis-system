@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="KeyStyle">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:textColor">@color/key_text</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:layout_marginHorizontal">2dp</item>
+        <item name="android:layout_marginVertical">2dp</item>
+        <item name="android:layout_weight">1</item>
+    </style>
+
+    <style name="KeyStyle.Normal" parent="KeyStyle">
+        <item name="android:background">@drawable/key_background</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <style name="KeyStyle.Special" parent="KeyStyle">
+        <item name="android:background">@drawable/key_background_special</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="KeyStyle.Space" parent="KeyStyle">
+        <item name="android:background">@drawable/key_background_space</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+</resources>

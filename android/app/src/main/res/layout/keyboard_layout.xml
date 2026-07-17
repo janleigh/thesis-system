@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@color/keyboard_bg">
+
+    <!-- Risk Status Bar -->
+    <LinearLayout
+        android:id="@+id/status_bar"
+        android:layout_width="match_parent"
+        android:layout_height="28dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="12dp"
+        android:background="#FF0F0F2A">
+
+        <View
+            android:id="@+id/status_indicator"
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            android:background="@drawable/status_dot"
+            android:layout_marginEnd="8dp" />
+
+        <TextView
+            android:id="@+id/status_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="ALLOW"
+            android:textColor="@color/risk_allow"
+            android:textSize="11sp"
+            android:fontFamily="sans-serif-medium" />
+
+        <TextView
+            android:id="@+id/score_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0.00"
+            android:textColor="@color/text_secondary"
+            android:textSize="11sp"
+            android:fontFamily="monospace" />
+
+        <TextView
+            android:id="@+id/enrollment_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textColor="@color/accent_purple"
+            android:textSize="11sp"
+            android:fontFamily="sans-serif-medium"
+            android:layout_marginStart="12dp" />
+    </LinearLayout>
+
+    <!-- Keyboard rows -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:orientation="vertical"
+        android:paddingBottom="6dp"
+        android:paddingTop="4dp">
+
+        <!-- Row 1: QWERTYUIOP -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:paddingHorizontal="3dp"
+            android:layout_marginBottom="4dp">
+
+            <TextView android:id="@+id/key_q" style="@style/KeyStyle.Normal" android:text="q"/>
+            <TextView android:id="@+id/key_w" style="@style/KeyStyle.Normal" android:text="w"/>
+            <TextView android:id="@+id/key_e" style="@style/KeyStyle.Normal" android:text="e"/>
+            <TextView android:id="@+id/key_r" style="@style/KeyStyle.Normal" android:text="r"/>
+            <TextView android:id="@+id/key_t" style="@style/KeyStyle.Normal" android:text="t"/>
+            <TextView android:id="@+id/key_y" style="@style/KeyStyle.Normal" android:text="y"/>
+            <TextView android:id="@+id/key_u" style="@style/KeyStyle.Normal" android:text="u"/>
+            <TextView android:id="@+id/key_i" style="@style/KeyStyle.Normal" android:text="i"/>
+            <TextView android:id="@+id/key_o" style="@style/KeyStyle.Normal" android:text="o"/>
+            <TextView android:id="@+id/key_p" style="@style/KeyStyle.Normal" android:text="p"/>
+        </LinearLayout>
+
+        <!-- Row 2: ASDFGHJKL -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:paddingHorizontal="16dp"
+            android:layout_marginBottom="4dp">
+
+            <TextView android:id="@+id/key_a" style="@style/KeyStyle.Normal" android:text="a"/>
+            <TextView android:id="@+id/key_s" style="@style/KeyStyle.Normal" android:text="s"/>
+            <TextView android:id="@+id/key_d" style="@style/KeyStyle.Normal" android:text="d"/>
+            <TextView android:id="@+id/key_f" style="@style/KeyStyle.Normal" android:text="f"/>
+            <TextView android:id="@+id/key_g" style="@style/KeyStyle.Normal" android:text="g"/>
+            <TextView android:id="@+id/key_h" style="@style/KeyStyle.Normal" android:text="h"/>
+            <TextView android:id="@+id/key_j" style="@style/KeyStyle.Normal" android:text="j"/>
+            <TextView android:id="@+id/key_k" style="@style/KeyStyle.Normal" android:text="k"/>
+            <TextView android:id="@+id/key_l" style="@style/KeyStyle.Normal" android:text="l"/>
+        </LinearLayout>
+
+        <!-- Row 3: SHIFT + ZXCVBNM + DEL -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:paddingHorizontal="3dp"
+            android:layout_marginBottom="4dp">
+
+            <TextView android:id="@+id/key_shift" style="@style/KeyStyle.Special" android:layout_weight="1.5" android:text="⇧"/>
+            <TextView android:id="@+id/key_z" style="@style/KeyStyle.Normal" android:text="z"/>
+            <TextView android:id="@+id/key_x" style="@style/KeyStyle.Normal" android:text="x"/>
+            <TextView android:id="@+id/key_c" style="@style/KeyStyle.Normal" android:text="c"/>
+            <TextView android:id="@+id/key_v" style="@style/KeyStyle.Normal" android:text="v"/>
+            <TextView android:id="@+id/key_b" style="@style/KeyStyle.Normal" android:text="b"/>
+            <TextView android:id="@+id/key_n" style="@style/KeyStyle.Normal" android:text="n"/>
+            <TextView android:id="@+id/key_m" style="@style/KeyStyle.Normal" android:text="m"/>
+            <TextView android:id="@+id/key_delete" style="@style/KeyStyle.Special" android:layout_weight="1.5" android:text="⌫"/>
+        </LinearLayout>
+
+        <!-- Row 4: ?123 + , + SPACE + . + ENTER -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:paddingHorizontal="3dp">
+
+            <TextView android:id="@+id/key_symbols" style="@style/KeyStyle.Special" android:layout_weight="1.5" android:text="\?123"/>
+            <TextView android:id="@+id/key_comma" style="@style/KeyStyle.Normal" android:text=","/>
+            <TextView android:id="@+id/key_space" style="@style/KeyStyle.Space" android:layout_weight="5" android:text=""/>
+            <TextView android:id="@+id/key_period" style="@style/KeyStyle.Normal" android:text="."/>
+            <TextView android:id="@+id/key_enter" style="@style/KeyStyle.Special" android:layout_weight="1.5" android:text="↵"/>
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>
