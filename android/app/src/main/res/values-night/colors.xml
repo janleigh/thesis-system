@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Material 3 Baseline Colors (Dark Theme) -->
+    <color name="md_theme_primary">#00E5FF</color>
+    <color name="md_theme_onPrimary">#00363D</color>
+    <color name="md_theme_primaryContainer">#004F58</color>
+    <color name="md_theme_onPrimaryContainer">#A6F4FF</color>
+    <color name="md_theme_secondary">#CCC2DC</color>
+    <color name="md_theme_onSecondary">#332D41</color>
+    <color name="md_theme_secondaryContainer">#4A4458</color>
+    <color name="md_theme_onSecondaryContainer">#E8DEF8</color>
+    <color name="md_theme_tertiary">#EFB8C8</color>
+    <color name="md_theme_onTertiary">#492532</color>
+    <color name="md_theme_tertiaryContainer">#633B48</color>
+    <color name="md_theme_onTertiaryContainer">#FFD8E4</color>
+    <color name="md_theme_error">#F2B8B5</color>
+    <color name="md_theme_onError">#601410</color>
+    <color name="md_theme_errorContainer">#8C1D18</color>
+    <color name="md_theme_onErrorContainer">#F9DEDC</color>
+    <color name="md_theme_background">#121212</color>
+    <color name="md_theme_onBackground">#E6E1E5</color>
+    <color name="md_theme_surface">#1C1B1F</color>
+    <color name="md_theme_onSurface">#E6E1E5</color>
+    <color name="md_theme_surfaceVariant">#49454F</color>
+    <color name="md_theme_onSurfaceVariant">#CAC4D0</color>
+    <color name="md_theme_outline">#938F99</color>
+
+    <!-- Legacy / Keyboard specific colors mapped to M3 vibes -->
+    <color name="keyboard_bg">#1C1B1F</color>
+    <color name="key_bg_normal">#49454F</color>
+    <color name="key_bg_special">#4A4458</color>
+    <color name="key_bg_space">#332D41</color>
+    <color name="key_text">#E6E1E5</color>
+    <color name="key_ripple">#4000E5FF</color>
+    <color name="key_border">#938F99</color>
+
+    <!-- Risk Level Colors -->
+    <color name="risk_allow">#78DB9F</color>
+    <color name="risk_warn">#E4C16E</color>
+    <color name="risk_step_up">#EAA76C</color>
+    <color name="risk_block">#F2B8B5</color>
+
+    <!-- Restored Fallback Colors for legacy XMLs/Kotlin refs -->
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6366F1</color> 
+    <color name="purple_700">#FF4F46E5</color>
+    <color name="teal_200">#FF2DD4BF</color> 
+    <color name="teal_700">#FF0F766E</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="dashboard_bg">#FF0B0F19</color> 
+    <color name="card_bg">#1C1B1F</color> 
+    <color name="card_border">#938F99</color> 
+    <color name="text_primary">#E6E1E5</color> 
+    <color name="text_secondary">#938F99</color> 
+    <color name="accent_blue">#00E5FF</color> 
+    <color name="accent_purple">#00E5FF</color> 
+    <color name="progress_track">#49454F</color>
+    <color name="progress_fill">#00E5FF</color>
+    <color name="risk_allow_bg">#1A78DB9F</color>
+    <color name="risk_warn_bg">#1AE4C16E</color>
+    <color name="risk_step_up_bg">#1AEAA76C</color>
+    <color name="risk_block_bg">#1AF2B8B5</color>
+</resources>

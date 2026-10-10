@@ -1,42 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center"
-    android:background="@color/risk_block_bg"
+    android:background="?attr/colorErrorContainer"
     android:padding="24dp">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="🔒"
-        android:textSize="80sp"
-        android:layout_marginBottom="24dp" />
+        android:textSize="96sp"
+        android:layout_marginBottom="32dp" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="SESSION BLOCKED"
-        android:textColor="@color/risk_block"
-        android:textSize="28sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="8dp" />
+        android:textColor="?attr/colorError"
+        android:textSize="32sp"
+        android:fontFamily="sans-serif-medium"
+        android:letterSpacing="0.05"
+        android:layout_marginBottom="16dp" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Anomalous typing behavior detected. Device has been locked for security."
-        android:textColor="@color/text_primary"
-        android:textSize="16sp"
+        android:text="Anomalous typing behavior detected.\nDevice has been locked for security."
+        android:textColor="?attr/colorOnErrorContainer"
+        android:textSize="18sp"
+        android:fontFamily="sans-serif"
+        android:lineSpacingExtra="4dp"
         android:gravity="center"
-        android:layout_marginBottom="32dp" />
+        android:layout_marginBottom="48dp" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/unblockButton"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:background="@drawable/button_primary"
+        android:layout_height="64dp"
         android:text="Reset &amp; Try Again"
-        android:textColor="@color/white" />
+        android:textSize="18sp"
+        app:cornerRadius="16dp"
+        app:backgroundTint="?attr/colorError"
+        android:textColor="?attr/colorOnError" />
 </LinearLayout>

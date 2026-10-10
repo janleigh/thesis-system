@@ -163,8 +163,18 @@ class RiskScorer(
         // Population std (matching np.std default ddof=0)
         val std = sqrt(variance / n)
 
-        val adaptive = mean + adaptiveK * std
-        return clip(adaptive, baseWarnThresh, stepUpThresh - 0.05)
+        val typicalUpperBound = mean + adaptiveK * std
+        val maxWarnThresh = stepUpThresh - 0.05
+        
+        val adaptive = if (typicalUpperBound < baseWarnThresh) {
+            val leniencyRatio = (baseWarnThresh - typicalUpperBound) / baseWarnThresh
+            val maxLeniency = maxWarnThresh - baseWarnThresh
+            baseWarnThresh + (maxLeniency * leniencyRatio)
+        } else {
+            baseWarnThresh
+        }
+
+        return clip(adaptive, baseWarnThresh, maxWarnThresh)
     }
 
     /**

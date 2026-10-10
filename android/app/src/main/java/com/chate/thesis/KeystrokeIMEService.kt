@@ -443,11 +443,16 @@ class KeystrokeIMEService : InputMethodService() {
                 Log.e("KeystrokeIMEService", "Failed to lock device screen", e)
             }
         } else {
-            Log.w("KeystrokeIMEService", "Device Admin is not active. Falling back to BlockedActivity overlay.")
-            val intent = Intent(context, BlockedActivity::class.java).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            Log.w("KeystrokeIMEService", "Device Admin is not active. Attempting root fallback to turn off screen.")
+            try {
+                Runtime.getRuntime().exec(arrayOf("su", "-c", "input keyevent 26"))
+            } catch (e: Exception) {
+                Log.e("KeystrokeIMEService", "Root fallback failed, showing BlockedActivity.", e)
+                val intent = Intent(context, BlockedActivity::class.java).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                }
+                context.startActivity(intent)
             }
-            context.startActivity(intent)
         }
     }
     

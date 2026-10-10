@@ -22,7 +22,6 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
 class MainActivity : AppCompatActivity() {
 
     // UI elements
-    private lateinit var statusBadge: TextView
     private lateinit var profileStatusText: TextView
     private lateinit var keystrokeCountText: TextView
     private lateinit var enrollmentProgress: ProgressBar
@@ -31,14 +30,24 @@ class MainActivity : AppCompatActivity() {
     private lateinit var ocsvmScoreText: TextView
     private lateinit var mahalScoreText: TextView
     private lateinit var actionText: TextView
-    private lateinit var actionCard: LinearLayout
+    private lateinit var actionCard: android.view.View
     private lateinit var testInput: EditText
     private lateinit var enableKeyboardButton: Button
     private lateinit var deviceAdminButton: Button
     private lateinit var enrollButton: Button
     private lateinit var resetButton: Button
+    private lateinit var clearTextButton: Button
+    private lateinit var verifyToggle: com.google.android.material.switchmaterial.SwitchMaterial
+    private lateinit var themeToggle: com.google.android.material.switchmaterial.SwitchMaterial
 
     private lateinit var profileManager: ProfileManager
+    private lateinit var bottomNavigation: com.google.android.material.bottomnavigation.BottomNavigationView
+    private lateinit var dashboardView: android.view.View
+    private lateinit var eventLogView: android.view.View
+    private lateinit var eventLogRecyclerView: androidx.recyclerview.widget.RecyclerView
+    private lateinit var logCountText: TextView
+    private lateinit var eventLogAdapter: EventLogAdapter
+    private lateinit var securityLogger: SecurityLogger
 
     companion object {
         const val ACTION_RISK_UPDATE = "com.chate.thesis.RISK_UPDATE"
@@ -57,6 +66,9 @@ class MainActivity : AppCompatActivity() {
                     val action = intent.getStringExtra("action") ?: "ALLOW"
                     val keystrokeCount = intent.getIntExtra("keystroke_count", 0)
                     updateRiskDisplay(composite, ocsvm, mahal, action, keystrokeCount)
+                    if (::eventLogView.isInitialized && eventLogView.visibility == android.view.View.VISIBLE) {
+                        loadEventLogs()
+                    }
                 }
                 ACTION_ENROLLMENT_UPDATE -> {
                     val keystrokeCount = intent.getIntExtra("keystroke_count", 0)
@@ -69,6 +81,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val prefs = getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
+        val isDarkMode = prefs.getBoolean("is_dark_mode", true)
+        val mode = if (isDarkMode) androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES else androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
+        if (androidx.appcompat.app.AppCompatDelegate.getDefaultNightMode() != mode) {
+            androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(mode)
+        }
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
@@ -76,6 +95,7 @@ class MainActivity : AppCompatActivity() {
 
         initViews()
         setupButtons()
+        setupNavigation()
         refreshProfileDisplay()
     }
 
@@ -154,7 +174,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initViews() {
-        statusBadge = findViewById(R.id.statusBadge)
         profileStatusText = findViewById(R.id.profileStatusText)
         keystrokeCountText = findViewById(R.id.keystrokeCountText)
         enrollmentProgress = findViewById(R.id.enrollmentProgress)
@@ -169,11 +188,50 @@ class MainActivity : AppCompatActivity() {
         deviceAdminButton = findViewById(R.id.deviceAdminButton)
         enrollButton = findViewById(R.id.enrollButton)
         resetButton = findViewById(R.id.resetButton)
+        clearTextButton = findViewById(R.id.clearTextButton)
+        verifyToggle = findViewById(R.id.verifyToggle)
+        themeToggle = findViewById(R.id.themeToggle)
+        
+        bottomNavigation = findViewById(R.id.bottomNavigation)
+        dashboardView = findViewById(R.id.dashboardView)
+        eventLogView = findViewById(R.id.eventLogView)
+        eventLogRecyclerView = findViewById(R.id.eventLogRecyclerView)
+        logCountText = findViewById(R.id.logCountText)
     }
 
     private fun setupButtons() {
+        val prefs = getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
+        val isDarkMode = prefs.getBoolean("is_dark_mode", true)
+        themeToggle.isChecked = isDarkMode
+
+        themeToggle.setOnCheckedChangeListener { _, isChecked ->
+            prefs.edit().putBoolean("is_dark_mode", isChecked).apply()
+            val mode = if (isChecked) androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES else androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
+            androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(mode)
+        }
         checkKeyboardState()
         checkDeviceAdminState()
+
+        clearTextButton.setOnClickListener {
+            testInput.text.clear()
+        }
+
+        verifyToggle.setOnCheckedChangeListener { _, isChecked ->
+            val profile = profileManager.getProfile(DEFAULT_USER_ID)
+            if (profile != null && profile.isReady) {
+                val intent = Intent(KeystrokeIMEService.ACTION_SET_MODE)
+                intent.putExtra("mode", if (isChecked) "VERIFY" else "IDLE")
+                intent.putExtra("user_id", DEFAULT_USER_ID)
+                LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
+                val msg = if (isChecked) "Verification enabled" else "Verification disabled"
+                Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+                if (isChecked) {
+                    testInput.requestFocus()
+                }
+            } else if (isChecked) {
+                verifyToggle.isChecked = false
+            }
+        }
 
         enrollButton.setOnClickListener {
             val profile = profileManager.getOrCreateProfile(DEFAULT_USER_ID)
@@ -189,12 +247,7 @@ class MainActivity : AppCompatActivity() {
                 testInput.requestFocus()
             } else if (profile.status == "READY" || profile.status == "ACTIVE") {
                 // Switch to verification mode
-                val intent = Intent(KeystrokeIMEService.ACTION_SET_MODE)
-                intent.putExtra("mode", "VERIFY")
-                intent.putExtra("user_id", DEFAULT_USER_ID)
-                LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
-                Toast.makeText(this, "Verification mode active", Toast.LENGTH_SHORT).show()
-                testInput.requestFocus()
+                verifyToggle.isChecked = true
             }
         }
 
@@ -204,12 +257,43 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra("mode", "IDLE")
             LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
 
+            verifyToggle.isChecked = false
             refreshProfileDisplay()
             resetScoreDisplay()
             enrollButton.text = "Start Enrollment"
             enrollButton.isEnabled = true
             Toast.makeText(this, "Profile reset", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun setupNavigation() {
+        securityLogger = SecurityLogger(this)
+        eventLogAdapter = EventLogAdapter(emptyList())
+        eventLogRecyclerView.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this)
+        eventLogRecyclerView.adapter = eventLogAdapter
+
+        bottomNavigation.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.nav_dashboard -> {
+                    dashboardView.visibility = android.view.View.VISIBLE
+                    eventLogView.visibility = android.view.View.GONE
+                    true
+                }
+                R.id.nav_event_log -> {
+                    dashboardView.visibility = android.view.View.GONE
+                    eventLogView.visibility = android.view.View.VISIBLE
+                    loadEventLogs()
+                    true
+                }
+                else -> false
+            }
+        }
+    }
+
+    private fun loadEventLogs() {
+        val logs = securityLogger.readAll(DEFAULT_USER_ID).reversed()
+        eventLogAdapter.updateLogs(logs)
+        logCountText.text = "Lines ${logs.size} of ${logs.size}"
     }
 
     private fun refreshProfileDisplay() {
@@ -224,22 +308,19 @@ class MainActivity : AppCompatActivity() {
             // Update status badge
             when (profile.status) {
                 "PENDING" -> {
-                    statusBadge.text = "P"
-                    setStatusBadgeColor(R.color.risk_warn)
                     enrollButton.text = "Start Enrollment"
                     enrollButton.isEnabled = true
+                    verifyToggle.isEnabled = false
                 }
                 "READY" -> {
-                    statusBadge.text = "R"
-                    setStatusBadgeColor(R.color.risk_allow)
                     enrollButton.text = "Start Verification"
                     enrollButton.isEnabled = true
+                    verifyToggle.isEnabled = true
                 }
                 "ACTIVE" -> {
-                    statusBadge.text = "A"
-                    setStatusBadgeColor(R.color.accent_blue)
                     enrollButton.text = "Verifying..."
                     enrollButton.isEnabled = false
+                    verifyToggle.isEnabled = true
                 }
             }
         } else {
@@ -247,8 +328,7 @@ class MainActivity : AppCompatActivity() {
             keystrokeCountText.text = "0"
             enrollmentProgress.progress = 0
             enrollmentPercentText.text = "0%"
-            statusBadge.text = "—"
-            setStatusBadgeColor(R.color.text_secondary)
+            verifyToggle.isEnabled = false
         }
     }
 
@@ -280,8 +360,6 @@ class MainActivity : AppCompatActivity() {
         profileStatusText.text = status
 
         if (status == "READY") {
-            statusBadge.text = "R"
-            setStatusBadgeColor(R.color.risk_allow)
             enrollButton.text = "Start Verification"
             enrollButton.isEnabled = true
             Toast.makeText(this, "✅ Enrollment complete! Profile is READY.", Toast.LENGTH_LONG).show()
@@ -294,12 +372,5 @@ class MainActivity : AppCompatActivity() {
         mahalScoreText.text = "0.000"
         actionText.text = "—"
         actionText.setTextColor(ContextCompat.getColor(this, R.color.text_secondary))
-    }
-
-    private fun setStatusBadgeColor(colorRes: Int) {
-        val bg = statusBadge.background
-        if (bg is GradientDrawable) {
-            bg.setColor(ContextCompat.getColor(this, colorRes))
-        }
     }
 }

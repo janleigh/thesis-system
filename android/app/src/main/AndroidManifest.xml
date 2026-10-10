@@ -4,7 +4,7 @@
     <application
         android:allowBackup="true"
         android:label="Thesis"
-        android:theme="@style/Theme.AppCompat.Light.DarkActionBar">
+        android:theme="@style/Theme.Thesis">
 
         <activity
             android:name=".MainActivity"
@@ -37,7 +37,7 @@
 
         <activity
             android:name=".BlockedActivity"
-            android:theme="@style/Theme.AppCompat.NoActionBar"
+            android:theme="@style/Theme.Thesis"
             android:launchMode="singleTask"
             android:exported="false" />
 

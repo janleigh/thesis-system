@@ -14,7 +14,7 @@ import java.time.Instant
 // Constants
 // ---------------------------------------------------------------------------
 private const val PRODUCTION_MIN_KEYSTROKES = 500
-private const val TESTING_MIN_KEYSTROKES = 50
+private const val TESTING_MIN_KEYSTROKES = 250
 
 private const val TAG = "ProfileManager"
 
