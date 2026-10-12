@@ -104,11 +104,11 @@ class MahalanobisNormalizer {
 
     /**
      * Return a score in [0, 1] by dividing the raw distance by [maxDist].
-     * In a 6-dimensional feature space, sqrt(chi2_6(0.95)) is approx 3.55.
-     * maxDist of 4.0 ensures statistical deviations of 2.5-4 sigma map to the
-     * high-risk action zone (0.60 - 1.00).
+     * In a 6-dimensional feature space, legitimate typing distances typically
+     * range between 1.5 - 3.5 (mean sqrt(6) ≈ 2.45), mapping to 0.15 - 0.35 (ALLOW).
+     * Impostor distances (typically 8.0 - 25.0) scale to high-risk (0.80 - 1.00).
      */
-    fun normalizedScore(vector: DoubleArray, maxDist: Double = 4.0): Double {
+    fun normalizedScore(vector: DoubleArray, maxDist: Double = 10.0): Double {
         val raw = distance(vector)
         return min(raw / maxDist, 1.0)
     }

@@ -6,11 +6,20 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
+import android.os.SystemClock
 import android.provider.Settings
 import android.text.Editable
+import android.text.Spannable
+import android.text.SpannableStringBuilder
 import android.text.TextWatcher
+import android.text.style.BackgroundColorSpan
+import android.text.style.ForegroundColorSpan
+import android.text.style.StrikethroughSpan
+import android.text.style.StyleSpan
+import android.text.style.UnderlineSpan
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
@@ -27,6 +36,7 @@ import com.google.android.material.color.DynamicColors
 import com.google.android.material.switchmaterial.SwitchMaterial
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import java.util.Random
 
 class MainActivity : AppCompatActivity() {
 
@@ -45,12 +55,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var ocsvmScoreText: TextView
     private lateinit var mahalScoreText: TextView
 
-    // 2x2 Grid Cards
+    // Security Control Cards (Live Verifier & Enforcer Policy)
     private lateinit var btnGridVerifier: View
     private lateinit var gridVerifierStatusText: TextView
-    private lateinit var btnGridModels: View
-    private lateinit var gridModelsStatusText: TextView
-    private lateinit var btnGridSandbox: View
     private lateinit var btnGridPolicy: View
     private lateinit var gridPolicyStatusText: TextView
 
@@ -93,13 +100,15 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnStep2Back: Button
     private lateinit var btnStep2Next: Button
 
-    // Step 3
+    // Step 3: MONKEYTYPE WORD TYPING ARENA
     private lateinit var enrollStep3Typing: View
-    private lateinit var guidedPromptText: TextView
-    private lateinit var btnShufflePrompt: Button
-    private lateinit var enrollmentInput: EditText
-    private lateinit var btnEnrollClearInput: Button
-    private lateinit var btnEnrollStartMode: Button
+    private lateinit var monkeytypeWpmText: TextView
+    private lateinit var monkeytypeAccText: TextView
+    private lateinit var monkeytypeWordCountText: TextView
+    private lateinit var btnMonkeytypeRestart: Button
+    private lateinit var monkeytypeWordsDisplay: TextView
+    private lateinit var monkeytypeInput: EditText
+    private lateinit var btnMonkeytypeClear: Button
     private lateinit var enrollTelemetryPercent: TextView
     private lateinit var enrollTelemetryProgressBar: ProgressBar
     private lateinit var enrollKeystrokeCounter: TextView
@@ -109,6 +118,8 @@ class MainActivity : AppCompatActivity() {
 
     // Step 4
     private lateinit var enrollStep4Complete: View
+    private lateinit var enrollCompleteWpmText: TextView
+    private lateinit var enrollCompleteAccText: TextView
     private lateinit var btnLaunchMonitor: Button
 
     // 3. SETTINGS TAB UI ELEMENTS (All buttons relocated here)
@@ -141,16 +152,31 @@ class MainActivity : AppCompatActivity() {
     private var currentFilter: String = "ALL"
     private var currentSearchQuery: String = ""
 
-    // Prompts Collection
-    private val prompts = listOf(
-        "The quick brown fox jumps over the lazy dog.",
-        "Pack my box with five dozen liquor jugs.",
-        "Sphinx of black quartz, judge my vow.",
-        "Continuous keystroke authentication verifies behavioral typing rhythm.",
-        "How vexingly quick daft zebras jump over sleek bronze fountains.",
-        "Zero-trust device protection detects session takeover instantly."
+    // MONKEYTYPE ENGINE STATE
+    private val monkeytypeDictionary = listOf(
+        "the", "be", "to", "of", "and", "a", "in", "that", "have", "it",
+        "for", "not", "on", "with", "he", "as", "you", "do", "at", "this",
+        "but", "his", "by", "from", "they", "we", "say", "her", "she", "or",
+        "an", "will", "my", "one", "all", "would", "there", "their", "what",
+        "so", "up", "out", "if", "about", "who", "get", "which", "go", "me",
+        "when", "make", "can", "like", "time", "no", "just", "him", "know",
+        "take", "people", "into", "year", "your", "good", "some", "could",
+        "them", "see", "other", "than", "then", "now", "look", "only", "come",
+        "its", "over", "think", "also", "back", "after", "use", "two", "how",
+        "our", "work", "first", "well", "way", "even", "new", "want", "because",
+        "any", "these", "give", "day", "most", "us", "system", "secure", "device",
+        "keystroke", "rhythm", "cadence", "behavior", "typing", "biometric", "protect",
+        "speed", "focus", "finger", "hand", "input", "sensor", "model", "pattern"
     )
-    private var currentPromptIndex = 0
+    private val targetWords = mutableListOf<String>()
+    private var currentWordIndex = 0
+    private var currentTypedWord = ""
+    private val wordResults = mutableListOf<Boolean>()
+    private var typingStartTime: Long = 0L
+    private var totalCorrectChars = 0
+    private var totalTypedChars = 0
+    private var finalWpm = 0
+    private var finalAcc = 100
 
     companion object {
         const val ACTION_RISK_UPDATE = "com.chate.thesis.RISK_UPDATE"
@@ -197,6 +223,7 @@ class MainActivity : AppCompatActivity() {
         setupNavigation()
         setupMonitorTab()
         setupOnboardingFlow()
+        setupMonkeytypeEngine()
         setupSettingsTab()
         setupLogsTab()
 
@@ -242,9 +269,6 @@ class MainActivity : AppCompatActivity() {
 
         btnGridVerifier = findViewById(R.id.btnGridVerifier)
         gridVerifierStatusText = findViewById(R.id.gridVerifierStatusText)
-        btnGridModels = findViewById(R.id.btnGridModels)
-        gridModelsStatusText = findViewById(R.id.gridModelsStatusText)
-        btnGridSandbox = findViewById(R.id.btnGridSandbox)
         btnGridPolicy = findViewById(R.id.btnGridPolicy)
         gridPolicyStatusText = findViewById(R.id.gridPolicyStatusText)
 
@@ -284,13 +308,15 @@ class MainActivity : AppCompatActivity() {
         btnStep2Back = findViewById(R.id.btnStep2Back)
         btnStep2Next = findViewById(R.id.btnStep2Next)
 
-        // Step 3
+        // Step 3 Monkeytype
         enrollStep3Typing = findViewById(R.id.enrollStep3Typing)
-        guidedPromptText = findViewById(R.id.guidedPromptText)
-        btnShufflePrompt = findViewById(R.id.btnShufflePrompt)
-        enrollmentInput = findViewById(R.id.enrollmentInput)
-        btnEnrollClearInput = findViewById(R.id.btnEnrollClearInput)
-        btnEnrollStartMode = findViewById(R.id.btnEnrollStartMode)
+        monkeytypeWpmText = findViewById(R.id.monkeytypeWpmText)
+        monkeytypeAccText = findViewById(R.id.monkeytypeAccText)
+        monkeytypeWordCountText = findViewById(R.id.monkeytypeWordCountText)
+        btnMonkeytypeRestart = findViewById(R.id.btnMonkeytypeRestart)
+        monkeytypeWordsDisplay = findViewById(R.id.monkeytypeWordsDisplay)
+        monkeytypeInput = findViewById(R.id.monkeytypeInput)
+        btnMonkeytypeClear = findViewById(R.id.btnMonkeytypeClear)
         enrollTelemetryPercent = findViewById(R.id.enrollTelemetryPercent)
         enrollTelemetryProgressBar = findViewById(R.id.enrollTelemetryProgressBar)
         enrollKeystrokeCounter = findViewById(R.id.enrollKeystrokeCounter)
@@ -300,6 +326,8 @@ class MainActivity : AppCompatActivity() {
 
         // Step 4
         enrollStep4Complete = findViewById(R.id.enrollStep4Complete)
+        enrollCompleteWpmText = findViewById(R.id.enrollCompleteWpmText)
+        enrollCompleteAccText = findViewById(R.id.enrollCompleteAccText)
         btnLaunchMonitor = findViewById(R.id.btnLaunchMonitor)
 
         // Settings Tab
@@ -387,21 +415,8 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // 2x2 Grid card interactions
         btnGridVerifier.setOnClickListener {
             verifyToggle.isChecked = !verifyToggle.isChecked
-        }
-
-        btnGridSandbox.setOnClickListener {
-            testInput.requestFocus()
-            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-            imm.showSoftInput(testInput, InputMethodManager.SHOW_IMPLICIT)
-        }
-
-        btnGridModels.setOnClickListener {
-            val profile = profileManager.getProfile(DEFAULT_USER_ID)
-            val info = if (profile != null && profile.isReady) "OCSVM + Mahalanobis models active" else "Models awaiting calibration"
-            Toast.makeText(this, info, Toast.LENGTH_SHORT).show()
         }
 
         btnGridPolicy.setOnClickListener {
@@ -438,6 +453,7 @@ class MainActivity : AppCompatActivity() {
             refreshProfileDisplay()
             resetScoreDisplay()
             setEnrollmentStep(1)
+            resetMonkeytypeWords()
             Toast.makeText(this, "Biometric profile deleted & reset", Toast.LENGTH_SHORT).show()
         }
     }
@@ -453,6 +469,7 @@ class MainActivity : AppCompatActivity() {
         btnStep2Next.setOnClickListener {
             setEnrollmentStep(3)
             startEnrollmentSession()
+            monkeytypeInput.requestFocus()
         }
         btnStep2Keyboard.setOnClickListener {
             handleKeyboardSetupClick()
@@ -461,18 +478,6 @@ class MainActivity : AppCompatActivity() {
             handleAdminSetupClick()
         }
 
-        guidedPromptText.text = prompts[currentPromptIndex]
-        btnShufflePrompt.setOnClickListener {
-            currentPromptIndex = (currentPromptIndex + 1) % prompts.size
-            guidedPromptText.text = prompts[currentPromptIndex]
-        }
-        btnEnrollClearInput.setOnClickListener {
-            enrollmentInput.text.clear()
-        }
-        btnEnrollStartMode.setOnClickListener {
-            startEnrollmentSession()
-            enrollmentInput.requestFocus()
-        }
         btnStep3Back.setOnClickListener {
             setEnrollmentStep(2)
         }
@@ -483,12 +488,224 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // =========================================================================
+    // MONKEYTYPE ENGINE IMPLEMENTATION
+    // =========================================================================
+    private fun setupMonkeytypeEngine() {
+        resetMonkeytypeWords()
+
+        btnMonkeytypeRestart.setOnClickListener {
+            resetMonkeytypeWords()
+            monkeytypeInput.requestFocus()
+        }
+
+        btnMonkeytypeClear.setOnClickListener {
+            monkeytypeInput.text.clear()
+        }
+
+        monkeytypeWordsDisplay.setOnClickListener {
+            monkeytypeInput.requestFocus()
+            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.showSoftInput(monkeytypeInput, InputMethodManager.SHOW_IMPLICIT)
+        }
+
+        monkeytypeInput.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                if (targetWords.isEmpty()) return
+
+                val rawText = s?.toString() ?: ""
+
+                // Start WPM timer on first keystroke
+                if (rawText.isNotEmpty() && typingStartTime == 0L) {
+                    typingStartTime = SystemClock.elapsedRealtime()
+                }
+
+                // If space is typed, advance to next word!
+                if (rawText.endsWith(" ")) {
+                    val typedWord = rawText.trimEnd()
+                    val targetWord = targetWords.getOrElse(currentWordIndex) { "" }
+                    val isMatch = typedWord == targetWord
+
+                    wordResults.add(isMatch)
+                    totalTypedChars += typedWord.length + 1
+                    if (isMatch) {
+                        totalCorrectChars += targetWord.length + 1
+                    }
+
+                    currentWordIndex++
+                    currentTypedWord = ""
+
+                    // If approaching end of buffered words, replenish continuously so it is endless!
+                    if (currentWordIndex + 15 >= targetWords.size) {
+                        generateMoreWords()
+                    }
+
+                    // Reset input field without triggering recursive space
+                    monkeytypeInput.removeTextChangedListener(this)
+                    monkeytypeInput.setText("")
+                    monkeytypeInput.addTextChangedListener(this)
+
+                    updateMonkeytypeStats()
+                    renderMonkeytypeDisplay()
+                } else {
+                    currentTypedWord = rawText
+                    updateMonkeytypeStats()
+                    renderMonkeytypeDisplay()
+                }
+            }
+            override fun afterTextChanged(s: Editable?) {}
+        })
+    }
+
+    private fun resetMonkeytypeWords() {
+        targetWords.clear()
+        val random = Random()
+        for (i in 0 until 60) {
+            val word = monkeytypeDictionary[random.nextInt(monkeytypeDictionary.size)]
+            targetWords.add(word)
+        }
+
+        currentWordIndex = 0
+        currentTypedWord = ""
+        wordResults.clear()
+        typingStartTime = 0L
+        totalCorrectChars = 0
+        totalTypedChars = 0
+        finalWpm = 0
+        finalAcc = 100
+
+        monkeytypeInput.setText("")
+        val profile = profileManager.getProfile(DEFAULT_USER_ID)
+        val isReady = profile != null && profile.isReady
+        monkeytypeWpmText.visibility = if (isReady) View.VISIBLE else View.GONE
+        monkeytypeWpmText.text = if (isReady) "$finalWpm WPM" else "-- WPM"
+        monkeytypeAccText.text = "100% ACC"
+        monkeytypeWordCountText.text = "0 words"
+
+        renderMonkeytypeDisplay()
+    }
+
+    private fun generateMoreWords() {
+        val random = Random()
+        for (i in 0 until 30) {
+            targetWords.add(monkeytypeDictionary[random.nextInt(monkeytypeDictionary.size)])
+        }
+    }
+
+    private fun updateMonkeytypeStats() {
+        if (typingStartTime > 0L) {
+            val elapsedMinutes = (SystemClock.elapsedRealtime() - typingStartTime) / 60000.0
+            if (elapsedMinutes > 0.03) {
+                val wordsCounted = (totalCorrectChars + currentTypedWord.length) / 5.0
+                finalWpm = (wordsCounted / elapsedMinutes).toInt().coerceAtLeast(0)
+                monkeytypeWpmText.text = "$finalWpm WPM"
+            }
+        }
+
+        val totalEvaluated = totalTypedChars + currentTypedWord.length
+        if (totalEvaluated > 0) {
+            finalAcc = ((totalCorrectChars.toDouble() / totalEvaluated) * 100.0).toInt().coerceIn(0, 100)
+            monkeytypeAccText.text = "$finalAcc% ACC"
+        } else {
+            finalAcc = 100
+            monkeytypeAccText.text = "100% ACC"
+        }
+
+        val profile = profileManager.getProfile(DEFAULT_USER_ID)
+        val isReady = profile != null && profile.isReady
+        monkeytypeWpmText.visibility = if (isReady) View.VISIBLE else View.GONE
+
+        monkeytypeWordCountText.text = "$currentWordIndex words"
+    }
+
+    private fun renderMonkeytypeDisplay() {
+        val ssb = SpannableStringBuilder()
+        val colorPrimary = ContextCompat.getColor(this, R.color.md_theme_primary)
+        val colorOnSurface = ContextCompat.getColor(this, R.color.md_theme_onSurface)
+        val colorDim = ContextCompat.getColor(this, R.color.md_theme_outline)
+        val colorError = ContextCompat.getColor(this, R.color.md_theme_error)
+        val colorCursorBg = ContextCompat.getColor(this, R.color.md_theme_primaryContainer)
+
+        // Show a sliding window of words (e.g. 25 words visible around current index)
+        val displayStartIndex = (currentWordIndex - 3).coerceAtLeast(0)
+        val displayEndIndex = (displayStartIndex + 25).coerceAtMost(targetWords.size)
+
+        for (i in displayStartIndex until displayEndIndex) {
+            val word = targetWords[i]
+            val wordStart = ssb.length
+
+            if (i < currentWordIndex) {
+                // Completed word
+                val isCorrect = wordResults.getOrElse(i) { true }
+                ssb.append(word)
+                if (isCorrect) {
+                    ssb.setSpan(ForegroundColorSpan(colorOnSurface), wordStart, ssb.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                } else {
+                    ssb.setSpan(ForegroundColorSpan(colorError), wordStart, ssb.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    ssb.setSpan(StrikethroughSpan(), wordStart, ssb.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                }
+            } else if (i == currentWordIndex) {
+                // Active word (character-by-character Monkeytype matching)
+                val typed = currentTypedWord
+                for (cIndex in word.indices) {
+                    val targetChar = word[cIndex]
+                    val charStart = ssb.length
+                    ssb.append(targetChar)
+
+                    if (cIndex < typed.length) {
+                        if (typed[cIndex] == targetChar) {
+                            ssb.setSpan(ForegroundColorSpan(colorPrimary), charStart, ssb.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                            ssb.setSpan(StyleSpan(Typeface.BOLD), charStart, ssb.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                        } else {
+                            ssb.setSpan(ForegroundColorSpan(colorError), charStart, ssb.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                            ssb.setSpan(UnderlineSpan(), charStart, ssb.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                        }
+                    } else if (cIndex == typed.length) {
+                        // Cursor caret position highlight
+                        ssb.setSpan(ForegroundColorSpan(colorOnSurface), charStart, ssb.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                        ssb.setSpan(BackgroundColorSpan(colorCursorBg), charStart, ssb.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                        ssb.setSpan(StyleSpan(Typeface.BOLD), charStart, ssb.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    } else {
+                        // Untyped remaining letters
+                        ssb.setSpan(ForegroundColorSpan(colorDim), charStart, ssb.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    }
+                }
+
+                // If user typed extra letters past word end
+                if (typed.length > word.length) {
+                    val extraChars = typed.substring(word.length)
+                    val extraStart = ssb.length
+                    ssb.append(extraChars)
+                    ssb.setSpan(ForegroundColorSpan(colorError), extraStart, ssb.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    ssb.setSpan(UnderlineSpan(), extraStart, ssb.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                }
+            } else {
+                // Upcoming dimmed words
+                ssb.append(word)
+                ssb.setSpan(ForegroundColorSpan(colorDim), wordStart, ssb.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
+
+            ssb.append("  ")
+        }
+
+        monkeytypeWordsDisplay.text = ssb
+    }
+
     private fun setEnrollmentStep(step: Int) {
         enrollStep1Welcome.visibility = if (step == 1) View.VISIBLE else View.GONE
         enrollStep2Setup.visibility = if (step == 2) View.VISIBLE else View.GONE
         enrollStep3Typing.visibility = if (step == 3) View.VISIBLE else View.GONE
         enrollStep4Complete.visibility = if (step == 4) View.VISIBLE else View.GONE
         updateStepperDots(step)
+
+        val profile = profileManager.getProfile(DEFAULT_USER_ID)
+        val isReady = profile != null && profile.isReady
+        monkeytypeWpmText.visibility = if (isReady) View.VISIBLE else View.GONE
+        if (step == 4) {
+            enrollCompleteWpmText.text = if (finalWpm > 0) "$finalWpm WPM" else "-- WPM"
+            enrollCompleteAccText.text = "$finalAcc% ACC"
+        }
     }
 
     private fun updateStepperDots(step: Int) {
@@ -571,8 +788,8 @@ class MainActivity : AppCompatActivity() {
             putExtra("user_id", DEFAULT_USER_ID)
         }
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
-        enrollRhythmStatus.text = "IME listening in ENROLL mode • Type naturally"
-        enrollmentInput.requestFocus()
+        enrollRhythmStatus.text = "IME listening in ENROLL mode • Type words naturally"
+        monkeytypeInput.requestFocus()
     }
 
     private fun checkDeviceAdminState() {
@@ -757,23 +974,21 @@ class MainActivity : AppCompatActivity() {
 
             when (profile.status) {
                 "PENDING" -> {
-                    heroTitleText.text = "Calibrating"
+                    heroTitleText.text = "Status: Calibrating"
                     enrollButton.text = getString(R.string.btn_start_enrollment)
                     enrollButton.isEnabled = true
                     verifyToggle.isEnabled = false
                     gridVerifierStatusText.text = "Standby"
-                    gridModelsStatusText.text = "Calibrating"
                 }
                 "READY", "ACTIVE" -> {
-                    heroTitleText.text = "Active"
+                    heroTitleText.text = "Status: Active"
                     enrollButton.text = "Profile Calibrated"
                     enrollButton.isEnabled = true
                     verifyToggle.isEnabled = true
-                    gridModelsStatusText.text = "Fitted"
                 }
             }
         } else {
-            heroTitleText.text = "Standby"
+            heroTitleText.text = "Status: Standby"
             profileStatusText.text = getString(R.string.status_not_enrolled)
             keystrokeCountText.text = "0"
             enrollmentProgress.progress = 0
@@ -786,7 +1001,6 @@ class MainActivity : AppCompatActivity() {
             telemetryVectorStat.text = "⚡ 0 Windows"
             verifyToggle.isEnabled = false
             gridVerifierStatusText.text = "Standby"
-            gridModelsStatusText.text = "Not Trained"
         }
     }
 
@@ -835,10 +1049,9 @@ class MainActivity : AppCompatActivity() {
         telemetryVectorStat.text = "⚡ $vectorCount Windows"
 
         if (status == "READY" || status == "ACTIVE") {
-            heroTitleText.text = "Active"
+            heroTitleText.text = "Status: Active"
             setEnrollmentStep(4)
             verifyToggle.isEnabled = true
-            gridModelsStatusText.text = "Fitted"
             Toast.makeText(this, "🎉 Biometric Profile Calibrated!", Toast.LENGTH_LONG).show()
         }
     }

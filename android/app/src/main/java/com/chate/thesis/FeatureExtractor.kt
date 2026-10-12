@@ -96,10 +96,10 @@ class FeatureExtractor {
 
     companion object {
         const val MIN_DWELL_MS = 10.0
-        const val MAX_DWELL_MS = 500.0
+        const val MAX_DWELL_MS = 600.0
         const val MIN_FLIGHT_MS = -300.0
-        const val MAX_FLIGHT_MS = 750.0
-        const val MAX_IKI_MS = 1000.0
+        const val MAX_FLIGHT_MS = 1200.0
+        const val MAX_IKI_MS = 1500.0
     }
 
     private fun computeStats(fv: FeatureVector) {

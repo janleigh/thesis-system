@@ -69,7 +69,7 @@
                                 android:id="@+id/heroTitleText"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Active"
+                                android:text="Status: Active"
                                 android:textColor="?attr/colorOnPrimaryContainer"
                                 android:textSize="22sp"
                                 android:fontFamily="sans-serif-bold"
@@ -147,12 +147,12 @@
                         android:fontFamily="sans-serif-medium"
                         android:layout_marginBottom="12dp" />
 
-                    <!-- 2x2 GRID OF ACTION / STATUS CARDS (Matching screenshot layout) -->
+                    <!-- ACTION / STATUS CARDS (Live Verifier & Enforcer Policy) -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:layout_marginBottom="10dp">
+                        android:layout_marginBottom="16dp">
 
                         <!-- Card 1: Live Verifier -->
                         <LinearLayout
@@ -196,97 +196,7 @@
                             </LinearLayout>
                         </LinearLayout>
 
-                        <!-- Card 2: Anomaly Models -->
-                        <LinearLayout
-                            android:id="@+id/btnGridModels"
-                            android:layout_width="0dp"
-                            android:layout_height="62dp"
-                            android:layout_weight="1"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical"
-                            android:paddingHorizontal="14dp"
-                            android:background="@drawable/card_feature_grid_bg"
-                            android:layout_marginStart="6dp">
-
-                            <ImageView
-                                android:layout_width="22dp"
-                                android:layout_height="22dp"
-                                android:src="@drawable/ic_experiment"
-                                app:tint="?attr/colorPrimary" />
-
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:orientation="vertical"
-                                android:layout_marginStart="10dp">
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Anomaly Engine"
-                                    android:textColor="?attr/colorOnSurface"
-                                    android:textSize="13sp"
-                                    android:fontFamily="sans-serif-medium" />
-
-                                <TextView
-                                    android:id="@+id/gridModelsStatusText"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Dual Model"
-                                    android:textColor="?attr/colorOnSurfaceVariant"
-                                    android:textSize="11sp" />
-                            </LinearLayout>
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginBottom="16dp">
-
-                        <!-- Card 3: Test Cadence -->
-                        <LinearLayout
-                            android:id="@+id/btnGridSandbox"
-                            android:layout_width="0dp"
-                            android:layout_height="62dp"
-                            android:layout_weight="1"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical"
-                            android:paddingHorizontal="14dp"
-                            android:background="@drawable/card_feature_grid_bg"
-                            android:layout_marginEnd="6dp">
-
-                            <ImageView
-                                android:layout_width="22dp"
-                                android:layout_height="22dp"
-                                android:src="@drawable/ic_keyboard"
-                                app:tint="?attr/colorPrimary" />
-
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:orientation="vertical"
-                                android:layout_marginStart="10dp">
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Test Cadence"
-                                    android:textColor="?attr/colorOnSurface"
-                                    android:textSize="13sp"
-                                    android:fontFamily="sans-serif-medium" />
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Sandbox"
-                                    android:textColor="?attr/colorOnSurfaceVariant"
-                                    android:textSize="11sp" />
-                            </LinearLayout>
-                        </LinearLayout>
-
-                        <!-- Card 4: Enforcer Policy -->
+                        <!-- Card 2: Enforcer Policy -->
                         <LinearLayout
                             android:id="@+id/btnGridPolicy"
                             android:layout_width="0dp"
@@ -1015,6 +925,7 @@
                     android:orientation="vertical"
                     android:visibility="gone">
 
+                    <!-- MONKEYTYPE WORD TYPING ARENA -->
                     <com.google.android.material.card.MaterialCardView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -1030,118 +941,113 @@
                             android:orientation="vertical"
                             android:padding="20dp">
 
+                            <!-- Monkeytype Live Metrics Header -->
                             <LinearLayout
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:orientation="horizontal"
                                 android:gravity="center_vertical"
-                                android:layout_marginBottom="10dp">
+                                android:layout_marginBottom="14dp">
 
-                                <ImageView
-                                    android:layout_width="22dp"
-                                    android:layout_height="22dp"
-                                    android:src="@drawable/ic_typing_challenge"
-                                    app:tint="?attr/colorPrimary" />
+                                <TextView
+                                    android:id="@+id/monkeytypeWpmText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="-- WPM"
+                                    android:textColor="?attr/colorPrimary"
+                                    android:textSize="18sp"
+                                    android:fontFamily="sans-serif-bold"
+                                    android:visibility="gone"
+                                    android:layout_marginEnd="14dp" />
+
+                                <TextView
+                                    android:id="@+id/monkeytypeAccText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="100% ACC"
+                                    android:textColor="?attr/colorOnSurfaceVariant"
+                                    android:textSize="13sp"
+                                    android:fontFamily="monospace" />
+
+                                <TextView
+                                    android:id="@+id/monkeytypeWordCountText"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:text="0 words"
+                                    android:textColor="?attr/colorOnSurfaceVariant"
+                                    android:textSize="12sp"
+                                    android:fontFamily="monospace"
+                                    android:layout_marginStart="14dp" />
+
+                                <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/btnMonkeytypeRestart"
+                                    style="@style/Widget.Material3.Button.IconButton"
+                                    android:layout_width="44dp"
+                                    android:layout_height="44dp"
+                                    app:icon="@drawable/ic_refresh"
+                                    app:iconTint="?attr/colorOnSurfaceVariant" />
+                            </LinearLayout>
+
+                            <!-- Monkeytype Word Stream Container -->
+                            <FrameLayout
+                                android:id="@+id/monkeytypeWordContainer"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:minHeight="140dp"
+                                android:padding="16dp"
+                                android:background="@drawable/card_expressive_container">
+
+                                <TextView
+                                    android:id="@+id/monkeytypeWordsDisplay"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:text="loading words..."
+                                    android:textColor="?attr/colorOnSurface"
+                                    android:textSize="19sp"
+                                    android:fontFamily="sans-serif"
+                                    android:lineSpacingExtra="8dp"
+                                    android:letterSpacing="0.02" />
+                            </FrameLayout>
+
+                            <!-- Input Box (Auto-advances on spacebar) -->
+                            <EditText
+                                android:id="@+id/monkeytypeInput"
+                                android:layout_width="match_parent"
+                                android:layout_height="52dp"
+                                android:background="@drawable/input_expressive_background"
+                                android:hint="Type word and press space..."
+                                android:textColorHint="?attr/colorOnSurfaceVariant"
+                                android:textColor="?attr/colorOnSurface"
+                                android:paddingHorizontal="14dp"
+                                android:textSize="16sp"
+                                android:inputType="textNoSuggestions|textVisiblePassword"
+                                android:imeOptions="actionDone"
+                                android:singleLine="true"
+                                android:layout_marginTop="14dp" />
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical"
+                                android:layout_marginTop="10dp">
 
                                 <TextView
                                     android:layout_width="0dp"
                                     android:layout_height="wrap_content"
                                     android:layout_weight="1"
-                                    android:text="Guided Typing Prompt"
+                                    android:text="Press space to advance words • Tab/restart to reset"
                                     android:textColor="?attr/colorOnSurfaceVariant"
-                                    android:textSize="12sp"
-                                    android:fontFamily="sans-serif-medium"
-                                    android:textAllCaps="true"
-                                    android:letterSpacing="0.08"
-                                    android:layout_marginStart="8dp" />
+                                    android:textSize="11sp" />
 
                                 <com.google.android.material.button.MaterialButton
-                                    android:id="@+id/btnShufflePrompt"
+                                    android:id="@+id/btnMonkeytypeClear"
                                     style="@style/Widget.Material3.Button.TextButton"
                                     android:layout_width="wrap_content"
                                     android:layout_height="36dp"
-                                    android:text="Shuffle"
-                                    app:icon="@drawable/ic_refresh"
+                                    android:text="Clear"
                                     android:textSize="12sp" />
-                            </LinearLayout>
-
-                            <TextView
-                                android:id="@+id/guidedPromptText"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:text="@string/prompt_1"
-                                android:textColor="?attr/colorOnSurface"
-                                android:textSize="16sp"
-                                android:fontFamily="sans-serif"
-                                android:lineSpacingExtra="3dp"
-                                android:padding="14dp"
-                                android:background="@drawable/card_expressive_container" />
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:text="Type naturally using your standard hand posture and speed."
-                                android:textColor="?attr/colorOnSurfaceVariant"
-                                android:textSize="12sp"
-                                android:layout_marginTop="8dp" />
-                        </LinearLayout>
-                    </com.google.android.material.card.MaterialCardView>
-
-                    <com.google.android.material.card.MaterialCardView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        app:cardBackgroundColor="?attr/colorSurfaceContainer"
-                        app:cardCornerRadius="24dp"
-                        app:cardElevation="0dp"
-                        app:strokeWidth="0dp"
-                        android:layout_marginBottom="14dp">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:padding="20dp">
-
-                            <EditText
-                                android:id="@+id/enrollmentInput"
-                                android:layout_width="match_parent"
-                                android:layout_height="110dp"
-                                android:background="@drawable/input_expressive_background"
-                                android:gravity="top|start"
-                                android:hint="@string/hint_type_here"
-                                android:textColorHint="?attr/colorOnSurfaceVariant"
-                                android:textColor="?attr/colorOnSurface"
-                                android:padding="14dp"
-                                android:textSize="15sp"
-                                android:lineSpacingExtra="2dp" />
-
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:orientation="horizontal"
-                                android:gravity="center_vertical"
-                                android:layout_marginTop="12dp">
-
-                                <com.google.android.material.button.MaterialButton
-                                    android:id="@+id/btnEnrollClearInput"
-                                    style="?attr/materialButtonOutlinedStyle"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="44dp"
-                                    android:text="Clear Input"
-                                    app:cornerRadius="22dp" />
-
-                                <View
-                                    android:layout_width="0dp"
-                                    android:layout_height="0dp"
-                                    android:layout_weight="1" />
-
-                                <com.google.android.material.button.MaterialButton
-                                    android:id="@+id/btnEnrollStartMode"
-                                    style="?attr/materialButtonStyle"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="44dp"
-                                    android:text="Capture Active"
-                                    app:cornerRadius="22dp" />
                             </LinearLayout>
                         </LinearLayout>
                     </com.google.android.material.card.MaterialCardView>
@@ -1309,6 +1215,39 @@
                                 android:gravity="center"
                                 android:layout_marginTop="12dp"
                                 android:layout_marginBottom="20dp" />
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center"
+                                android:layout_marginBottom="16dp">
+
+                                <TextView
+                                    android:id="@+id/enrollCompleteWpmText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="-- WPM"
+                                    android:textColor="?attr/colorPrimary"
+                                    android:textSize="14sp"
+                                    android:fontFamily="sans-serif-bold"
+                                    android:paddingHorizontal="14dp"
+                                    android:paddingVertical="7dp"
+                                    android:background="@drawable/badge_chip_pill" />
+
+                                <TextView
+                                    android:id="@+id/enrollCompleteAccText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="100% ACC"
+                                    android:textColor="?attr/colorOnSurfaceVariant"
+                                    android:textSize="14sp"
+                                    android:fontFamily="monospace"
+                                    android:paddingHorizontal="14dp"
+                                    android:paddingVertical="7dp"
+                                    android:background="@drawable/badge_chip_pill"
+                                    android:layout_marginStart="10dp" />
+                            </LinearLayout>
 
                             <TextView
                                 android:layout_width="wrap_content"

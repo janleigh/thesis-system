@@ -139,11 +139,11 @@ class OCSVMModel(
 
         // 2. Gamma
         gamma = if (gammaMode == DEFAULT_GAMMA_SCALE) {
-            // Standard RBF gamma = 1 / (n_features * X.var())
-            // Since features are standardized with unit variance (X.var() = 1.0), gamma = 1.0 / d
-            1.0 / d
+            // For small enrollment samples (10-25 vectors in 6D), gamma = 1 / (2*d) prevents
+            // isolated RBF support vector spikes while maintaining a distinct decision boundary.
+            1.0 / (2.0 * d)
         } else {
-            gammaMode.toDoubleOrNull() ?: (1.0 / d)
+            gammaMode.toDoubleOrNull() ?: (1.0 / (2.0 * d))
         }
 
         // 3. Kernel matrix (symmetric)
@@ -275,10 +275,10 @@ class OCSVMModel(
 
         return if (rawScore >= 0) {
             val scale = kotlin.math.max(trainScoreMax, 1e-9)
-            0.5 - 0.5 * (rawScore / scale).coerceIn(0.0, 1.0)
+            0.28 * (1.0 - (rawScore / scale).coerceIn(0.0, 1.0))
         } else {
             val scale = kotlin.math.max(intercept, 1e-9)
-            0.5 + 0.5 * (-rawScore / scale).coerceIn(0.0, 1.0)
+            0.28 + 0.72 * (-rawScore / scale).coerceIn(0.0, 1.0)
         }
     }
 
