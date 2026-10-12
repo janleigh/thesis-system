@@ -10,7 +10,7 @@ import kotlin.math.min
  * Minimum number of samples required to compute a full covariance matrix.
  * Below this threshold, a diagonal (variance-only) approximation is used.
  */
-const val MIN_SAMPLES_FOR_COVARIANCE = 10
+const val MIN_SAMPLES_FOR_COVARIANCE = 50
 
 /**
  * MahalanobisNormalizer — computes Mahalanobis distance from a fitted distribution.
@@ -104,8 +104,9 @@ class MahalanobisNormalizer {
 
     /**
      * Return a score in [0, 1] by dividing the raw distance by [maxDist].
+     * maxDist of 10.0 is more appropriate for a 6-dimensional feature space.
      */
-    fun normalizedScore(vector: DoubleArray, maxDist: Double = 50.0): Double {
+    fun normalizedScore(vector: DoubleArray, maxDist: Double = 10.0): Double {
         val raw = distance(vector)
         return min(raw / maxDist, 1.0)
     }

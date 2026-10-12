@@ -1,5 +1,6 @@
 package com.chate.thesis
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
@@ -18,23 +19,45 @@ class BlockedActivity : AppCompatActivity() {
         profileManager = ProfileManager(this, testingMode = true)
 
         findViewById<Button>(R.id.unblockButton).setOnClickListener {
-            // Reset profile
-            profileManager.deleteUser(MainActivity.DEFAULT_USER_ID)
-            
-            // Broadcast mode update to IME
-            val intent = Intent(KeystrokeIMEService.ACTION_SET_MODE).apply {
-                putExtra("mode", "IDLE")
+            val keyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as android.app.KeyguardManager
+            if (!keyguardManager.isKeyguardSecure) {
+                Toast.makeText(this, "Secure lock screen not set up. Cannot unblock.", Toast.LENGTH_LONG).show()
+                return@setOnClickListener
             }
-            LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
+            
+            val authIntent = keyguardManager.createConfirmDeviceCredentialIntent(
+                "Unblock Session",
+                "Enter your PIN/Password to unblock the application."
+            )
+            
+            if (authIntent != null) {
+                startActivityForResult(authIntent, 1001)
+            }
+        }
+    }
 
-            Toast.makeText(this, "Profile reset. Try enrolling again.", Toast.LENGTH_SHORT).show()
-            
-            // Go back to main activity
-            val mainIntent = Intent(this, MainActivity::class.java).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == 1001) {
+            if (resultCode == RESULT_OK) {
+                // Authentication succeeded, proceed with unblocking
+                profileManager.deleteUser(MainActivity.DEFAULT_USER_ID)
+                
+                val intent = Intent(KeystrokeIMEService.ACTION_SET_MODE).apply {
+                    putExtra("mode", "IDLE")
+                }
+                LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
+
+                Toast.makeText(this, "Profile reset. Try enrolling again.", Toast.LENGTH_SHORT).show()
+                
+                val mainIntent = Intent(this, MainActivity::class.java).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                }
+                startActivity(mainIntent)
+                finish()
+            } else {
+                Toast.makeText(this, "Authentication failed. Session remains blocked.", Toast.LENGTH_SHORT).show()
             }
-            startActivity(mainIntent)
-            finish()
         }
     }
 

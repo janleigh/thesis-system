@@ -39,53 +39,51 @@ class FeatureExtractor {
     fun extract(events: List<KeystrokeEvent>): FeatureVector? {
         if (events.isEmpty()) return null
 
-        // sort by timestamp just to be safe
         val sortedEvents = events.sortedBy { it.timestampMs }
 
-        val downTimes = mutableMapOf<Int, Double>()
-        val upTimes = mutableMapOf<Int, Double>()
-        val keyOrder = mutableListOf<Int>()
+        data class PairedKey(val keyCode: Int, val downTs: Double, val upTs: Double)
+        val pairedKeys = mutableListOf<PairedKey>()
+        
+        val pendingDowns = mutableMapOf<Int, ArrayDeque<Double>>()
 
         for (event in sortedEvents) {
             val key = event.keyCode
             val ts = event.timestampMs
             if (event.eventType == 0) { // DOWN
-                if (!downTimes.containsKey(key)) {
-                    keyOrder.add(key)
-                }
-                downTimes[key] = ts
+                pendingDowns.getOrPut(key) { ArrayDeque() }.addLast(ts)
             } else if (event.eventType == 1) { // UP
-                upTimes[key] = ts
+                val downQueue = pendingDowns[key]
+                if (downQueue != null && downQueue.isNotEmpty()) {
+                    val downTs = downQueue.removeFirst()
+                    pairedKeys.add(PairedKey(key, downTs, ts))
+                }
             }
         }
+
+        // Sort by down timestamp to ensure chronological order for consecutive typing features
+        pairedKeys.sortBy { it.downTs }
 
         val fv = FeatureVector()
 
-        // how long each key is held down
-        for (key in keyOrder) {
-            if (downTimes.containsKey(key) && upTimes.containsKey(key)) {
-                val dwell = upTimes[key]!! - downTimes[key]!!
-                if (dwell >= 0) {
-                    fv.dwellTimes.add(dwell)
-                }
+        // dwell times
+        for (pk in pairedKeys) {
+            val dwell = pk.upTs - pk.downTs
+            if (dwell >= 0) {
+                fv.dwellTimes.add(dwell)
             }
         }
 
-        // how long between consecutive keypresses
-        for (i in 0 until keyOrder.size - 1) {
-            val keyN = keyOrder[i]
-            val keyN1 = keyOrder[i + 1]
+        // flight and IKI times
+        for (i in 0 until pairedKeys.size - 1) {
+            val current = pairedKeys[i]
+            val next = pairedKeys[i + 1]
 
-            if (upTimes.containsKey(keyN) && downTimes.containsKey(keyN1)) {
-                val flight = downTimes[keyN1]!! - upTimes[keyN]!!
-                fv.flightTimes.add(flight)
-            }
+            val flight = next.downTs - current.upTs
+            fv.flightTimes.add(flight) // Can be legitimately negative for rollover typing
 
-            if (downTimes.containsKey(keyN) && downTimes.containsKey(keyN1)) {
-                val iki = downTimes[keyN1]!! - downTimes[keyN]!!
-                if (iki >= 0) {
-                    fv.ikiTimes.add(iki)
-                }
+            val iki = next.downTs - current.downTs
+            if (iki >= 0) {
+                fv.ikiTimes.add(iki)
             }
         }
 

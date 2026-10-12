@@ -78,8 +78,10 @@ class RiskScorer(
     private val ocsvmW: Double
     private val mahalW: Double
 
-    /** Rolling history of composite scores (bounded by [adaptiveWindow]). */
     private val scoreHistory: ArrayDeque<Double> = ArrayDeque()
+    
+    /** Strike counter to prevent single-window false positives. */
+    private var consecutiveAnomalies: Int = 0
 
     init {
         val total = ocsvmWeight + mahalWeight
@@ -120,7 +122,21 @@ class RiskScorer(
             scoreHistory.removeFirst()
         }
 
-        val action = mapAction(composite, adaptiveThresh)
+        val rawAction = mapAction(composite, adaptiveThresh)
+        
+        // Strike system logic
+        val action = if (rawAction == Action.STEP_UP_AUTH || rawAction == Action.BLOCK_SESSION) {
+            consecutiveAnomalies++
+            when {
+                consecutiveAnomalies >= 3 -> Action.BLOCK_SESSION
+                consecutiveAnomalies >= 2 -> Action.STEP_UP_AUTH
+                else -> Action.WARN // First strike is just a warning
+            }
+        } else {
+            consecutiveAnomalies = 0
+            rawAction
+        }
+
         val isAnomaly = action == Action.STEP_UP_AUTH || action == Action.BLOCK_SESSION
 
         return RiskDecision(
@@ -134,9 +150,10 @@ class RiskScorer(
         )
     }
 
-    /** Clear the rolling score history (e.g. on re-enrolment). */
+    /** Clear the rolling score history and strikes (e.g. on re-enrolment or successful step-up). */
     fun resetHistory() {
         scoreHistory.clear()
+        consecutiveAnomalies = 0
     }
 
     // ------------------------------------------------------------------ //

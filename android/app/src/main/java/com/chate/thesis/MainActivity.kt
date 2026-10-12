@@ -66,7 +66,7 @@ class MainActivity : AppCompatActivity() {
                     val action = intent.getStringExtra("action") ?: "ALLOW"
                     val keystrokeCount = intent.getIntExtra("keystroke_count", 0)
                     updateRiskDisplay(composite, ocsvm, mahal, action, keystrokeCount)
-                    if (::eventLogView.isInitialized && eventLogView.visibility == android.view.View.VISIBLE) {
+                    if (this@MainActivity::eventLogView.isInitialized && eventLogView.visibility == android.view.View.VISIBLE) {
                         loadEventLogs()
                     }
                 }
@@ -91,7 +91,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        profileManager = ProfileManager(this, testingMode = true)
+        profileManager = ProfileManager(this, testingMode = false)
 
         initViews()
         setupButtons()
@@ -138,7 +138,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun checkKeyboardState() {
-        val imm = getSystemService(INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
         val enabledMethods = imm.enabledInputMethodList
         var isEnabled = false
         val ourPackage = packageName

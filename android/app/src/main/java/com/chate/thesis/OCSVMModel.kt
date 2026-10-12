@@ -146,9 +146,10 @@ class OCSVMModel(
                 for (i in 0 until n) s += xScaled[i][j] * xScaled[i][j]
                 totalVar += s / n   // population variance (mean is 0 after scaling)
             }
-            if (totalVar < 1e-12) 1.0 else 1.0 / (d * totalVar)
+            // Use a wider kernel (5x) for small datasets to prevent the K(x,x)=1 overfitting spike
+            if (totalVar < 1e-12) 0.2 else 1.0 / (d * totalVar * 5.0)
         } else {
-            gammaMode.toDoubleOrNull() ?: (1.0 / d)
+            gammaMode.toDoubleOrNull() ?: (1.0 / (d * 5.0))
         }
 
         // 3. Kernel matrix (symmetric)
@@ -270,20 +271,21 @@ class OCSVMModel(
     /**
      * Anomaly score in [0, 1].
      *
-     * The score is normalised relative to the training score range so that
-     * lower decision function values (more anomalous) yield scores closer to 1.
+     * The score is normalised such that the maximum training decision value maps to 0.0,
+     * the decision boundary (0.0) maps to 0.5, and negative values scale smoothly to 1.0.
      */
     fun anomalyScore(vector: DoubleArray): Double {
         check(isFitted) { "Model is not fitted" }
         val xScaled = DoubleArray(vector.size) { j -> (vector[j] - scalerMean[j]) / scalerStd[j] }
         val rawScore = decisionFunctionInternal(xScaled)
 
-        val scoreRange = trainScoreMax - trainScoreMin
-        if (scoreRange < 1e-9) {
-            return if (rawScore >= trainScoreMax) 0.0 else 1.0
+        return if (rawScore >= 0) {
+            val scale = kotlin.math.max(trainScoreMax, 1e-9)
+            0.5 - 0.5 * (rawScore / scale).coerceIn(0.0, 1.0)
+        } else {
+            val scale = kotlin.math.max(intercept, 1e-9)
+            0.5 + 0.5 * (-rawScore / scale).coerceIn(0.0, 1.0)
         }
-        val normalized = (trainScoreMax - rawScore) / scoreRange
-        return normalized.coerceIn(0.0, 1.0)
     }
 
     /**

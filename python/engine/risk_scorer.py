@@ -115,9 +115,20 @@ class RiskScorer:
         mean = float(np.mean(hist))
         std  = float(np.std(hist))
 
-        # Adaptive upper limit = mean + k * std, clamped to [base, step_up - 0.05]
-        adaptive = mean + self.adaptive_k * std
-        return float(np.clip(adaptive, self.base_warn_thresh, self.step_up_thresh - 0.05))
+        # We reward "consistently low" scores (low mean, low std) with a higher threshold.
+        # Calculate the upper bound of their typical scores.
+        typical_upper_bound = mean + self.adaptive_k * std
+        max_warn_thresh = self.step_up_thresh - 0.05
+        
+        if typical_upper_bound < self.base_warn_thresh:
+            # How far below the base threshold is their typical upper bound? (0.0 to 1.0)
+            leniency_ratio = (self.base_warn_thresh - typical_upper_bound) / self.base_warn_thresh
+            max_leniency = max_warn_thresh - self.base_warn_thresh
+            adaptive = self.base_warn_thresh + (max_leniency * leniency_ratio)
+        else:
+            adaptive = self.base_warn_thresh
+
+        return float(np.clip(adaptive, self.base_warn_thresh, max_warn_thresh))
 
     def _map_action(self, score: float, warn_thresh: float) -> Action:
         if score >= self.block_thresh:

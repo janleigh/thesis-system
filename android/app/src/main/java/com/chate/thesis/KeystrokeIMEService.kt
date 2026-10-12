@@ -151,7 +151,7 @@ class KeystrokeIMEService : InputMethodService() {
 
     override fun onCreate() {
         super.onCreate()
-        profileManager = ProfileManager(this, testingMode = true)
+        profileManager = ProfileManager(this, testingMode = false)
         riskScorer = RiskScorer()
         securityLogger = SecurityLogger(this)
         
@@ -279,7 +279,7 @@ class KeystrokeIMEService : InputMethodService() {
     }
 
     private fun handleTouch(view: View, event: MotionEvent, buttonId: Int) {
-        val currentTime = SystemClock.elapsedRealtime().toDouble()
+        val currentTime = event.eventTime.toDouble()
         val currentMap = if (isSymbols) symbolsMap else keyMap
         val keyData = currentMap[buttonId] ?: Pair(0, "")
         val actualKeyCode = keyData.first
@@ -291,7 +291,7 @@ class KeystrokeIMEService : InputMethodService() {
     }
 
     private fun handleSpecialTouch(view: View, event: MotionEvent, keyCode: Int, keyLabel: String, commitAction: () -> Unit) {
-        val currentTime = SystemClock.elapsedRealtime().toDouble()
+        val currentTime = event.eventTime.toDouble()
         processMotionEvent(view, event, keyCode, keyLabel, currentTime, commitAction)
     }
 
@@ -345,7 +345,30 @@ class KeystrokeIMEService : InputMethodService() {
                     handleVerification(fv)
                 }
             }
+            
+            // Sliding window: Retain unpaired DOWN events for the next window
+            val unpairedDowns = mutableListOf<KeystrokeEvent>()
+            val upCounts = mutableMapOf<Int, Int>()
+            
+            for (e in eventBuffer) {
+                if (e.eventType == 1) { // UP
+                    upCounts[e.keyCode] = (upCounts[e.keyCode] ?: 0) + 1
+                }
+            }
+            
+            for (e in eventBuffer) {
+                if (e.eventType == 0) { // DOWN
+                    val ups = upCounts[e.keyCode] ?: 0
+                    if (ups > 0) {
+                        upCounts[e.keyCode] = ups - 1
+                    } else {
+                        unpairedDowns.add(e)
+                    }
+                }
+            }
+            
             eventBuffer.clear()
+            eventBuffer.addAll(unpairedDowns)
         }
     }
     
