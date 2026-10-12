@@ -106,7 +106,7 @@ class ProfileManager(
         profile.updatedAt = now
 
         if (profile.status == "PENDING"
-            && profile.keystrokeCount >= minKs
+            && profile.keystrokeCount >= profile.minKeystrokes
             && profile.vectors.size >= 5
         ) {
             Log.i(TAG, "Enrollment threshold reached for $userId — fitting models")

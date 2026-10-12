@@ -65,24 +65,26 @@ class FeatureExtractor {
 
         val fv = FeatureVector()
 
-        // dwell times
+        // dwell times (filter touch artifacts < 10ms and stuck keys > 500ms)
         for (pk in pairedKeys) {
             val dwell = pk.upTs - pk.downTs
-            if (dwell >= 0) {
+            if (dwell in MIN_DWELL_MS..MAX_DWELL_MS) {
                 fv.dwellTimes.add(dwell)
             }
         }
 
-        // flight and IKI times
+        // flight and IKI times (filter inter-word / reading pauses > 750ms)
         for (i in 0 until pairedKeys.size - 1) {
             val current = pairedKeys[i]
             val next = pairedKeys[i + 1]
 
             val flight = next.downTs - current.upTs
-            fv.flightTimes.add(flight) // Can be legitimately negative for rollover typing
+            if (flight in MIN_FLIGHT_MS..MAX_FLIGHT_MS) {
+                fv.flightTimes.add(flight) // Can be legitimately negative for rollover typing
+            }
 
             val iki = next.downTs - current.downTs
-            if (iki >= 0) {
+            if (iki in 0.0..MAX_IKI_MS) {
                 fv.ikiTimes.add(iki)
             }
         }
@@ -90,6 +92,14 @@ class FeatureExtractor {
         fv.keystrokeCount = fv.dwellTimes.size
         computeStats(fv)
         return fv
+    }
+
+    companion object {
+        const val MIN_DWELL_MS = 10.0
+        const val MAX_DWELL_MS = 500.0
+        const val MIN_FLIGHT_MS = -300.0
+        const val MAX_FLIGHT_MS = 750.0
+        const val MAX_IKI_MS = 1000.0
     }
 
     private fun computeStats(fv: FeatureVector) {

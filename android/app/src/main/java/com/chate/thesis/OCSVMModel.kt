@@ -139,17 +139,11 @@ class OCSVMModel(
 
         // 2. Gamma
         gamma = if (gammaMode == DEFAULT_GAMMA_SCALE) {
-            // Total variance across all features (already scaled → each ≈ 1)
-            var totalVar = 0.0
-            for (j in 0 until d) {
-                var s = 0.0
-                for (i in 0 until n) s += xScaled[i][j] * xScaled[i][j]
-                totalVar += s / n   // population variance (mean is 0 after scaling)
-            }
-            // Use a wider kernel (5x) for small datasets to prevent the K(x,x)=1 overfitting spike
-            if (totalVar < 1e-12) 0.2 else 1.0 / (d * totalVar * 5.0)
+            // Standard RBF gamma = 1 / (n_features * X.var())
+            // Since features are standardized with unit variance (X.var() = 1.0), gamma = 1.0 / d
+            1.0 / d
         } else {
-            gammaMode.toDoubleOrNull() ?: (1.0 / (d * 5.0))
+            gammaMode.toDoubleOrNull() ?: (1.0 / d)
         }
 
         // 3. Kernel matrix (symmetric)

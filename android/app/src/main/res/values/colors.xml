@@ -1,64 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Material 3 Baseline Colors (Light Theme) -->
+    <!-- Material 3 Expressive Tokens (Light Theme: Electric Cyan & Security Slate) -->
     <color name="md_theme_primary">#00677E</color>
     <color name="md_theme_onPrimary">#FFFFFF</color>
     <color name="md_theme_primaryContainer">#B3EBFF</color>
     <color name="md_theme_onPrimaryContainer">#001F28</color>
-    <color name="md_theme_secondary">#625B71</color>
+    
+    <color name="md_theme_secondary">#4A626A</color>
     <color name="md_theme_onSecondary">#FFFFFF</color>
-    <color name="md_theme_secondaryContainer">#E8DEF8</color>
-    <color name="md_theme_onSecondaryContainer">#1D192B</color>
-    <color name="md_theme_tertiary">#7D5260</color>
+    <color name="md_theme_secondaryContainer">#CCE8F1</color>
+    <color name="md_theme_onSecondaryContainer">#051F25</color>
+    
+    <color name="md_theme_tertiary">#6D5E0F</color>
     <color name="md_theme_onTertiary">#FFFFFF</color>
-    <color name="md_theme_tertiaryContainer">#FFD8E4</color>
-    <color name="md_theme_onTertiaryContainer">#31111D</color>
-    <color name="md_theme_error">#B3261E</color>
+    <color name="md_theme_tertiaryContainer">#F7E287</color>
+    <color name="md_theme_onTertiaryContainer">#211B00</color>
+    
+    <color name="md_theme_error">#BA1A1A</color>
     <color name="md_theme_onError">#FFFFFF</color>
-    <color name="md_theme_errorContainer">#F9DEDC</color>
-    <color name="md_theme_onErrorContainer">#410E0B</color>
-    <color name="md_theme_background">#FFFFFF</color>
-    <color name="md_theme_onBackground">#1A1C1E</color>
+    <color name="md_theme_errorContainer">#FFDAD6</color>
+    <color name="md_theme_onErrorContainer">#410002</color>
+    
+    <color name="md_theme_background">#F6FAFC</color>
+    <color name="md_theme_onBackground">#171D1E</color>
     <color name="md_theme_surface">#FFFFFF</color>
-    <color name="md_theme_onSurface">#1A1C1E</color>
-    <color name="md_theme_surfaceVariant">#E7E0EC</color>
-    <color name="md_theme_onSurfaceVariant">#49454F</color>
-    <color name="md_theme_outline">#79747E</color>
+    <color name="md_theme_onSurface">#171D1E</color>
+    <color name="md_theme_surfaceVariant">#DBE4E7</color>
+    <color name="md_theme_onSurfaceVariant">#3F484B</color>
+    <color name="md_theme_outline">#70797C</color>
+    <color name="md_theme_outlineVariant">#BFC8CB</color>
 
-    <!-- Legacy / Keyboard specific colors mapped to M3 vibes -->
-    <color name="keyboard_bg">#F0F0F0</color>
-    <color name="key_bg_normal">#FFFFFF</color>
-    <color name="key_bg_special">#E0E0E0</color>
-    <color name="key_bg_space">#FFFFFF</color>
-    <color name="key_text">#1A1C1E</color>
-    <color name="key_ripple">#4000677E</color>
-    <color name="key_border">#D0D0D0</color>
+    <!-- M3 Expressive Tonal Surface Containers -->
+    <color name="surface_container_lowest">#FFFFFF</color>
+    <color name="surface_container_low">#F0F5F7</color>
+    <color name="surface_container">#EAEFF2</color>
+    <color name="surface_container_high">#E4E9EC</color>
+    <color name="surface_container_highest">#DEE4E7</color>
 
-    <!-- Risk Level Colors -->
+    <!-- Biometric Threat Evaluation Levels -->
     <color name="risk_allow">#2E7D32</color>
-    <color name="risk_warn">#F57F17</color>
-    <color name="risk_step_up">#E65100</color>
-    <color name="risk_block">#C62828</color>
+    <color name="risk_allow_bg">#1A2E7D32</color>
+    <color name="risk_allow_container">#E8F5E9</color>
 
-    <!-- Restored Fallback Colors for legacy XMLs/Kotlin refs -->
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6366F1</color> 
-    <color name="purple_700">#FF4F46E5</color>
-    <color name="teal_200">#FF2DD4BF</color> 
-    <color name="teal_700">#FF0F766E</color>
+    <color name="risk_warn">#EF6C00</color>
+    <color name="risk_warn_bg">#1AEF6C00</color>
+    <color name="risk_warn_container">#FFF3E0</color>
+
+    <color name="risk_step_up">#C2185B</color>
+    <color name="risk_step_up_bg">#1AC2185B</color>
+    <color name="risk_step_up_container">#FCE4EC</color>
+
+    <color name="risk_block">#C62828</color>
+    <color name="risk_block_bg">#1AC62828</color>
+    <color name="risk_block_container">#FFEBEE</color>
+
+    <!-- Keyboard IME Theming -->
+    <color name="keyboard_bg">#EAEFF2</color>
+    <color name="key_bg_normal">#FFFFFF</color>
+    <color name="key_bg_special">#DBE4E7</color>
+    <color name="key_bg_space">#FFFFFF</color>
+    <color name="key_text">#171D1E</color>
+    <color name="key_ripple">#3300677E</color>
+    <color name="key_border">#BFC8CB</color>
+
+    <!-- Legacy / Semantic fallbacks -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="dashboard_bg">#FFFFFF</color> 
-    <color name="card_bg">#FFFFFF</color> 
-    <color name="card_border">#E0E0E0</color> 
-    <color name="text_primary">#1A1C1E</color> 
-    <color name="text_secondary">#49454F</color> 
-    <color name="accent_blue">#00677E</color> 
-    <color name="accent_purple">#00677E</color> 
-    <color name="progress_track">#E0E0E0</color>
+    <color name="text_primary">#171D1E</color>
+    <color name="text_secondary">#3F484B</color>
+    <color name="card_bg">#FFFFFF</color>
+    <color name="card_border">#BFC8CB</color>
+    <color name="progress_track">#DBE4E7</color>
     <color name="progress_fill">#00677E</color>
-    <color name="risk_allow_bg">#1A2E7D32</color>
-    <color name="risk_warn_bg">#1AF57F17</color>
-    <color name="risk_step_up_bg">#1AE65100</color>
-    <color name="risk_block_bg">#1AC62828</color>
+    <color name="accent_blue">#00677E</color>
+    <color name="accent_purple">#00677E</color>
 </resources>

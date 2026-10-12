@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application
+        android:name=".ThesisApplication"
         android:allowBackup="true"
         android:label="Thesis"
         android:theme="@style/Theme.Thesis">

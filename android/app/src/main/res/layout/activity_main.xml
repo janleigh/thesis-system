@@ -11,6 +11,9 @@
         android:layout_height="match_parent"
         android:layout_above="@id/bottomNavigation">
 
+        <!-- ================================================================= -->
+        <!-- 1. MONITOR TAB (Styled with Hero Highlight matching reference)     -->
+        <!-- ================================================================= -->
         <ScrollView
             android:id="@+id/dashboardView"
             android:layout_width="match_parent"
@@ -20,10 +23,647 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="24dp">
+                android:orientation="vertical">
 
-                <!-- Header -->
+                <!-- TOP HERO HIGHLIGHT BANNER (Curved bottom corners matching screenshot) -->
+                <LinearLayout
+                    android:id="@+id/heroHighlightCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/card_hero_highlight_bg"
+                    android:paddingHorizontal="20dp"
+                    android:paddingTop="28dp"
+                    android:paddingBottom="24dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <!-- Squircle status badge with check icon -->
+                        <FrameLayout
+                            android:id="@+id/heroSquircleIcon"
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:background="@drawable/squircle_status_bg">
+
+                            <ImageView
+                                android:id="@+id/heroStatusIcon"
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_check_bold"
+                                app:tint="?attr/colorOnPrimary" />
+                        </FrameLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="14dp">
+
+                            <TextView
+                                android:id="@+id/heroTitleText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Active"
+                                android:textColor="?attr/colorOnPrimaryContainer"
+                                android:textSize="22sp"
+                                android:fontFamily="sans-serif-bold"
+                                android:letterSpacing="-0.01" />
+
+                            <TextView
+                                android:id="@+id/heroSubtitleText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="v0.1"
+                                android:textColor="?attr/colorOnPrimaryContainer"
+                                android:textSize="12sp"
+                                android:layout_marginTop="2dp"
+                                android:alpha="0.85" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/actionText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="ALLOW"
+                            android:textColor="@color/risk_allow"
+                            android:textSize="13sp"
+                            android:fontFamily="sans-serif-bold"
+                            android:paddingHorizontal="12dp"
+                            android:paddingVertical="5dp"
+                            android:background="@drawable/badge_status_container" />
+                    </LinearLayout>
+
+                    <!-- Score Preview row inside Hero -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginTop="16dp">
+
+                        <TextView
+                            android:id="@+id/compositeScoreText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0.000"
+                            android:textColor="?attr/colorOnPrimaryContainer"
+                            android:textSize="44sp"
+                            android:fontFamily="sans-serif-light"
+                            android:includeFontPadding="false" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Composite Anomaly Index"
+                            android:textColor="?attr/colorOnPrimaryContainer"
+                            android:textSize="13sp"
+                            android:layout_marginStart="12dp"
+                            android:alpha="0.85" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Scrollable Body Content -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingHorizontal="20dp"
+                    android:paddingTop="20dp"
+                    android:paddingBottom="24dp">
+
+                    <!-- Section Header (like "Take part" in reference image) -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Security controls"
+                        android:textColor="?attr/colorOnBackground"
+                        android:textSize="15sp"
+                        android:fontFamily="sans-serif-medium"
+                        android:layout_marginBottom="12dp" />
+
+                    <!-- 2x2 GRID OF ACTION / STATUS CARDS (Matching screenshot layout) -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="10dp">
+
+                        <!-- Card 1: Live Verifier -->
+                        <LinearLayout
+                            android:id="@+id/btnGridVerifier"
+                            android:layout_width="0dp"
+                            android:layout_height="62dp"
+                            android:layout_weight="1"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:paddingHorizontal="14dp"
+                            android:background="@drawable/card_feature_grid_bg"
+                            android:layout_marginEnd="6dp">
+
+                            <ImageView
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:src="@drawable/ic_shield_biometric"
+                                app:tint="?attr/colorPrimary" />
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:layout_marginStart="10dp">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Live Verifier"
+                                    android:textColor="?attr/colorOnSurface"
+                                    android:textSize="13sp"
+                                    android:fontFamily="sans-serif-medium" />
+
+                                <TextView
+                                    android:id="@+id/gridVerifierStatusText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Standby"
+                                    android:textColor="?attr/colorOnSurfaceVariant"
+                                    android:textSize="11sp" />
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <!-- Card 2: Anomaly Models -->
+                        <LinearLayout
+                            android:id="@+id/btnGridModels"
+                            android:layout_width="0dp"
+                            android:layout_height="62dp"
+                            android:layout_weight="1"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:paddingHorizontal="14dp"
+                            android:background="@drawable/card_feature_grid_bg"
+                            android:layout_marginStart="6dp">
+
+                            <ImageView
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:src="@drawable/ic_experiment"
+                                app:tint="?attr/colorPrimary" />
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:layout_marginStart="10dp">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Anomaly Engine"
+                                    android:textColor="?attr/colorOnSurface"
+                                    android:textSize="13sp"
+                                    android:fontFamily="sans-serif-medium" />
+
+                                <TextView
+                                    android:id="@+id/gridModelsStatusText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Dual Model"
+                                    android:textColor="?attr/colorOnSurfaceVariant"
+                                    android:textSize="11sp" />
+                            </LinearLayout>
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="16dp">
+
+                        <!-- Card 3: Test Cadence -->
+                        <LinearLayout
+                            android:id="@+id/btnGridSandbox"
+                            android:layout_width="0dp"
+                            android:layout_height="62dp"
+                            android:layout_weight="1"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:paddingHorizontal="14dp"
+                            android:background="@drawable/card_feature_grid_bg"
+                            android:layout_marginEnd="6dp">
+
+                            <ImageView
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:src="@drawable/ic_keyboard"
+                                app:tint="?attr/colorPrimary" />
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:layout_marginStart="10dp">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Test Cadence"
+                                    android:textColor="?attr/colorOnSurface"
+                                    android:textSize="13sp"
+                                    android:fontFamily="sans-serif-medium" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Sandbox"
+                                    android:textColor="?attr/colorOnSurfaceVariant"
+                                    android:textSize="11sp" />
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <!-- Card 4: Enforcer Policy -->
+                        <LinearLayout
+                            android:id="@+id/btnGridPolicy"
+                            android:layout_width="0dp"
+                            android:layout_height="62dp"
+                            android:layout_weight="1"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:paddingHorizontal="14dp"
+                            android:background="@drawable/card_feature_grid_bg"
+                            android:layout_marginStart="6dp">
+
+                            <ImageView
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:src="@drawable/ic_lock_policy"
+                                app:tint="?attr/colorPrimary" />
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:layout_marginStart="10dp">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Enforcer Policy"
+                                    android:textColor="?attr/colorOnSurface"
+                                    android:textSize="13sp"
+                                    android:fontFamily="sans-serif-medium" />
+
+                                <TextView
+                                    android:id="@+id/gridPolicyStatusText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Auto-Lock"
+                                    android:textColor="?attr/colorOnSurfaceVariant"
+                                    android:textSize="11sp" />
+                            </LinearLayout>
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- QUICK TELEMETRY STATS ROW (Matching screenshot stats bar e.g. ★ 12.7k ⑂ 855 ⚙ 36) -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center"
+                        android:layout_marginBottom="18dp">
+
+                        <TextView
+                            android:id="@+id/telemetryScoreStat"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="★ Risk: 0.000"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="12sp"
+                            android:fontFamily="monospace" />
+
+                        <TextView
+                            android:id="@+id/telemetryKeystrokeStat"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="⌨ 0 Keys"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="12sp"
+                            android:fontFamily="monospace"
+                            android:layout_marginStart="18dp" />
+
+                        <TextView
+                            android:id="@+id/telemetryVectorStat"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="⚡ 0 Windows"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="12sp"
+                            android:fontFamily="monospace"
+                            android:layout_marginStart="18dp" />
+                    </LinearLayout>
+
+                    <!-- Model Metric Split Detail -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="16dp">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:padding="12dp"
+                            android:background="@drawable/card_expressive_container">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="OCSVM Score"
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                android:textSize="11sp" />
+
+                            <TextView
+                                android:id="@+id/ocsvmScoreText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0.000"
+                                android:textColor="?attr/colorOnSurface"
+                                android:textSize="16sp"
+                                android:fontFamily="monospace"
+                                android:layout_marginTop="2dp" />
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="10dp"
+                            android:layout_height="match_parent" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:padding="12dp"
+                            android:background="@drawable/card_expressive_container">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Mahalanobis Dist"
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                android:textSize="11sp" />
+
+                            <TextView
+                                android:id="@+id/mahalScoreText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0.000"
+                                android:textColor="?attr/colorOnSurface"
+                                android:textSize="16sp"
+                                android:fontFamily="monospace"
+                                android:layout_marginTop="2dp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Interactive Verification Sandbox Input Card -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/sandboxContainerCard"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="20dp"
+                        app:cardBackgroundColor="?attr/colorSurfaceContainer"
+                        app:cardCornerRadius="24dp"
+                        app:cardElevation="0dp"
+                        app:strokeWidth="0dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="18dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical"
+                                android:layout_marginBottom="10dp">
+
+                                <TextView
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:text="Verification sandbox"
+                                    android:textColor="?attr/colorOnSurfaceVariant"
+                                    android:textSize="12sp"
+                                    android:fontFamily="sans-serif-medium"
+                                    android:textAllCaps="true"
+                                    android:letterSpacing="0.06" />
+
+                                <com.google.android.material.switchmaterial.SwitchMaterial
+                                    android:id="@+id/verifyToggle"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Live Verifier"
+                                    android:textSize="12sp"
+                                    android:textColor="?attr/colorOnSurfaceVariant" />
+                            </LinearLayout>
+
+                            <EditText
+                                android:id="@+id/testInput"
+                                android:layout_width="match_parent"
+                                android:layout_height="90dp"
+                                android:background="@drawable/input_expressive_background"
+                                android:gravity="top|start"
+                                android:hint="@string/hint_verify_here"
+                                android:textColorHint="?attr/colorOnSurfaceVariant"
+                                android:textColor="?attr/colorOnSurface"
+                                android:padding="12dp"
+                                android:textSize="14sp"
+                                android:lineSpacingExtra="2dp" />
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:layout_marginTop="10dp">
+
+                                <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/clearTextButton"
+                                    style="?attr/materialButtonOutlinedStyle"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="44dp"
+                                    android:text="Clear Input"
+                                    app:cornerRadius="22dp" />
+                            </LinearLayout>
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <!-- RECENT ACTIVITY SECTION (Matching the Recent activity timeline in screenshot) -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Recent activity"
+                            android:textColor="?attr/colorOnBackground"
+                            android:textSize="15sp"
+                            android:fontFamily="sans-serif-medium" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Live continuous evaluations · Pull to refresh"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="12sp"
+                            android:layout_marginTop="2dp"
+                            android:layout_marginBottom="12dp" />
+
+                        <!-- Timeline Item 1 -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="top"
+                            android:layout_marginBottom="10dp">
+
+                            <ImageView
+                                android:layout_width="16dp"
+                                android:layout_height="16dp"
+                                android:src="@drawable/ic_timeline_node"
+                                android:layout_marginTop="2dp" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical"
+                                android:layout_marginStart="10dp">
+
+                                <TextView
+                                    android:id="@+id/timelineEvent1Title"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Session evaluation completed"
+                                    android:textColor="?attr/colorOnSurface"
+                                    android:textSize="13sp"
+                                    android:fontFamily="sans-serif-medium" />
+
+                                <TextView
+                                    android:id="@+id/timelineEvent1Details"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Status: ALLOW · Anomaly: 0.000 · Cadence normal"
+                                    android:textColor="?attr/colorOnSurfaceVariant"
+                                    android:textSize="11sp"
+                                    android:fontFamily="monospace"
+                                    android:layout_marginTop="2dp" />
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <!-- Timeline Item 2 -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="top">
+
+                            <ImageView
+                                android:layout_width="16dp"
+                                android:layout_height="16dp"
+                                android:src="@drawable/ic_timeline_node"
+                                android:layout_marginTop="2dp" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical"
+                                android:layout_marginStart="10dp">
+
+                                <TextView
+                                    android:id="@+id/timelineEvent2Title"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Biometric profile active"
+                                    android:textColor="?attr/colorOnSurface"
+                                    android:textSize="13sp"
+                                    android:fontFamily="sans-serif-medium" />
+
+                                <TextView
+                                    android:id="@+id/timelineEvent2Details"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Models loaded · Real-time scoring armed"
+                                    android:textColor="?attr/colorOnSurfaceVariant"
+                                    android:textSize="11sp"
+                                    android:fontFamily="monospace"
+                                    android:layout_marginTop="2dp" />
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnViewMoreLogs"
+                            style="@style/Widget.Material3.Button.TextButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="40dp"
+                            android:text="View full history in Logs →"
+                            android:textSize="12sp"
+                            android:layout_marginTop="8dp" />
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </LinearLayout>
+        </ScrollView>
+
+        <!-- ================================================================= -->
+        <!-- 2. ENROLLMENT & ONBOARDING VIEW                                    -->
+        <!-- ================================================================= -->
+        <ScrollView
+            android:id="@+id/enrollmentView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            android:fillViewport="true">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingHorizontal="20dp"
+                android:paddingTop="24dp"
+                android:paddingBottom="24dp">
+
+                <!-- Title -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/title_enrollment"
+                    android:textColor="?attr/colorOnBackground"
+                    android:textSize="28sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:letterSpacing="-0.02" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/subtitle_enrollment"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="13sp"
+                    android:layout_marginTop="2dp"
+                    android:layout_marginBottom="20dp" />
+
+                <!-- Stepper Dots -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -31,50 +671,726 @@
                     android:gravity="center_vertical"
                     android:layout_marginBottom="24dp">
 
-                    <LinearLayout
+                    <TextView
+                        android:id="@+id/stepDot1"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:gravity="center"
+                        android:text="1"
+                        android:textColor="?attr/colorOnPrimary"
+                        android:textSize="14sp"
+                        android:fontFamily="sans-serif-bold"
+                        android:background="@drawable/stepper_pill_active" />
+
+                    <View
+                        android:id="@+id/stepLine1"
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
+                        android:layout_height="4dp"
                         android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:background="?attr/colorSurfaceContainerHigh"
+                        android:layout_marginHorizontal="6dp" />
 
-                        <TextView
-                            android:id="@+id/titleText"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/title_dashboard"
-                            android:textColor="?attr/colorOnBackground"
-                            android:textSize="28sp"
-                            android:fontFamily="sans-serif-medium"
-                            android:letterSpacing="-0.02" />
+                    <TextView
+                        android:id="@+id/stepDot2"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:gravity="center"
+                        android:text="2"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textSize="14sp"
+                        android:fontFamily="sans-serif-bold"
+                        android:background="@drawable/stepper_pill_inactive" />
 
-                        <TextView
-                            android:id="@+id/subtitleText"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/subtitle_dashboard"
-                            android:textColor="?attr/colorOnSurfaceVariant"
-                            android:textSize="14sp"
-                            android:layout_marginTop="4dp" />
-                    </LinearLayout>
+                    <View
+                        android:id="@+id/stepLine2"
+                        android:layout_width="0dp"
+                        android:layout_height="4dp"
+                        android:layout_weight="1"
+                        android:background="?attr/colorSurfaceContainerHigh"
+                        android:layout_marginHorizontal="6dp" />
 
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/themeToggle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Dark Mode"
-                        android:textSize="12sp"
-                        android:textColor="?attr/colorOnSurfaceVariant" />
+                    <TextView
+                        android:id="@+id/stepDot3"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:gravity="center"
+                        android:text="3"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textSize="14sp"
+                        android:fontFamily="sans-serif-bold"
+                        android:background="@drawable/stepper_pill_inactive" />
+
+                    <View
+                        android:id="@+id/stepLine3"
+                        android:layout_width="0dp"
+                        android:layout_height="4dp"
+                        android:layout_weight="1"
+                        android:background="?attr/colorSurfaceContainerHigh"
+                        android:layout_marginHorizontal="6dp" />
+
+                    <TextView
+                        android:id="@+id/stepDot4"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:gravity="center"
+                        android:text="4"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textSize="14sp"
+                        android:fontFamily="sans-serif-bold"
+                        android:background="@drawable/stepper_pill_inactive" />
                 </LinearLayout>
 
-                <!-- Status Card -->
+                <!-- STEP 1: WELCOME -->
+                <LinearLayout
+                    android:id="@+id/enrollStep1Welcome"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:cardBackgroundColor="?attr/colorSurfaceContainer"
+                        app:cardCornerRadius="28dp"
+                        app:cardElevation="0dp"
+                        app:strokeWidth="0dp"
+                        android:layout_marginBottom="20dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="24dp">
+
+                            <ImageView
+                                android:layout_width="56dp"
+                                android:layout_height="56dp"
+                                android:src="@drawable/ic_shield_biometric"
+                                app:tint="?attr/colorPrimary"
+                                android:layout_marginBottom="16dp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Zero-Trust Behavioral Biometrics"
+                                android:textColor="?attr/colorOnSurface"
+                                android:textSize="22sp"
+                                android:fontFamily="sans-serif-medium"
+                                android:letterSpacing="-0.01" />
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Unlike one-time screen locks, Thesis authenticates you continuously as you type. Your keystroke rhythm, key hold time, and digram latencies form a unique biometric signature that stops unauthorized users."
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                android:textSize="14sp"
+                                android:lineSpacingExtra="3dp"
+                                android:layout_marginTop="10dp" />
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="1dp"
+                                android:background="?attr/colorOutlineVariant"
+                                android:layout_marginVertical="18dp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="• Continuous non-intrusive background scoring"
+                                android:textColor="?attr/colorOnSurface"
+                                android:textSize="13sp"
+                                android:layout_marginBottom="6dp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="• Automatic session lock on phone snatch or impostor"
+                                android:textColor="?attr/colorOnSurface"
+                                android:textSize="13sp"
+                                android:layout_marginBottom="6dp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="• On-device machine learning (OCSVM + Mahalanobis)"
+                                android:textColor="?attr/colorOnSurface"
+                                android:textSize="13sp" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnStep1Next"
+                        android:layout_width="match_parent"
+                        android:layout_height="54dp"
+                        android:text="Begin Permissions Setup"
+                        style="?attr/materialButtonStyle"
+                        app:cornerRadius="27dp"
+                        app:icon="@drawable/ic_arrow_forward"
+                        app:iconGravity="textEnd" />
+                </LinearLayout>
+
+                <!-- STEP 2: PERMISSIONS SETUP -->
+                <LinearLayout
+                    android:id="@+id/enrollStep2Setup"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:cardBackgroundColor="?attr/colorSurfaceContainer"
+                        app:cardCornerRadius="24dp"
+                        app:cardElevation="0dp"
+                        app:strokeWidth="0dp"
+                        android:layout_marginBottom="14dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="20dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical">
+
+                                <ImageView
+                                    android:layout_width="32dp"
+                                    android:layout_height="32dp"
+                                    android:src="@drawable/ic_keyboard"
+                                    app:tint="?attr/colorPrimary" />
+
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:orientation="vertical"
+                                    android:layout_marginStart="12dp">
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Custom IME Keyboard"
+                                        android:textColor="?attr/colorOnSurface"
+                                        android:textSize="16sp"
+                                        android:fontFamily="sans-serif-medium" />
+
+                                    <TextView
+                                        android:id="@+id/step2KeyboardStatusLabel"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Setup Required"
+                                        android:textColor="?attr/colorError"
+                                        android:textSize="12sp" />
+                                </LinearLayout>
+                            </LinearLayout>
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="The biometric authenticator operates as an Android input method to accurately measure micro-timing keystroke dynamics."
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                android:textSize="13sp"
+                                android:layout_marginTop="10dp" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnStep2Keyboard"
+                                android:layout_width="match_parent"
+                                android:layout_height="48dp"
+                                android:text="@string/btn_enable_keyboard"
+                                style="?attr/materialButtonOutlinedStyle"
+                                app:cornerRadius="24dp"
+                                android:layout_marginTop="14dp" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:cardBackgroundColor="?attr/colorSurfaceContainer"
+                        app:cardCornerRadius="24dp"
+                        app:cardElevation="0dp"
+                        app:strokeWidth="0dp"
+                        android:layout_marginBottom="20dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="20dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical">
+
+                                <ImageView
+                                    android:layout_width="32dp"
+                                    android:layout_height="32dp"
+                                    android:src="@drawable/ic_device_admin"
+                                    app:tint="?attr/colorPrimary" />
+
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:orientation="vertical"
+                                    android:layout_marginStart="12dp">
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Device Admin Policy"
+                                        android:textColor="?attr/colorOnSurface"
+                                        android:textSize="16sp"
+                                        android:fontFamily="sans-serif-medium" />
+
+                                    <TextView
+                                        android:id="@+id/step2AdminStatusLabel"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Optional / Recommended"
+                                        android:textColor="?attr/colorOnSurfaceVariant"
+                                        android:textSize="12sp" />
+                                </LinearLayout>
+                            </LinearLayout>
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Allows Thesis to immediately lock the screen if an anomalous intruder continues operating the device."
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                android:textSize="13sp"
+                                android:layout_marginTop="10dp" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnStep2Admin"
+                                android:layout_width="match_parent"
+                                android:layout_height="48dp"
+                                android:text="Activate Device Admin"
+                                style="?attr/materialButtonOutlinedStyle"
+                                app:cornerRadius="24dp"
+                                android:layout_marginTop="14dp" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnStep2Back"
+                            android:layout_width="0dp"
+                            android:layout_height="54dp"
+                            android:layout_weight="1"
+                            android:text="Back"
+                            style="?attr/materialButtonOutlinedStyle"
+                            app:cornerRadius="27dp"
+                            android:layout_marginEnd="8dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnStep2Next"
+                            android:layout_width="0dp"
+                            android:layout_height="54dp"
+                            android:layout_weight="2"
+                            android:text="Continue"
+                            style="?attr/materialButtonStyle"
+                            app:cornerRadius="27dp"
+                            app:icon="@drawable/ic_arrow_forward"
+                            app:iconGravity="textEnd" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- STEP 3: GUIDED TYPING CALIBRATION -->
+                <LinearLayout
+                    android:id="@+id/enrollStep3Typing"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:cardBackgroundColor="?attr/colorSurfaceContainer"
+                        app:cardCornerRadius="24dp"
+                        app:cardElevation="0dp"
+                        app:strokeWidth="0dp"
+                        android:layout_marginBottom="14dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="20dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical"
+                                android:layout_marginBottom="10dp">
+
+                                <ImageView
+                                    android:layout_width="22dp"
+                                    android:layout_height="22dp"
+                                    android:src="@drawable/ic_typing_challenge"
+                                    app:tint="?attr/colorPrimary" />
+
+                                <TextView
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:text="Guided Typing Prompt"
+                                    android:textColor="?attr/colorOnSurfaceVariant"
+                                    android:textSize="12sp"
+                                    android:fontFamily="sans-serif-medium"
+                                    android:textAllCaps="true"
+                                    android:letterSpacing="0.08"
+                                    android:layout_marginStart="8dp" />
+
+                                <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/btnShufflePrompt"
+                                    style="@style/Widget.Material3.Button.TextButton"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="36dp"
+                                    android:text="Shuffle"
+                                    app:icon="@drawable/ic_refresh"
+                                    android:textSize="12sp" />
+                            </LinearLayout>
+
+                            <TextView
+                                android:id="@+id/guidedPromptText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/prompt_1"
+                                android:textColor="?attr/colorOnSurface"
+                                android:textSize="16sp"
+                                android:fontFamily="sans-serif"
+                                android:lineSpacingExtra="3dp"
+                                android:padding="14dp"
+                                android:background="@drawable/card_expressive_container" />
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Type naturally using your standard hand posture and speed."
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                android:textSize="12sp"
+                                android:layout_marginTop="8dp" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:cardBackgroundColor="?attr/colorSurfaceContainer"
+                        app:cardCornerRadius="24dp"
+                        app:cardElevation="0dp"
+                        app:strokeWidth="0dp"
+                        android:layout_marginBottom="14dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="20dp">
+
+                            <EditText
+                                android:id="@+id/enrollmentInput"
+                                android:layout_width="match_parent"
+                                android:layout_height="110dp"
+                                android:background="@drawable/input_expressive_background"
+                                android:gravity="top|start"
+                                android:hint="@string/hint_type_here"
+                                android:textColorHint="?attr/colorOnSurfaceVariant"
+                                android:textColor="?attr/colorOnSurface"
+                                android:padding="14dp"
+                                android:textSize="15sp"
+                                android:lineSpacingExtra="2dp" />
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical"
+                                android:layout_marginTop="12dp">
+
+                                <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/btnEnrollClearInput"
+                                    style="?attr/materialButtonOutlinedStyle"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="44dp"
+                                    android:text="Clear Input"
+                                    app:cornerRadius="22dp" />
+
+                                <View
+                                    android:layout_width="0dp"
+                                    android:layout_height="0dp"
+                                    android:layout_weight="1" />
+
+                                <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/btnEnrollStartMode"
+                                    style="?attr/materialButtonStyle"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="44dp"
+                                    android:text="Capture Active"
+                                    app:cornerRadius="22dp" />
+                            </LinearLayout>
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <!-- Real-Time Biometric Telemetry Card -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:cardBackgroundColor="?attr/colorSurfaceContainer"
+                        app:cardCornerRadius="24dp"
+                        app:cardElevation="0dp"
+                        app:strokeWidth="0dp"
+                        android:layout_marginBottom="20dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="20dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical">
+
+                                <TextView
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:text="Biometric Calibration"
+                                    android:textColor="?attr/colorOnSurfaceVariant"
+                                    android:textSize="12sp"
+                                    android:fontFamily="sans-serif-medium"
+                                    android:textAllCaps="true"
+                                    android:letterSpacing="0.08" />
+
+                                <TextView
+                                    android:id="@+id/enrollTelemetryPercent"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="0%"
+                                    android:textColor="?attr/colorPrimary"
+                                    android:textSize="16sp"
+                                    android:fontFamily="sans-serif-bold" />
+                            </LinearLayout>
+
+                            <ProgressBar
+                                android:id="@+id/enrollTelemetryProgressBar"
+                                style="?android:attr/progressBarStyleHorizontal"
+                                android:layout_width="match_parent"
+                                android:layout_height="10dp"
+                                android:max="100"
+                                android:progress="0"
+                                android:progressTint="?attr/colorPrimary"
+                                android:progressBackgroundTint="?attr/colorSurfaceVariant"
+                                android:layout_marginTop="10dp"
+                                android:layout_marginBottom="14dp" />
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal">
+
+                                <TextView
+                                    android:id="@+id/enrollKeystrokeCounter"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Keystrokes: 0 / 250"
+                                    android:textColor="?attr/colorOnSurface"
+                                    android:textSize="13sp"
+                                    android:fontFamily="monospace"
+                                    android:paddingHorizontal="10dp"
+                                    android:paddingVertical="4dp"
+                                    android:background="@drawable/badge_chip_pill" />
+
+                                <TextView
+                                    android:id="@+id/enrollVectorCounter"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Vectors: 0 / 5"
+                                    android:textColor="?attr/colorOnSurface"
+                                    android:textSize="13sp"
+                                    android:fontFamily="monospace"
+                                    android:paddingHorizontal="10dp"
+                                    android:paddingVertical="4dp"
+                                    android:background="@drawable/badge_chip_pill"
+                                    android:layout_marginStart="8dp" />
+                            </LinearLayout>
+
+                            <TextView
+                                android:id="@+id/enrollRhythmStatus"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Waiting for keystrokes..."
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                android:textSize="12sp"
+                                android:layout_marginTop="10dp" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnStep3Back"
+                            android:layout_width="wrap_content"
+                            android:layout_height="48dp"
+                            android:text="Back"
+                            style="?attr/materialButtonOutlinedStyle"
+                            app:cornerRadius="24dp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- STEP 4: CALIBRATION COMPLETE CELEBRATION -->
+                <LinearLayout
+                    android:id="@+id/enrollStep4Complete"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:cardBackgroundColor="?attr/colorSurfaceContainer"
+                        app:cardCornerRadius="28dp"
+                        app:cardElevation="0dp"
+                        app:strokeWidth="0dp"
+                        android:layout_marginBottom="24dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:gravity="center_horizontal"
+                            android:padding="28dp">
+
+                            <ImageView
+                                android:layout_width="64dp"
+                                android:layout_height="64dp"
+                                android:src="@drawable/ic_celebrate"
+                                app:tint="?attr/colorPrimary"
+                                android:layout_marginBottom="16dp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Biometric Profile Calibrated!"
+                                android:textColor="?attr/colorOnSurface"
+                                android:textSize="22sp"
+                                android:fontFamily="sans-serif-medium"
+                                android:letterSpacing="-0.01"
+                                android:gravity="center" />
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Your behavioral keystroke dynamics profile is now trained. Both OCSVM and Mahalanobis anomaly detection models are saved on-device and ready for real-time verification."
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                android:textSize="14sp"
+                                android:lineSpacingExtra="3dp"
+                                android:gravity="center"
+                                android:layout_marginTop="12dp"
+                                android:layout_marginBottom="20dp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Status: READY"
+                                android:textColor="@color/risk_allow"
+                                android:textSize="13sp"
+                                android:fontFamily="sans-serif-bold"
+                                android:paddingHorizontal="14dp"
+                                android:paddingVertical="6dp"
+                                android:background="@drawable/badge_status_container" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnLaunchMonitor"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:text="@string/btn_launch_monitor"
+                        style="?attr/materialButtonStyle"
+                        app:cornerRadius="28dp"
+                        app:icon="@drawable/ic_nav_monitor"
+                        app:iconGravity="textStart" />
+                </LinearLayout>
+
+            </LinearLayout>
+        </ScrollView>
+
+        <!-- ================================================================= -->
+        <!-- 3. SETTINGS TAB (Houses all permissions, enroll, & reset buttons)  -->
+        <!-- ================================================================= -->
+        <ScrollView
+            android:id="@+id/settingsView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            android:fillViewport="true">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingHorizontal="20dp"
+                android:paddingTop="24dp"
+                android:paddingBottom="24dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/title_settings"
+                    android:textColor="?attr/colorOnBackground"
+                    android:textSize="28sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:letterSpacing="-0.02" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/subtitle_settings"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="13sp"
+                    android:layout_marginTop="2dp"
+                    android:layout_marginBottom="24dp" />
+
+                <!-- Category 1: System Permissions & Integrations -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="System integrations"
+                    android:textColor="?attr/colorOnBackground"
+                    android:textSize="14sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:layout_marginBottom="12dp" />
+
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
-                    app:cardBackgroundColor="?attr/colorSurface"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="2dp"
-                    app:strokeWidth="0dp">
+                    app:cardBackgroundColor="?attr/colorSurfaceContainer"
+                    app:cardCornerRadius="24dp"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="0dp"
+                    android:layout_marginBottom="14dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -82,36 +1398,195 @@
                         android:orientation="vertical"
                         android:padding="20dp">
 
-                        <TextView
-                            android:layout_width="wrap_content"
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="@string/label_status"
-                            android:textColor="?attr/colorOnSurfaceVariant"
-                            android:textSize="12sp"
-                            android:letterSpacing="0.1"
-                            android:textAllCaps="true" />
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <ImageView
+                                android:layout_width="28dp"
+                                android:layout_height="28dp"
+                                android:src="@drawable/ic_keyboard"
+                                app:tint="?attr/colorPrimary" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical"
+                                android:layout_marginStart="12dp">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Custom IME Keyboard"
+                                    android:textColor="?attr/colorOnSurface"
+                                    android:textSize="16sp"
+                                    android:fontFamily="sans-serif-medium" />
+
+                                <TextView
+                                    android:id="@+id/settingsKeyboardStatusLabel"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Setup Required"
+                                    android:textColor="?attr/colorError"
+                                    android:textSize="12sp" />
+                            </LinearLayout>
+                        </LinearLayout>
 
                         <TextView
-                            android:id="@+id/profileStatusText"
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="@string/status_not_enrolled"
-                            android:textColor="?attr/colorOnSurface"
-                            android:textSize="22sp"
-                            android:fontFamily="sans-serif-medium"
-                            android:layout_marginTop="4dp"
-                            android:layout_marginBottom="20dp" />
+                            android:text="Captures keystroke timing and micro-latencies system-wide."
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="13sp"
+                            android:layout_marginTop="8dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/enableKeyboardButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:text="@string/btn_enable_keyboard"
+                            style="?attr/materialButtonOutlinedStyle"
+                            app:cornerRadius="24dp"
+                            android:layout_marginTop="14dp" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardBackgroundColor="?attr/colorSurfaceContainer"
+                    app:cardCornerRadius="24dp"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="0dp"
+                    android:layout_marginBottom="24dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="20dp">
 
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal">
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <ImageView
+                                android:layout_width="28dp"
+                                android:layout_height="28dp"
+                                android:src="@drawable/ic_device_admin"
+                                app:tint="?attr/colorPrimary" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical"
+                                android:layout_marginStart="12dp">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Device Admin Policy"
+                                    android:textColor="?attr/colorOnSurface"
+                                    android:textSize="16sp"
+                                    android:fontFamily="sans-serif-medium" />
+
+                                <TextView
+                                    android:id="@+id/settingsAdminStatusLabel"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Optional / Recommended"
+                                    android:textColor="?attr/colorOnSurfaceVariant"
+                                    android:textSize="12sp" />
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Authorizes Thesis to lock device immediately upon threat breach."
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="13sp"
+                            android:layout_marginTop="8dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/deviceAdminButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:text="@string/btn_activate_admin"
+                            style="?attr/materialButtonOutlinedStyle"
+                            app:cornerRadius="24dp"
+                            android:layout_marginTop="14dp" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Category 2: Profile & Model Calibration -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Profile management"
+                    android:textColor="?attr/colorOnBackground"
+                    android:textSize="14sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:layout_marginBottom="12dp" />
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardBackgroundColor="?attr/colorSurfaceContainer"
+                    app:cardCornerRadius="24dp"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="0dp"
+                    android:layout_marginBottom="24dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="20dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="8dp">
 
                             <TextView
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="@string/label_keystrokes"
+                                android:text="Profile Status"
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:id="@+id/profileStatusText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/status_not_enrolled"
+                                android:textColor="?attr/colorOnSurface"
+                                android:textSize="14sp"
+                                android:fontFamily="sans-serif-bold" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="8dp">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Trained Keystrokes"
                                 android:textColor="?attr/colorOnSurfaceVariant"
                                 android:textSize="14sp" />
 
@@ -121,35 +1596,24 @@
                                 android:layout_height="wrap_content"
                                 android:text="0"
                                 android:textColor="?attr/colorOnSurface"
-                                android:textSize="16sp"
-                                android:fontFamily="sans-serif-medium" />
+                                android:textSize="14sp"
+                                android:fontFamily="monospace" />
                         </LinearLayout>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/label_enrollment"
-                            android:textColor="?attr/colorOnSurfaceVariant"
-                            android:textSize="14sp"
-                            android:layout_marginTop="20dp" />
 
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
                             android:gravity="center_vertical"
-                            android:layout_marginTop="8dp">
+                            android:layout_marginBottom="8dp">
 
-                            <ProgressBar
-                                android:id="@+id/enrollmentProgress"
-                                style="?android:attr/progressBarStyleHorizontal"
+                            <TextView
                                 android:layout_width="0dp"
-                                android:layout_height="8dp"
+                                android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:max="100"
-                                android:progress="0"
-                                android:progressTint="?attr/colorPrimary"
-                                android:progressBackgroundTint="?attr/colorSurfaceVariant" />
+                                android:text="Calibration Progress"
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                android:textSize="14sp" />
 
                             <TextView
                                 android:id="@+id/enrollmentPercentText"
@@ -158,21 +1622,56 @@
                                 android:text="0%"
                                 android:textColor="?attr/colorPrimary"
                                 android:textSize="14sp"
-                                android:fontFamily="sans-serif-medium"
-                                android:layout_marginStart="16dp" />
+                                android:fontFamily="sans-serif-bold" />
                         </LinearLayout>
+
+                        <ProgressBar
+                            android:id="@+id/enrollmentProgress"
+                            style="?android:attr/progressBarStyleHorizontal"
+                            android:layout_width="match_parent"
+                            android:layout_height="8dp"
+                            android:max="100"
+                            android:progress="0"
+                            android:progressTint="?attr/colorPrimary"
+                            android:progressBackgroundTint="?attr/colorSurfaceVariant"
+                            android:layout_marginTop="4dp"
+                            android:layout_marginBottom="16dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/enrollButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:text="@string/btn_start_enrollment"
+                            style="?attr/materialButtonStyle"
+                            app:cornerRadius="24dp"
+                            android:layout_marginBottom="8dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/resetButton"
+                            style="@style/Widget.Material3.Button.TextButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:text="@string/btn_reset_profile"
+                            android:textColor="?attr/colorError" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- Live Score Card -->
+                <!-- Category 3: Monet Theming & System Info -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="System &amp; Theming"
+                    android:textColor="?attr/colorOnBackground"
+                    android:textSize="14sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:layout_marginBottom="12dp" />
+
                 <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/actionCard"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="24dp"
-                    app:cardBackgroundColor="?attr/colorSurface"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="2dp"
+                    app:cardBackgroundColor="?attr/colorSurfaceContainer"
+                    app:cardCornerRadius="24dp"
+                    app:cardElevation="0dp"
                     app:strokeWidth="0dp">
 
                     <LinearLayout
@@ -184,267 +1683,204 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/label_risk_score"
-                            android:textColor="?attr/colorOnSurfaceVariant"
-                            android:textSize="12sp"
-                            android:letterSpacing="0.1"
-                            android:textAllCaps="true" />
+                            android:text="Monet Dynamic Theming"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textSize="15sp"
+                            android:fontFamily="sans-serif-medium" />
 
-                        <LinearLayout
+                        <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical"
-                            android:layout_marginTop="8dp"
-                            android:layout_marginBottom="20dp">
-
-                            <TextView
-                                android:id="@+id/compositeScoreText"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="0.000"
-                                android:textColor="?attr/colorOnSurface"
-                                android:textSize="56sp"
-                                android:fontFamily="sans-serif-light"
-                                android:includeFontPadding="false" />
-
-                            <LinearLayout
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:orientation="vertical"
-                                android:gravity="end">
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="@string/label_ocsvm_score"
-                                    android:textColor="?attr/colorOnSurfaceVariant"
-                                    android:textSize="12sp" />
-
-                                <TextView
-                                    android:id="@+id/ocsvmScoreText"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="0.000"
-                                    android:textColor="?attr/colorOnSurface"
-                                    android:textSize="16sp"
-                                    android:fontFamily="monospace"
-                                    android:layout_marginBottom="12dp" />
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="@string/label_mahal_score"
-                                    android:textColor="?attr/colorOnSurfaceVariant"
-                                    android:textSize="12sp" />
-
-                                <TextView
-                                    android:id="@+id/mahalScoreText"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="0.000"
-                                    android:textColor="?attr/colorOnSurface"
-                                    android:textSize="16sp"
-                                    android:fontFamily="monospace" />
-                            </LinearLayout>
-                        </LinearLayout>
+                            android:text="Active. Wallpaper-derived color extraction (Material You) powers all UI surfaces and tonal containers automatically."
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="13sp"
+                            android:layout_marginTop="4dp" />
 
                         <View
                             android:layout_width="match_parent"
                             android:layout_height="1dp"
-                            android:background="?attr/colorOutline"
-                            android:layout_marginBottom="16dp" />
+                            android:background="?attr/colorOutlineVariant"
+                            android:layout_marginVertical="12dp" />
 
-                        <LinearLayout
-                            android:layout_width="match_parent"
+                        <TextView
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal">
-
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="@string/label_action"
-                                android:textColor="?attr/colorOnSurfaceVariant"
-                                android:textSize="14sp" />
-
-                            <TextView
-                                android:id="@+id/actionText"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="—"
-                                android:textColor="?attr/colorOnSurfaceVariant"
-                                android:textSize="16sp"
-                                android:fontFamily="sans-serif-medium" />
-                        </LinearLayout>
+                            android:text="Thesis Keystroke Dynamics Engine v1.0"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="12sp"
+                            android:fontFamily="monospace" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
-
-                <!-- Test Input -->
-                <EditText
-                    android:id="@+id/testInput"
-                    android:layout_width="match_parent"
-                    android:layout_height="120dp"
-                    android:background="@drawable/input_background"
-                    android:gravity="top|start"
-                    android:hint="@string/hint_type_here"
-                    android:textColorHint="?attr/colorOnSurfaceVariant"
-                    android:textColor="?attr/colorOnSurface"
-                    android:padding="16dp"
-                    android:textSize="16sp"
-                    android:layout_marginBottom="8dp" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginBottom="24dp">
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/clearTextButton"
-                        style="?attr/materialButtonOutlinedStyle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Clear Text" />
-
-                    <View
-                        android:layout_width="0dp"
-                        android:layout_height="0dp"
-                        android:layout_weight="1" />
-
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/verifyToggle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text=""
-                        android:enabled="false" />
-                </LinearLayout>
-
-                <!-- Buttons -->
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/enableKeyboardButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:text="@string/btn_enable_keyboard"
-                    style="?attr/materialButtonOutlinedStyle"
-                    app:cornerRadius="16dp"
-                    android:layout_marginBottom="12dp" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/deviceAdminButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:text="Activate Device Admin"
-                    style="?attr/materialButtonOutlinedStyle"
-                    app:cornerRadius="16dp"
-                    android:layout_marginBottom="12dp" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/enrollButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:text="@string/btn_start_enrollment"
-                    style="?attr/materialButtonStyle"
-                    app:cornerRadius="16dp"
-                    android:layout_marginBottom="12dp" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/resetButton"
-                    style="@style/Widget.Material3.Button.TextButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:text="@string/btn_reset_profile"
-                    android:textColor="?attr/colorError" />
 
             </LinearLayout>
         </ScrollView>
 
+        <!-- ================================================================= -->
+        <!-- 4. LOGS TAB (Renamed from Audit Log to Logs)                       -->
+        <!-- ================================================================= -->
         <LinearLayout
             android:id="@+id/eventLogView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
             android:visibility="gone">
-            
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp"
-                android:background="?android:colorBackground">
-                
+                android:paddingHorizontal="20dp"
+                android:paddingTop="24dp"
+                android:paddingBottom="12dp">
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical">
-                    
-                    <TextView
+
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Logs"
-                        android:textColor="?attr/colorOnBackground"
-                        android:textSize="24sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
+                        android:orientation="vertical">
 
-                <TextView
-                    android:id="@+id/logCountText"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Lines 0 of 0"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    android:textSize="12sp"
-                    android:fontFamily="monospace"
-                    android:layout_marginTop="8dp" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/title_logs"
+                            android:textColor="?attr/colorOnBackground"
+                            android:textSize="28sp"
+                            android:fontFamily="sans-serif-medium"
+                            android:letterSpacing="-0.02" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/subtitle_logs"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="13sp"
+                            android:layout_marginTop="2dp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/logCountText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0 events"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textSize="12sp"
+                        android:fontFamily="monospace"
+                        android:paddingHorizontal="10dp"
+                        android:paddingVertical="4dp"
+                        android:background="@drawable/badge_chip_pill" />
+                </LinearLayout>
 
                 <!-- Search Bar -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
                     android:orientation="horizontal"
-                    android:background="@drawable/input_background"
+                    android:background="@drawable/input_expressive_background"
                     android:gravity="center_vertical"
-                    android:layout_marginTop="12dp"
-                    android:paddingHorizontal="12dp">
-                    
+                    android:layout_marginTop="16dp"
+                    android:paddingHorizontal="14dp">
+
                     <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@android:drawable/ic_menu_search" />
-                        
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@android:drawable/ic_menu_search"
+                        app:tint="?attr/colorOnSurfaceVariant" />
+
                     <EditText
+                        android:id="@+id/logSearchInput"
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_weight="1"
                         android:background="@null"
-                        android:hint="Search this log"
+                        android:hint="Search logs..."
                         android:textColorHint="?attr/colorOnSurfaceVariant"
                         android:textColor="?attr/colorOnSurface"
                         android:textSize="14sp"
-                        android:layout_marginStart="8dp"
+                        android:layout_marginStart="10dp"
                         android:inputType="text" />
                 </LinearLayout>
+
+                <!-- Filter Chips -->
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipFilterAll"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="All Events"
+                            android:checked="true"
+                            app:chipCornerRadius="16dp" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipFilterAllow"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="ALLOW"
+                            android:layout_marginStart="6dp"
+                            app:chipCornerRadius="16dp" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipFilterWarn"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="WARN"
+                            android:layout_marginStart="6dp"
+                            app:chipCornerRadius="16dp" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipFilterStepUp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="STEP_UP"
+                            android:layout_marginStart="6dp"
+                            app:chipCornerRadius="16dp" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipFilterBlock"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="BLOCK"
+                            android:layout_marginStart="6dp"
+                            app:chipCornerRadius="16dp" />
+                    </LinearLayout>
+                </HorizontalScrollView>
             </LinearLayout>
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/eventLogRecyclerView"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:paddingHorizontal="16dp"
+                android:clipToPadding="false"
                 android:scrollbars="vertical" />
         </LinearLayout>
 
     </FrameLayout>
 
+    <!-- Bottom Navigation Bar with 4 destinations -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavigation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         app:menu="@menu/bottom_nav_menu"
-        app:labelVisibilityMode="labeled" />
+        app:labelVisibilityMode="labeled"
+        android:background="?attr/colorSurfaceContainer"
+        app:elevation="4dp" />
 
 </RelativeLayout>

@@ -1,16 +1,13 @@
 package com.chate.thesis
 
-import android.graphics.Color
-import android.text.Spannable
-import android.text.SpannableStringBuilder
-import android.text.style.BackgroundColorSpan
-import android.text.style.ForegroundColorSpan
+import android.graphics.drawable.GradientDrawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
+import com.google.gson.JsonParser
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -18,7 +15,10 @@ import java.time.format.DateTimeFormatter
 class EventLogAdapter(private var logs: List<LogEntry>) : RecyclerView.Adapter<EventLogAdapter.ViewHolder>() {
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val logText: TextView = view.findViewById(R.id.logText)
+        val logActionBadge: TextView = view.findViewById(R.id.logActionBadge)
+        val logEventType: TextView = view.findViewById(R.id.logEventType)
+        val logTimestamp: TextView = view.findViewById(R.id.logTimestamp)
+        val logDetails: TextView = view.findViewById(R.id.logDetails)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -30,28 +30,26 @@ class EventLogAdapter(private var logs: List<LogEntry>) : RecyclerView.Adapter<E
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val log = logs[position]
         val context = holder.itemView.context
-        
-        val colorOnSurface = com.google.android.material.color.MaterialColors.getColor(holder.itemView, com.google.android.material.R.attr.colorOnSurface)
-        val colorOnSurfaceVariant = com.google.android.material.color.MaterialColors.getColor(holder.itemView, com.google.android.material.R.attr.colorOnSurfaceVariant)
-        val colorSurfaceVariant = com.google.android.material.color.MaterialColors.getColor(holder.itemView, com.google.android.material.R.attr.colorSurfaceVariant)
-        
-        val ssb = SpannableStringBuilder()
 
-        // 1. Level (D, V, W, E based on action)
-        val actionStr = log.action ?: ""
-        val (levelChar, levelColor) = when (actionStr) {
-            "ALLOW" -> Pair("V", ContextCompat.getColor(context, R.color.risk_allow))
-            "WARN" -> Pair("W", ContextCompat.getColor(context, R.color.risk_warn))
-            "STEP_UP_AUTH" -> Pair("E", ContextCompat.getColor(context, R.color.risk_step_up))
-            "BLOCK_SESSION" -> Pair("F", ContextCompat.getColor(context, R.color.risk_block))
-            else -> Pair("D", colorOnSurfaceVariant)
+        val actionStr = log.action ?: "LOG"
+        holder.logActionBadge.text = actionStr
+
+        val (textColor, bgColor) = when (actionStr) {
+            "ALLOW" -> Pair(R.color.risk_allow, R.color.risk_allow_bg)
+            "WARN" -> Pair(R.color.risk_warn, R.color.risk_warn_bg)
+            "STEP_UP_AUTH" -> Pair(R.color.risk_step_up, R.color.risk_step_up_bg)
+            "BLOCK_SESSION" -> Pair(R.color.risk_block, R.color.risk_block_bg)
+            else -> Pair(R.color.text_secondary, R.color.surface_container_high)
         }
 
-        val startLevel = ssb.length
-        ssb.append("$levelChar ")
-        ssb.setSpan(ForegroundColorSpan(levelColor), startLevel, ssb.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        holder.logActionBadge.setTextColor(ContextCompat.getColor(context, textColor))
+        val bgDrawable = holder.logActionBadge.background
+        if (bgDrawable is GradientDrawable) {
+            bgDrawable.setColor(ContextCompat.getColor(context, bgColor))
+        }
 
-        // 2. Timestamp
+        holder.logEventType.text = log.eventType
+
         val timeStr = try {
             val instant = Instant.parse(log.timestamp)
             val formatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS").withZone(ZoneId.systemDefault())
@@ -59,27 +57,26 @@ class EventLogAdapter(private var logs: List<LogEntry>) : RecyclerView.Adapter<E
         } catch (e: Exception) {
             log.timestamp.take(12)
         }
-        val startTime = ssb.length
-        ssb.append("$timeStr ")
-        ssb.setSpan(ForegroundColorSpan(colorOnSurfaceVariant), startTime, ssb.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        holder.logTimestamp.text = timeStr
 
-        // 3. Tag (Event Type)
-        val tagStr = log.eventType.padEnd(10).take(20)
-        val startTag = ssb.length
-        ssb.append(" $tagStr ")
-        ssb.setSpan(BackgroundColorSpan(colorSurfaceVariant), startTag, ssb.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-        ssb.setSpan(ForegroundColorSpan(colorOnSurface), startTag, ssb.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        // Parse payload json if possible
+        var parsedDetails = ""
+        try {
+            val jsonObject = JsonParser.parseString(log.payload).asJsonObject
+            val composite = jsonObject.get("composite")?.asString?.toDoubleOrNull()
+            val ocsvm = jsonObject.get("ocsvm")?.asString?.toDoubleOrNull()
+            val mahal = jsonObject.get("mahal")?.asString?.toDoubleOrNull()
+            if (composite != null && ocsvm != null && mahal != null) {
+                parsedDetails = String.format("Risk: %.3f  |  OCSVM: %.3f  |  Mahal: %.3f", composite, ocsvm, mahal)
+            }
+        } catch (_: Exception) {}
 
-        ssb.append(" ")
+        if (parsedDetails.isEmpty()) {
+            val riskFormatted = log.riskScore?.let { String.format("Risk: %.3f  |  ", it) } ?: ""
+            parsedDetails = "$riskFormatted${log.payload}"
+        }
 
-        // 4. Message (Risk Score + Action + Payload)
-        val riskScoreFormatted = log.riskScore?.let { String.format("%.3f", it) } ?: "N/A"
-        val message = "Risk: $riskScoreFormatted | Action: $actionStr | ${log.payload}"
-        val startMsg = ssb.length
-        ssb.append(message)
-        ssb.setSpan(ForegroundColorSpan(colorOnSurface), startMsg, ssb.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-
-        holder.logText.text = ssb
+        holder.logDetails.text = parsedDetails
     }
 
     override fun getItemCount() = logs.size

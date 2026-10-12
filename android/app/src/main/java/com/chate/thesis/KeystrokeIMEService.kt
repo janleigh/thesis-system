@@ -151,7 +151,7 @@ class KeystrokeIMEService : InputMethodService() {
 
     override fun onCreate() {
         super.onCreate()
-        profileManager = ProfileManager(this, testingMode = false)
+        profileManager = ProfileManager(this, testingMode = true)
         riskScorer = RiskScorer()
         securityLogger = SecurityLogger(this)
         

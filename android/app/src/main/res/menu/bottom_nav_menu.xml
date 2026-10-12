@@ -2,10 +2,18 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/nav_dashboard"
-        android:icon="@android:drawable/ic_menu_myplaces"
-        android:title="Dashboard" />
+        android:icon="@drawable/ic_nav_monitor"
+        android:title="Monitor" />
+    <item
+        android:id="@+id/nav_enrollment"
+        android:icon="@drawable/ic_nav_enrollment"
+        android:title="Enrollment" />
+    <item
+        android:id="@+id/nav_settings"
+        android:icon="@drawable/ic_nav_settings"
+        android:title="Settings" />
     <item
         android:id="@+id/nav_event_log"
-        android:icon="@android:drawable/ic_menu_recent_history"
-        android:title="Event Log" />
+        android:icon="@drawable/ic_nav_log"
+        android:title="Logs" />
 </menu>

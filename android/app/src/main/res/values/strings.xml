@@ -1,24 +1,60 @@
 <resources>
-    <string name="app_name">Keystroke Auth</string>
+    <string name="app_name">Thesis Biometrics</string>
     <string name="ime_label">Keystroke Authenticator</string>
-    <string name="title_dashboard">Behavioral Biometrics</string>
-    <string name="subtitle_dashboard">Continuous Authentication System</string>
+    
+    <!-- Navigation & Titles -->
+    <string name="title_dashboard">Biometric Monitor</string>
+    <string name="subtitle_dashboard">Continuous Keystroke Dynamics Zero-Trust Engine</string>
+    <string name="title_enrollment">Biometric Enrollment</string>
+    <string name="subtitle_enrollment">Build your behavioral typing profile</string>
+    <string name="title_settings">Settings</string>
+    <string name="subtitle_settings">Permissions, integrations, and engine management</string>
+    <string name="title_logs">Logs</string>
+    <string name="subtitle_logs">Live security activity stream</string>
+
+    <!-- Buttons -->
     <string name="btn_enable_keyboard">Enable Keyboard</string>
+    <string name="btn_select_keyboard">Select Keyboard</string>
+    <string name="btn_keyboard_active">Keyboard Active</string>
+    <string name="btn_activate_admin">Activate Device Admin</string>
+    <string name="btn_admin_active">Device Admin Active</string>
     <string name="btn_start_enrollment">Start Enrollment</string>
     <string name="btn_reset_profile">Reset Profile</string>
     <string name="btn_view_logs">View Logs</string>
+    <string name="btn_clear_text">Clear Text</string>
+    <string name="btn_shuffle_prompt">Shuffle Prompt</string>
+    <string name="btn_start_onboarding">Start Guided Onboarding</string>
+    <string name="btn_continue_to_typing">Continue to Typing Calibration</string>
+    <string name="btn_launch_monitor">Activate Continuous Verification</string>
+
+    <!-- Labels & Telemetry -->
     <string name="label_status">Status</string>
     <string name="label_keystrokes">Keystrokes</string>
     <string name="label_enrollment">Enrollment Progress</string>
-    <string name="label_risk_score">Risk Score</string>
-    <string name="label_ocsvm_score">OCSVM</string>
-    <string name="label_mahal_score">Mahalanobis</string>
-    <string name="label_composite">Composite</string>
-    <string name="label_action">Action</string>
+    <string name="label_risk_score">Threat Score</string>
+    <string name="label_ocsvm_score">OCSVM Model</string>
+    <string name="label_mahal_score">Mahalanobis Distance</string>
+    <string name="label_composite">Composite Risk</string>
+    <string name="label_action">Security Decision</string>
     <string name="label_test_input">Type here to test...</string>
+    <string name="label_step_1">1. Welcome</string>
+    <string name="label_step_2">2. Setup</string>
+    <string name="label_step_3">3. Calibration</string>
+    <string name="label_step_4">4. Ready</string>
+
+    <!-- Status Values -->
     <string name="status_pending">PENDING</string>
     <string name="status_ready">READY</string>
     <string name="status_active">ACTIVE</string>
     <string name="status_not_enrolled">Not Enrolled</string>
-    <string name="hint_type_here">Start typing to capture biometric data...</string>
+    <string name="hint_type_here">Start typing naturally to calibrate your rhythm...</string>
+    <string name="hint_verify_here">Type sample sentences here to verify continuous biometric scoring...</string>
+
+    <!-- Prompts for Guided Typing -->
+    <string name="prompt_1">The quick brown fox jumps over the lazy dog.</string>
+    <string name="prompt_2">Pack my box with five dozen liquor jugs.</string>
+    <string name="prompt_3">Sphinx of black quartz, judge my vow.</string>
+    <string name="prompt_4">Continuous keystroke authentication verifies behavioral typing rhythm.</string>
+    <string name="prompt_5">How vexingly quick daft zebras jump over sleek bronze fountains.</string>
+    <string name="prompt_6">Zero-trust device protection detects session takeover instantly.</string>
 </resources>
