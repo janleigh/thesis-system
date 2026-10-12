@@ -173,22 +173,39 @@ All machine learning models and linear algebra operations are developed in **100
 
 The [`FeatureExtractor`](file:///f:/THS1/system/app/src/main/java/com/chate/thesis/FeatureExtractor.kt) class intercepts paired touch events ($t_{\text{down}}$, $t_{\text{up}}$) with microsecond precision and extracts three core temporal metrics:
 
-1. **Dwell Time ($T_{\text{dwell}}$)**: The physical duration a key remains held down.
-   $$T_{\text{dwell}} = t_{\text{up}}^{(i)} - t_{\text{down}}^{(i)}$$
-2. **Flight Time ($T_{\text{flight}}$)**: The latency between releasing the current key and pressing the subsequent key. Supports multi-touch rollover typing where flight time is negative.
-   $$T_{\text{flight}} = t_{\text{down}}^{(i+1)} - t_{\text{up}}^{(i)}$$
-3. **Inter-Key Interval ($T_{\text{IKI}}$)**: The total elapsed time between consecutive key presses.
-   $$T_{\text{IKI}} = t_{\text{down}}^{(i+1)} - t_{\text{down}}^{(i)}$$
+- **Dwell Time ($T_{\text{dwell}}$)**: The physical duration a key remains held down.
+
+$$
+T_{\text{dwell}} = t_{\text{up}}^{(i)} - t_{\text{down}}^{(i)}
+$$
+
+- **Flight Time ($T_{\text{flight}}$)**: The latency between releasing the current key and pressing the subsequent key (negative values represent multi-touch rollover typing).
+
+$$
+T_{\text{flight}} = t_{\text{down}}^{(i+1)} - t_{\text{up}}^{(i)}
+$$
+
+- **Inter-Key Interval ($T_{\text{IKI}}$)**: The total elapsed time between consecutive key presses.
+
+$$
+T_{\text{IKI}} = t_{\text{down}}^{(i+1)} - t_{\text{down}}^{(i)}
+$$
 
 #### Artifact & Noise Filtering
-Mobile typing contains physical noise (touch tremor, deliberate long pauses, browsing pauses). Raw events are filtered before statistical aggregation:
-- **Dwell Filter**: $10\text{ ms} \le T_{\text{dwell}} \le 600\text{ ms}$ (discards capacitive touch artifacts $< 10\text{ ms}$ and stuck keys $> 600\text{ ms}$).
-- **Flight Filter**: $-300\text{ ms} \le T_{\text{flight}} \le 1200\text{ ms}$ (discards reading / cognitive pauses $> 1.2\text{ s}$).
-- **IKI Filter**: $0\text{ ms} \le T_{\text{IKI}} \le 1500\text{ ms}$.
+
+Mobile typing contains physical noise (touch tremors, deliberate long pauses, browsing delays). Raw events are filtered before statistical aggregation:
+
+- **Dwell Filter**: Discards capacitive touch artifacts under 10 ms and stuck keys over 600 ms ($10\text{ ms} \le T_{\text{dwell}} \le 600\text{ ms}$).
+- **Flight Filter**: Discards reading and cognitive pauses exceeding 1.2 s ($-300\text{ ms} \le T_{\text{flight}} \le 1200\text{ ms}$).
+- **IKI Filter**: Discards inter-word idle intervals exceeding 1.5 s ($0\text{ ms} \le T_{\text{IKI}} \le 1500\text{ ms}$).
 
 #### 6-Dimensional Statistical Vector
-Extracted features over an evaluation window (20 paired keystrokes) are aggregated into a fixed 6-dimensional statistical vector:
-$$\mathbf{x} = \begin{bmatrix} \mu_{\text{dwell}} & \sigma_{\text{dwell}} & \mu_{\text{flight}} & \sigma_{\text{flight}} & \mu_{\text{iki}} & \sigma_{\text{iki}} \end{bmatrix}^T \in \mathbb{R}^6$$
+
+Extracted features across an evaluation window (20 paired keystrokes) are aggregated into a fixed 6-dimensional statistical vector:
+
+$$
+\mathbf{x} = \begin{bmatrix} \mu_{\text{dwell}} & \sigma_{\text{dwell}} & \mu_{\text{flight}} & \sigma_{\text{flight}} & \mu_{\text{iki}} & \sigma_{\text{iki}} \end{bmatrix}^T \in \mathbb{R}^6
+$$
 
 ---
 
@@ -196,32 +213,58 @@ $$\mathbf{x} = \begin{bmatrix} \mu_{\text{dwell}} & \sigma_{\text{dwell}} & \mu_
 
 The [`OCSVMModel`](file:///f:/THS1/system/app/src/main/java/com/chate/thesis/OCSVMModel.kt) maps legitimate user timing patterns into a high-dimensional feature space using a **Radial Basis Function (RBF)** Gaussian kernel:
 
-$$K(\mathbf{x}_i, \mathbf{x}_j) = \exp\left(-\gamma \|\mathbf{x}_i - \mathbf{x}_j\|^2\right), \quad \gamma = \frac{1}{2d} = \frac{1}{12}$$
+$$
+K(\mathbf{x}_i, \mathbf{x}_j) = \exp\left(-\gamma \|\mathbf{x}_i - \mathbf{x}_j\|^2\right), \quad \gamma = \frac{1}{2d} = \frac{1}{12}
+$$
 
 #### Dual Optimization via Sequential Minimal Optimization (SMO)
-Trained strictly on positive baseline vectors (legitimate user enrollment) by minimizing the quadratic objective:
-$$\min_{\boldsymbol{\alpha}} \frac{1}{2} \sum_{i,j} \alpha_i \alpha_j K(\mathbf{x}_i, \mathbf{x}_j) \quad \text{s.t.} \quad 0 \le \alpha_i \le \frac{1}{n \cdot \nu}, \quad \sum_{i=1}^n \alpha_i = 1$$
 
-- **StandardScaler**: Features are scaled to zero mean and unit variance ($\mu = 0, \sigma = 1$).
-- **Decision Function**:
-  $$f(\mathbf{x}) = \sum_{i \in \text{SV}} \alpha_i K(\mathbf{s}_i, \mathbf{x}) - \rho$$
-- **Score Normalization**: Mapped smoothly into $S_{\text{ocsvm}} \in [0, 1]$ where inliers evaluate to $< 0.35$ and distinct impostor rhythms scale toward $1.0$.
+Trained strictly on positive baseline vectors (legitimate user enrollment) by minimizing the dual quadratic objective:
+
+$$
+\min_{\boldsymbol{\alpha}} \frac{1}{2} \sum_{i=1}^n \sum_{j=1}^n \alpha_i \alpha_j K(\mathbf{x}_i, \mathbf{x}_j)
+$$
+
+subject to the box and equality constraints:
+
+$$
+0 \le \alpha_i \le \frac{1}{n \cdot \nu}, \quad \sum_{i=1}^n \alpha_i = 1
+$$
+
+- **StandardScaler**: Features are normalized to zero mean and unit variance ($\mu = 0, \; \sigma = 1$).
+- **Decision Function**: The hyperplane separation distance is computed across the support vectors:
+
+$$
+f(\mathbf{x}) = \sum_{i \in \text{SV}} \alpha_i K(\mathbf{s}_i, \mathbf{x}) - \rho
+$$
+
+- **Score Normalization**: Decision values are mapped smoothly into $S_{\text{ocsvm}} \in [0, 1]$, where inliers score $< 0.35$ and anomalous rhythms scale toward $1.0$.
 
 ---
 
 ### 3. Mahalanobis Distance Normalizer
 
-The [`MahalanobisNormalizer`](file:///f:/THS1/system/app/src/main/java/com/chate/thesis/MahalanobisNormalizer.kt) measures the scale-invariant statistical distance between candidate feature vectors and the user's calibration centroid, accounting for feature correlations:
+The [`MahalanobisNormalizer`](file:///f:/THS1/system/app/src/main/java/com/chate/thesis/MahalanobisNormalizer.kt) measures the scale-invariant statistical distance between candidate feature vectors and the user's calibration centroid, accounting for covariance across features:
 
-$$D_M(\mathbf{x}) = \sqrt{(\mathbf{x} - \boldsymbol{\mu})^T \boldsymbol{\Sigma}^{-1} (\mathbf{x} - \boldsymbol{\mu})}$$
+$$
+D_M(\mathbf{x}) = \sqrt{(\mathbf{x} - \boldsymbol{\mu})^T \boldsymbol{\Sigma}^{-1} (\mathbf{x} - \boldsymbol{\mu})}
+$$
 
 #### Pure-Kotlin Linear Algebra Engine
+
 - **Cold-Start Handling**: When sample size $N < 50$, the system avoids rank deficiency by utilizing a diagonal variance approximation:
-  $$\boldsymbol{\Sigma}^{-1} \approx \operatorname{diag}\left(\frac{1}{\sigma_1^2}, \frac{1}{\sigma_2^2}, \dots, \frac{1}{\sigma_d^2}\right)$$
+
+$$
+\boldsymbol{\Sigma}^{-1} \approx \operatorname{diag}\left(\frac{1}{\sigma_1^2}, \frac{1}{\sigma_2^2}, \dots, \frac{1}{\sigma_d^2}\right)
+$$
+
 - **Full Covariance Inversion**: For $N \ge 50$, the full sample covariance matrix $\boldsymbol{\Sigma}$ is inverted via **Gauss-Jordan elimination with partial pivoting**.
 - **Tikhonov Regularization Fallback**: If $\boldsymbol{\Sigma}$ is ill-conditioned or near-singular, a regularization ridge is applied: $\boldsymbol{\Sigma}_{\text{reg}} = \boldsymbol{\Sigma} + 10^{-6} \mathbf{I}$.
-- **Normalized Mahalanobis Score**:
-  $$S_{\text{mahal}} = \min\left(\frac{D_M(\mathbf{x})}{10.0}, 1.0\right)$$
+- **Normalized Mahalanobis Score**: Scales the raw distance relative to the distribution boundary:
+
+$$
+S_{\text{mahal}} = \min\left(\frac{D_M(\mathbf{x})}{10.0}, 1.0\right)
+$$
 
 ---
 
@@ -229,21 +272,26 @@ $$D_M(\mathbf{x}) = \sqrt{(\mathbf{x} - \boldsymbol{\mu})^T \boldsymbol{\Sigma}^
 
 The [`RiskScorer`](file:///f:/THS1/system/app/src/main/java/com/chate/thesis/RiskScorer.kt) combines the dual model outputs through an optimal weighted fusion:
 
-$$\text{Composite} = 0.6 \cdot S_{\text{ocsvm}} + 0.4 \cdot S_{\text{mahal}}$$
+$$
+\text{Composite} = 0.6 \cdot S_{\text{ocsvm}} + 0.4 \cdot S_{\text{mahal}}
+$$
 
 #### Adaptive Dynamic Warning Threshold
+
 Typing cadence varies naturally under cognitive load or fatigue. To minimize false rejections, the warning threshold $\tau_{\text{warn}}$ dynamically adapts based on a rolling history of recent composite scores (window size 20):
 
-$$\tau_{\text{warn}} = \operatorname{clip}\left(\mu_{\text{recent}} + 1.5 \cdot \sigma_{\text{recent}}, \; 0.35, \; 0.55\right)$$
+$$
+\tau_{\text{warn}} = \operatorname{clip}\left(\mu_{\text{recent}} + 1.5 \cdot \sigma_{\text{recent}}, \; 0.35, \; 0.55\right)
+$$
 
 #### Tiered Policy Decision Framework
 
 | Action | Score Range | System Response |
 | :--- | :---: | :--- |
-| **`ALLOW`** | $[0.00, \; \tau_{\text{warn}})$ | Legitimate behavioral match. Session proceeds seamlessly without friction. |
-| **`WARN`** | $[\tau_{\text{warn}}, \; 0.60)$ | Moderate timing divergence. Displays subtle warning telemetry on the IME strip. |
-| **`STEP_UP_AUTH`** | $[0.60, \; 0.80)$ | Significant behavioral divergence. Triggers biometric prompt or PIN challenge. |
-| **`BLOCK_SESSION`** | $[\ge 0.80]$ | Critical biometric mismatch. Enforces immediate hardware device lockdown. |
+| **`ALLOW`** | `[0.00, τ_warn)` (&lt; 0.35) | Legitimate behavioral match. Session proceeds seamlessly without friction. |
+| **`WARN`** | `[τ_warn, 0.60)` | Moderate timing divergence. Displays subtle warning telemetry on the IME strip. |
+| **`STEP_UP_AUTH`** | `[0.60, 0.80)` | Significant behavioral divergence. Triggers biometric prompt or PIN challenge. |
+| **`BLOCK_SESSION`** | `≥ 0.80` | Critical biometric mismatch. Enforces immediate hardware device lockdown. |
 
 ---
 
@@ -320,10 +368,10 @@ Designed according to **Material Design 3 Expressive** specifications with a tai
 
 - **Color Palette**: Electric Cyan (`#00677E` light / `#00E5FF` dark) paired with Security Slate and Alert Accents (Green for Allow, Amber for Warn, Pink for Step-Up, Red for Block).
 - **Expressive Geometry**: 28dp corner radii on hero monitor cards, 24dp action cards, and fully rounded pill controls.
-- **Strict Accessibility**: Touch targets strictly adhere to $\ge 48\times 48\text{ dp}$ with responsive haptic feedback.
+- **Strict Accessibility**: Touch targets strictly adhere to ≥ 48 × 48 dp with responsive haptic feedback.
 - **Dynamic 4-Destination Navigation**:
   1. **Biometric Monitor**: Real-time threat gauge, model breakdown cards (OCSVM vs. Mahalanobis), statistical telemetry strip, and interactive verification sandbox.
-  2. **Biometric Enrollment**: 4-step guided wizard (Welcome $\to$ Setup $\to$ Calibration $\to$ Ready) with curated pangram prompts (`The quick brown fox...`, `Pack my box with five dozen liquor jugs...`).
+  2. **Biometric Enrollment**: 4-step guided wizard (Welcome → Setup → Calibration → Ready) with curated pangram prompts (`The quick brown fox...`, `Pack my box with five dozen liquor jugs...`).
   3. **Settings**: IME selection shortcuts, Device Admin permission toggles, and calibration thresholds.
   4. **Security Logs**: Real-time decrypted audit feed with event timestamps, risk scores, and security actions.
 
@@ -426,9 +474,9 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ### Step 1: Initial Permission Setup
 1. Launch **PuKey** (Thesis Biometrics).
 2. Navigate to **Biometric Enrollment** or **Settings**.
-3. Tap **Enable Keyboard** $\to$ Toggle on **Keystroke Authenticator** under Android System Settings.
-4. Tap **Select Keyboard** $\to$ Choose **Keystroke Authenticator** as your default input method.
-5. Tap **Activate Device Admin** $\to$ Grant administration permissions so the system can lock the phone upon detecting an impostor.
+3. Tap **Enable Keyboard** → Toggle on **Keystroke Authenticator** under Android System Settings.
+4. Tap **Select Keyboard** → Choose **Keystroke Authenticator** as your default input method.
+5. Tap **Activate Device Admin** → Grant administration permissions so the system can lock the phone upon detecting an impostor.
 
 ### Step 2: Guided Typing Calibration
 1. Navigate to the **Biometric Enrollment** tab.
@@ -441,7 +489,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 1. Navigate to the **Biometric Monitor** tab.
 2. Toggle **Live Verifier Active**.
 3. Type inside the test sandbox or any messaging application:
-   - **Legitimate Typing**: The keyboard indicator remains green (`ALLOW`), with composite risk $< 0.35$.
+   - **Legitimate Typing**: The keyboard indicator remains green (`ALLOW`), with composite risk < 0.35.
    - **Simulated Impostor Typing**: Type with exaggerated pauses, alternating speeds, or pass the device to another person.
    - The status transitions to yellow (`WARN`), then triggers a system credential dialog (`STEP_UP_AUTH`), and finally locks the screen (`BLOCK_SESSION`).
 
