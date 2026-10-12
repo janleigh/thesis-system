@@ -255,7 +255,7 @@ $$
 - **Cold-Start Handling**: When sample size $N < 50$, the system avoids rank deficiency by utilizing a diagonal variance approximation:
 
 $$
-\boldsymbol{\Sigma}^{-1} \approx \operatorname{diag}\left(\frac{1}{\sigma_1^2}, \frac{1}{\sigma_2^2}, \dots, \frac{1}{\sigma_d^2}\right)
+\boldsymbol{\Sigma}^{-1} \approx \mathrm{diag}\left(\frac{1}{\sigma_1^2}, \frac{1}{\sigma_2^2}, \dots, \frac{1}{\sigma_d^2}\right)
 $$
 
 - **Full Covariance Inversion**: For $N \ge 50$, the full sample covariance matrix $\boldsymbol{\Sigma}$ is inverted via **Gauss-Jordan elimination with partial pivoting**.
@@ -281,7 +281,7 @@ $$
 Typing cadence varies naturally under cognitive load or fatigue. To minimize false rejections, the warning threshold $\tau_{\text{warn}}$ dynamically adapts based on a rolling history of recent composite scores (window size 20):
 
 $$
-\tau_{\text{warn}} = \operatorname{clip}\left(\mu_{\text{recent}} + 1.5 \cdot \sigma_{\text{recent}}, \; 0.35, \; 0.55\right)
+\tau_{\text{warn}} = \mathrm{clip}\left(\mu_{\text{recent}} + 1.5 \cdot \sigma_{\text{recent}}, \; 0.35, \; 0.55\right)
 $$
 
 #### Tiered Policy Decision Framework
