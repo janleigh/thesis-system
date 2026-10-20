@@ -52,3 +52,4 @@ class SecurityControlsLayoutContractTest {
         assertTrue("masterSwitch must appear before sandboxContainerCard", masterSwitchIndex < sandboxIndex)
     }
 }
+
