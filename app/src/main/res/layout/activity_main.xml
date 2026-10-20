@@ -251,43 +251,6 @@
                         </LinearLayout>
                     </LinearLayout>
 
-                    <!-- QUICK TELEMETRY STATS ROW (Matching screenshot stats bar e.g. ★ 12.7k ⑂ 855 ⚙ 36) -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center"
-                        android:layout_marginBottom="18dp">
-
-                        <TextView
-                            android:id="@+id/telemetryScoreStat"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="★ Risk: 0.000"
-                            android:textColor="?attr/colorOnSurfaceVariant"
-                            android:textSize="12sp"
-                            android:fontFamily="monospace" />
-
-                        <TextView
-                            android:id="@+id/telemetryKeystrokeStat"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="⌨ 0 Keys"
-                            android:textColor="?attr/colorOnSurfaceVariant"
-                            android:textSize="12sp"
-                            android:fontFamily="monospace"
-                            android:layout_marginStart="18dp" />
-
-                        <TextView
-                            android:id="@+id/telemetryVectorStat"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="⚡ 0 Windows"
-                            android:textColor="?attr/colorOnSurfaceVariant"
-                            android:textSize="12sp"
-                            android:fontFamily="monospace"
-                            android:layout_marginStart="18dp" />
-                    </LinearLayout>
 
                     <!-- Model Metric Split Detail -->
                     <LinearLayout
@@ -962,35 +925,14 @@
                                 android:layout_marginBottom="14dp">
 
                                 <TextView
-                                    android:id="@+id/monkeytypeWpmText"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="-- WPM"
-                                    android:textColor="?attr/colorPrimary"
-                                    android:textSize="18sp"
-                                    android:fontFamily="sans-serif-bold"
-                                    android:visibility="gone"
-                                    android:layout_marginEnd="14dp" />
-
-                                <TextView
-                                    android:id="@+id/monkeytypeAccText"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="100% ACC"
-                                    android:textColor="?attr/colorOnSurfaceVariant"
-                                    android:textSize="13sp"
-                                    android:fontFamily="monospace" />
-
-                                <TextView
                                     android:id="@+id/monkeytypeWordCountText"
                                     android:layout_width="0dp"
                                     android:layout_height="wrap_content"
                                     android:layout_weight="1"
                                     android:text="0 words"
                                     android:textColor="?attr/colorOnSurfaceVariant"
-                                    android:textSize="12sp"
-                                    android:fontFamily="monospace"
-                                    android:layout_marginStart="14dp" />
+                                    android:textSize="13sp"
+                                    android:fontFamily="monospace" />
 
                                 <com.google.android.material.button.MaterialButton
                                     android:id="@+id/btnMonkeytypeRestart"
@@ -1228,38 +1170,6 @@
                                 android:layout_marginTop="12dp"
                                 android:layout_marginBottom="20dp" />
 
-                            <LinearLayout
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:orientation="horizontal"
-                                android:gravity="center"
-                                android:layout_marginBottom="16dp">
-
-                                <TextView
-                                    android:id="@+id/enrollCompleteWpmText"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="-- WPM"
-                                    android:textColor="?attr/colorPrimary"
-                                    android:textSize="14sp"
-                                    android:fontFamily="sans-serif-bold"
-                                    android:paddingHorizontal="14dp"
-                                    android:paddingVertical="7dp"
-                                    android:background="@drawable/badge_chip_pill" />
-
-                                <TextView
-                                    android:id="@+id/enrollCompleteAccText"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="100% ACC"
-                                    android:textColor="?attr/colorOnSurfaceVariant"
-                                    android:textSize="14sp"
-                                    android:fontFamily="monospace"
-                                    android:paddingHorizontal="14dp"
-                                    android:paddingVertical="7dp"
-                                    android:background="@drawable/badge_chip_pill"
-                                    android:layout_marginStart="10dp" />
-                            </LinearLayout>
 
                             <TextView
                                 android:layout_width="wrap_content"
