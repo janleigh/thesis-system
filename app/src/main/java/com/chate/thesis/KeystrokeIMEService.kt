@@ -6,16 +6,25 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.SharedPreferences
+import android.content.res.ColorStateList
+import android.content.res.Configuration
 import android.graphics.Color
+import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.LayerDrawable
+import android.graphics.drawable.RippleDrawable
+import android.graphics.drawable.StateListDrawable
 import android.inputmethodservice.InputMethodService
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
+import android.view.ContextThemeWrapper
 import android.view.Gravity
 import android.view.HapticFeedbackConstants
 import android.view.KeyEvent
+import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
@@ -27,6 +36,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.google.android.material.color.DynamicColors
+import com.google.android.material.color.MaterialColors
 import kotlin.math.abs
 
 class KeystrokeIMEService : InputMethodService() {
@@ -81,6 +92,22 @@ class KeystrokeIMEService : InputMethodService() {
     private var initialTouchX = 0f
     private var initialTouchY = 0f
 
+    // Dynamic Theme Tokens & Context
+    private lateinit var themedContext: Context
+    private var currentPrimaryColor: Int = 0
+    private var currentOnPrimaryColor: Int = 0
+    private var currentKeyTextColor: Int = 0
+    private var currentOnSurfaceVariant: Int = 0
+    private var isAmoledActive: Boolean = false
+
+    private val themePreferenceListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+        if (key in listOf(ThemePreferences.KEY_THEME_MODE, ThemePreferences.KEY_PALETTE, ThemePreferences.KEY_AMOLED_BLACK)) {
+            mainHandler.post {
+                reloadInputView()
+            }
+        }
+    }
+
     companion object {
         const val ACTION_SET_MODE = "com.chate.thesis.SET_MODE"
         const val ACTION_STEP_UP_RESULT = "com.chate.thesis.STEP_UP_RESULT"
@@ -130,6 +157,9 @@ class KeystrokeIMEService : InputMethodService() {
                 }
                 KeyboardPreferences.ACTION_SETTINGS_CHANGED -> {
                     applyKeyboardPreferences()
+                }
+                ThemePreferences.ACTION_THEME_CHANGED -> {
+                    reloadInputView()
                 }
             }
         }
@@ -206,18 +236,25 @@ class KeystrokeIMEService : InputMethodService() {
             addAction(ACTION_SET_MODE)
             addAction(ACTION_STEP_UP_RESULT)
             addAction(KeyboardPreferences.ACTION_SETTINGS_CHANGED)
+            addAction(ThemePreferences.ACTION_THEME_CHANGED)
         }
         LocalBroadcastManager.getInstance(this).registerReceiver(modeReceiver, filter)
+
+        val themePrefs = getSharedPreferences(ThemePreferences.PREFS_NAME, Context.MODE_PRIVATE)
+        themePrefs.registerOnSharedPreferenceChangeListener(themePreferenceListener)
     }
 
     override fun onDestroy() {
+        val themePrefs = getSharedPreferences(ThemePreferences.PREFS_NAME, Context.MODE_PRIVATE)
+        themePrefs.unregisterOnSharedPreferenceChangeListener(themePreferenceListener)
         cancelAllRunnables()
         LocalBroadcastManager.getInstance(this).unregisterReceiver(modeReceiver)
         super.onDestroy()
     }
 
     override fun onCreateInputView(): View {
-        keyboardView = layoutInflater.inflate(R.layout.keyboard_layout, null)
+        themedContext = getThemedContext()
+        keyboardView = LayoutInflater.from(themedContext).inflate(R.layout.keyboard_layout, null)
         
         keyboardRootFrame = keyboardView.findViewById(R.id.keyboard_root_frame)
         keyboardRowsContainer = keyboardView.findViewById(R.id.keyboard_rows_container)
@@ -304,8 +341,12 @@ class KeystrokeIMEService : InputMethodService() {
             true
         }
 
+        // Apply dynamic theme colors and styles
+        applyThemeColors(themedContext)
+
         // Apply saved keyboard height and preferences
         applyKeyboardPreferences()
+        updateShiftKey(keyboardView)
 
         // Update mode on attach
         val profile = profileManager.getProfile(MainActivity.DEFAULT_USER_ID)
@@ -433,13 +474,13 @@ class KeystrokeIMEService : InputMethodService() {
 
     private fun showResizePanel() {
         resizePanel.visibility = View.VISIBLE
-        btnResizeToggle.setColorFilter(ContextCompat.getColor(this, R.color.lavender_blue))
+        btnResizeToggle.setColorFilter(currentPrimaryColor)
         updateResizeHeightLabel(preferences.heightDp)
     }
 
     private fun hideResizePanel() {
         resizePanel.visibility = View.GONE
-        btnResizeToggle.setColorFilter(ContextCompat.getColor(this, R.color.key_text_special))
+        btnResizeToggle.setColorFilter(currentOnSurfaceVariant)
     }
 
     private fun setKeyboardHeightDp(heightDp: Int) {
@@ -470,12 +511,12 @@ class KeystrokeIMEService : InputMethodService() {
             R.id.btn_size_tall to 320,
             R.id.btn_size_xtall to 360
         )
-        val activeTextColor = ContextCompat.getColor(this, R.color.key_accent_text)
-        val defaultTextColor = ContextCompat.getColor(this, R.color.key_text)
+        val activeTextColor = currentOnPrimaryColor
+        val defaultTextColor = currentKeyTextColor
         presets.forEach { (btnId, dpVal) ->
             val btn = keyboardView.findViewById<TextView>(btnId) ?: return@forEach
             if (abs(currentDp - dpVal) <= 12) {
-                btn.setBackgroundResource(R.drawable.variant_item_selected)
+                btn.background = createRoundedDrawable(currentPrimaryColor, 16f)
                 btn.setTextColor(activeTextColor)
             } else {
                 btn.setBackgroundResource(R.drawable.resize_chip_bg)
@@ -509,10 +550,11 @@ class KeystrokeIMEService : InputMethodService() {
         if (!::btnModeToggle.isInitialized) return
         if (preferences.longPressMode == KeyboardPreferences.MODE_VARIANTS) {
             btnModeToggle.text = "VAR"
-            btnModeToggle.setTextColor(ContextCompat.getColor(this, R.color.lavender_blue))
+            btnModeToggle.setTextColor(currentPrimaryColor)
         } else {
             btnModeToggle.text = "REP"
-            btnModeToggle.setTextColor(ContextCompat.getColor(this, R.color.risk_warn))
+            val warnColor = ContextCompat.getColor(if (::themedContext.isInitialized) themedContext else this, R.color.risk_warn)
+            btnModeToggle.setTextColor(warnColor)
         }
     }
 
@@ -804,14 +846,15 @@ class KeystrokeIMEService : InputMethodService() {
         val itemHeight = (46 * density).toInt()
 
         // Build variant item views
+        val tvContext = if (::themedContext.isInitialized) themedContext else this
         variants.forEachIndexed { index, variantStr ->
-            val tv = TextView(this).apply {
+            val tv = TextView(tvContext).apply {
                 text = variantStr
                 textSize = 20f
                 gravity = Gravity.CENTER
                 minWidth = itemMinWidth
                 height = itemHeight
-                setTextColor(ContextCompat.getColor(this@KeystrokeIMEService, R.color.key_text))
+                setTextColor(currentKeyTextColor)
                 tag = index
                 setPadding((6 * density).toInt(), 0, (6 * density).toInt(), 0)
             }
@@ -906,17 +949,14 @@ class KeystrokeIMEService : InputMethodService() {
 
     private fun highlightVariantItem(index: Int) {
         val count = variantsPopupCard.childCount
-        val onPrimaryColor = ContextCompat.getColor(this, R.color.key_accent_text)
-        val defaultTextColor = ContextCompat.getColor(this, R.color.key_text)
-
         for (i in 0 until count) {
             val child = variantsPopupCard.getChildAt(i) as? TextView ?: continue
             if (i == index) {
-                child.setBackgroundResource(R.drawable.variant_item_selected)
-                child.setTextColor(onPrimaryColor)
+                child.background = createRoundedDrawable(currentPrimaryColor, 8f)
+                child.setTextColor(currentOnPrimaryColor)
             } else {
                 child.background = null
-                child.setTextColor(defaultTextColor)
+                child.setTextColor(currentKeyTextColor)
             }
         }
     }
@@ -942,12 +982,23 @@ class KeystrokeIMEService : InputMethodService() {
     private fun updateShiftKey(view: View) {
         val shiftButton = view.findViewById<TextView>(R.id.key_shift) ?: return
         if (isShifted) {
-            shiftButton.setBackgroundResource(R.drawable.key_background_accent)
-            shiftButton.setTextColor(ContextCompat.getColor(this, R.color.key_accent_text))
+            shiftButton.background = createAccentDrawable(currentPrimaryColor)
+            shiftButton.setTextColor(currentOnPrimaryColor)
             shiftButton.text = "⬆"
         } else {
-            shiftButton.setBackgroundResource(R.drawable.key_background_special)
-            shiftButton.setTextColor(ContextCompat.getColor(this, R.color.key_text_special))
+            if (isAmoledActive) {
+                shiftButton.background = createKeyDrawable(
+                    normalColor = Color.parseColor("#0C0E10"),
+                    pressedColor = Color.parseColor("#1F2327"),
+                    shadowColor = Color.BLACK,
+                    borderColor = Color.parseColor("#1D2024")
+                )
+                shiftButton.setTextColor(Color.parseColor("#DEE4E6"))
+            } else {
+                shiftButton.setBackgroundResource(R.drawable.key_background_special)
+                val specialTextColor = ContextCompat.getColor(if (::themedContext.isInitialized) themedContext else this, R.color.key_text_special)
+                shiftButton.setTextColor(specialTextColor)
+            }
             shiftButton.text = "⇧"
         }
         updateKeyboardLabels(view)
@@ -956,11 +1007,12 @@ class KeystrokeIMEService : InputMethodService() {
     private fun updateKeyboardLabels(view: View) {
         val currentMap = if (isSymbols) symbolsMap else keyMap
         val showHints = preferences.showKeyHints
+        val ctx = if (::themedContext.isInitialized) themedContext else this
 
         currentMap.forEach { (buttonId, keyData) ->
             val button = view.findViewById<TextView>(buttonId) ?: return@forEach
             val baseChar = if (isShifted && !isSymbols) keyData.second.uppercase() else keyData.second
-            button.text = CharacterVariants.formatKeyLabel(baseChar, isSymbols, showHints, this)
+            button.text = CharacterVariants.formatKeyLabel(baseChar, isSymbols, showHints, ctx)
         }
 
         val symbolsButton = view.findViewById<TextView>(R.id.key_symbols)
@@ -1132,7 +1184,335 @@ class KeystrokeIMEService : InputMethodService() {
     private fun setIndicatorColor(colorRes: Int) {
         val bg = statusIndicator.background
         if (bg is GradientDrawable) {
-            bg.setColor(ContextCompat.getColor(this, colorRes))
+            val ctx = if (::themedContext.isInitialized) themedContext else this
+            bg.setColor(ContextCompat.getColor(ctx, colorRes))
         }
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        mainHandler.post {
+            reloadInputView()
+        }
+    }
+
+    private fun reloadInputView() {
+        if (!::keyboardRootFrame.isInitialized) return
+
+        val wasShifted = isShifted
+        val wasSymbols = isSymbols
+        val lastScore = if (::scoreText.isInitialized) scoreText.text?.toString() else null
+        val lastStatus = if (::statusText.isInitialized) statusText.text?.toString() else null
+        val lastEnroll = if (::enrollmentText.isInitialized) enrollmentText.text?.toString() else null
+        val isResizeOpen = ::resizePanel.isInitialized && resizePanel.visibility == View.VISIBLE
+
+        val newView = onCreateInputView()
+
+        isShifted = wasShifted
+        isSymbols = wasSymbols
+        if (::scoreText.isInitialized && lastScore != null) scoreText.text = lastScore
+        if (::statusText.isInitialized && lastStatus != null) statusText.text = lastStatus
+        if (::enrollmentText.isInitialized && lastEnroll != null) enrollmentText.text = lastEnroll
+        if (isResizeOpen) showResizePanel()
+
+        updateKeyboardLabels(newView)
+        updateShiftKey(newView)
+
+        if (isInputViewShown) {
+            setInputView(newView)
+        }
+    }
+
+    private fun getThemedContext(): Context {
+        val themePrefs = ThemePreferences(this)
+        val isNight = when (themePrefs.themeMode) {
+            ThemeMode.LIGHT -> false
+            ThemeMode.DARK -> true
+            ThemeMode.SYSTEM -> {
+                (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+            }
+        }
+
+        val overrideConfig = Configuration(resources.configuration).apply {
+            uiMode = (uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()) or
+                    (if (isNight) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO)
+        }
+        val configContext = createConfigurationContext(overrideConfig)
+
+        val themeResId = if (themePrefs.palette == ColorPalette.MONET) {
+            R.style.Theme_Thesis
+        } else {
+            themePrefs.palette.getThemeResId()
+        }
+
+        var themed: Context = ContextThemeWrapper(configContext, themeResId)
+
+        if (themePrefs.palette == ColorPalette.MONET && DynamicColors.isDynamicColorAvailable()) {
+            themed = DynamicColors.wrapContextIfAvailable(themed)
+        }
+
+        if (isNight && themePrefs.isAmoledBlackEnabled) {
+            themed = ContextThemeWrapper(themed, R.style.Theme_Thesis_Amoled)
+        }
+
+        return themed
+    }
+
+    private fun applyThemeColors(ctx: Context) {
+        val themePrefs = ThemePreferences(this)
+        val isNight = (ctx.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+        isAmoledActive = isNight && themePrefs.isAmoledBlackEnabled
+
+        currentPrimaryColor = MaterialColors.getColor(
+            ctx,
+            com.google.android.material.R.attr.colorPrimary,
+            ContextCompat.getColor(ctx, R.color.md_theme_primary)
+        )
+        currentOnPrimaryColor = MaterialColors.getColor(
+            ctx,
+            com.google.android.material.R.attr.colorOnPrimary,
+            ContextCompat.getColor(ctx, R.color.md_theme_onPrimary)
+        )
+        currentKeyTextColor = MaterialColors.getColor(
+            ctx,
+            com.google.android.material.R.attr.colorOnSurface,
+            ContextCompat.getColor(ctx, R.color.key_text)
+        )
+        currentOnSurfaceVariant = MaterialColors.getColor(
+            ctx,
+            com.google.android.material.R.attr.colorOnSurfaceVariant,
+            ContextCompat.getColor(ctx, R.color.key_text_special)
+        )
+        val surfaceContainer = MaterialColors.getColor(
+            ctx,
+            com.google.android.material.R.attr.colorSurfaceContainer,
+            ContextCompat.getColor(ctx, R.color.keyboard_bg)
+        )
+        val surfaceContainerLow = MaterialColors.getColor(
+            ctx,
+            com.google.android.material.R.attr.colorSurfaceContainerLow,
+            ContextCompat.getColor(ctx, R.color.keyboard_bar_bg)
+        )
+
+        val mainContent = keyboardView.findViewById<LinearLayout>(R.id.keyboard_main_content)
+        if (isAmoledActive) {
+            mainContent?.setBackgroundColor(Color.BLACK)
+            statusBar.setBackgroundColor(Color.BLACK)
+            resizePanel.setBackgroundColor(Color.BLACK)
+            applyAmoledKeyBackgrounds()
+        } else {
+            mainContent?.setBackgroundColor(surfaceContainer)
+            statusBar.setBackgroundColor(surfaceContainerLow)
+            resizePanel.setBackgroundColor(surfaceContainerLow)
+        }
+
+        // Return / Enter Key
+        val keyEnter = keyboardView.findViewById<TextView>(R.id.key_enter)
+        if (keyEnter != null) {
+            keyEnter.background = createAccentDrawable(currentPrimaryColor)
+            keyEnter.setTextColor(currentOnPrimaryColor)
+        }
+
+        // Mode toggle button
+        updateModeToggleButton()
+
+        // Enrollment text
+        if (::enrollmentText.isInitialized) {
+            enrollmentText.setTextColor(currentPrimaryColor)
+        }
+
+        // Resize buttons
+        if (::btnResizeDone.isInitialized) {
+            btnResizeDone.background = createRoundedDrawable(currentPrimaryColor, 16f)
+            btnResizeDone.setTextColor(currentOnPrimaryColor)
+        }
+
+        // Resize drag handle pill & area
+        val dragHandle = keyboardView.findViewById<View>(R.id.resize_drag_handle_area)
+        if (dragHandle is ViewGroup && dragHandle.childCount > 0) {
+            val pill = dragHandle.getChildAt(0)
+            pill?.background = createRoundedDrawable(currentPrimaryColor, 3f)
+            if (isAmoledActive) {
+                dragHandle.setBackgroundColor(Color.parseColor("#121417"))
+            }
+        }
+
+        // Resize toggle icon tint
+        if (::btnResizeToggle.isInitialized) {
+            val isPanelOpen = ::resizePanel.isInitialized && resizePanel.visibility == View.VISIBLE
+            btnResizeToggle.setColorFilter(if (isPanelOpen) currentPrimaryColor else currentOnSurfaceVariant)
+        }
+    }
+
+    private fun applyAmoledKeyBackgrounds() {
+        val normalAmoledDrawable = createKeyDrawable(
+            normalColor = Color.parseColor("#15181C"),
+            pressedColor = Color.parseColor("#262B31"),
+            shadowColor = Color.BLACK,
+            borderColor = Color.parseColor("#252A2F")
+        )
+        val specialAmoledDrawable = createKeyDrawable(
+            normalColor = Color.parseColor("#0C0E10"),
+            pressedColor = Color.parseColor("#1F2327"),
+            shadowColor = Color.BLACK,
+            borderColor = Color.parseColor("#1D2024")
+        )
+
+        keyMap.keys.forEach { buttonId ->
+            keyboardView.findViewById<TextView>(buttonId)?.apply {
+                background = normalAmoledDrawable.constantState?.newDrawable()?.mutate() ?: normalAmoledDrawable
+                setTextColor(Color.WHITE)
+            }
+        }
+        keyboardView.findViewById<TextView>(R.id.key_comma)?.apply {
+            background = normalAmoledDrawable.constantState?.newDrawable()?.mutate() ?: normalAmoledDrawable
+            setTextColor(Color.WHITE)
+        }
+        keyboardView.findViewById<TextView>(R.id.key_period)?.apply {
+            background = normalAmoledDrawable.constantState?.newDrawable()?.mutate() ?: normalAmoledDrawable
+            setTextColor(Color.WHITE)
+        }
+        keyboardView.findViewById<TextView>(R.id.key_space)?.apply {
+            background = normalAmoledDrawable.constantState?.newDrawable()?.mutate() ?: normalAmoledDrawable
+            setTextColor(Color.parseColor("#9497A0"))
+        }
+        keyboardView.findViewById<TextView>(R.id.key_delete)?.apply {
+            background = specialAmoledDrawable.constantState?.newDrawable()?.mutate() ?: specialAmoledDrawable
+            setTextColor(Color.parseColor("#DEE4E6"))
+        }
+        keyboardView.findViewById<TextView>(R.id.key_symbols)?.apply {
+            background = specialAmoledDrawable.constantState?.newDrawable()?.mutate() ?: specialAmoledDrawable
+            setTextColor(Color.parseColor("#DEE4E6"))
+        }
+        keyboardView.findViewById<TextView>(R.id.key_shift)?.apply {
+            if (!isShifted) {
+                background = specialAmoledDrawable.constantState?.newDrawable()?.mutate() ?: specialAmoledDrawable
+                setTextColor(Color.parseColor("#DEE4E6"))
+            }
+        }
+    }
+
+    private fun createAccentDrawable(
+        primaryColor: Int,
+        cornerRadiusDp: Float = 7f
+    ): Drawable {
+        val density = resources.displayMetrics.density
+        val radiusPx = cornerRadiusDp * density
+        val strokePx = (0.75f * density).toInt().coerceAtLeast(1)
+        val insetPx = (1.5f * density).toInt().coerceAtLeast(1)
+
+        val pressedColor = adjustColorBrightness(primaryColor, 0.85f)
+        val shadowColor = adjustColorBrightness(primaryColor, 0.60f)
+        val borderColor = adjustColorBrightness(primaryColor, 0.75f)
+
+        val pressedShape = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = radiusPx
+            setColor(pressedColor)
+            setStroke(strokePx, borderColor)
+        }
+        val pressedLayer = LayerDrawable(arrayOf(pressedShape)).apply {
+            setLayerInset(0, 0, insetPx, 0, 0)
+        }
+
+        val shadowShape = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = radiusPx
+            setColor(shadowColor)
+        }
+        val surfaceShape = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = radiusPx
+            setColor(primaryColor)
+            setStroke(strokePx, borderColor)
+        }
+        val normalLayer = LayerDrawable(arrayOf(shadowShape, surfaceShape)).apply {
+            setLayerInset(0, 0, insetPx, 0, 0)
+            setLayerInset(1, 0, 0, 0, insetPx)
+        }
+
+        val stateList = StateListDrawable().apply {
+            addState(intArrayOf(android.R.attr.state_pressed), pressedLayer)
+            addState(intArrayOf(), normalLayer)
+        }
+
+        val rippleAlpha = 60
+        val rippleColor = Color.argb(
+            rippleAlpha,
+            Color.red(primaryColor),
+            Color.green(primaryColor),
+            Color.blue(primaryColor)
+        )
+        return RippleDrawable(ColorStateList.valueOf(rippleColor), stateList, null)
+    }
+
+    private fun createKeyDrawable(
+        normalColor: Int,
+        pressedColor: Int,
+        shadowColor: Int,
+        borderColor: Int,
+        cornerRadiusDp: Float = 7f
+    ): Drawable {
+        val density = resources.displayMetrics.density
+        val radiusPx = cornerRadiusDp * density
+        val strokePx = (0.75f * density).toInt().coerceAtLeast(1)
+        val insetPx = (1.5f * density).toInt().coerceAtLeast(1)
+
+        val pressedShape = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = radiusPx
+            setColor(pressedColor)
+            setStroke(strokePx, borderColor)
+        }
+        val pressedLayer = LayerDrawable(arrayOf(pressedShape)).apply {
+            setLayerInset(0, 0, insetPx, 0, 0)
+        }
+
+        val shadowShape = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = radiusPx
+            setColor(shadowColor)
+        }
+        val surfaceShape = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = radiusPx
+            setColor(normalColor)
+            setStroke(strokePx, borderColor)
+        }
+        val normalLayer = LayerDrawable(arrayOf(shadowShape, surfaceShape)).apply {
+            setLayerInset(0, 0, insetPx, 0, 0)
+            setLayerInset(1, 0, 0, 0, insetPx)
+        }
+
+        val stateList = StateListDrawable().apply {
+            addState(intArrayOf(android.R.attr.state_pressed), pressedLayer)
+            addState(intArrayOf(), normalLayer)
+        }
+
+        val rippleAlpha = 40
+        val rippleColor = Color.argb(
+            rippleAlpha,
+            (Color.red(normalColor) + 50).coerceAtMost(255),
+            (Color.green(normalColor) + 50).coerceAtMost(255),
+            (Color.blue(normalColor) + 50).coerceAtMost(255)
+        )
+        return RippleDrawable(ColorStateList.valueOf(rippleColor), stateList, null)
+    }
+
+    private fun createRoundedDrawable(color: Int, radiusDp: Float): Drawable {
+        val density = resources.displayMetrics.density
+        return GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = radiusDp * density
+            setColor(color)
+        }
+    }
+
+    private fun adjustColorBrightness(color: Int, factor: Float): Int {
+        val a = Color.alpha(color)
+        val r = (Color.red(color) * factor).toInt().coerceIn(0, 255)
+        val g = (Color.green(color) * factor).toInt().coerceIn(0, 255)
+        val b = (Color.blue(color) * factor).toInt().coerceIn(0, 255)
+        return Color.argb(a, r, g, b)
     }
 }

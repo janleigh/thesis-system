@@ -20,6 +20,7 @@
             android:name=".KeystrokeIMEService"
             android:label="Keystroke Authenticator"
             android:permission="android.permission.BIND_INPUT_METHOD"
+            android:theme="@style/Theme.Thesis"
             android:exported="true">
 
             <intent-filter>

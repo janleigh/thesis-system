@@ -54,30 +54,30 @@
     <color name="risk_block_bg">#26FF8A80</color>
     <color name="risk_block_container">#4E0C0C</color>
 
-    <!-- Keyboard IME Theming (iOS-Inspired Design) -->
-    <color name="keyboard_bg">#1D1F23</color>
-    <color name="keyboard_bar_bg">#272A2F</color>
-    <color name="key_bg_normal">#383C43</color>
-    <color name="key_bg_pressed">#52565F</color>
-    <color name="key_shadow">#121417</color>
-    <color name="key_border">#424750</color>
-    <color name="key_bg_special">#282A2F</color>
-    <color name="key_bg_special_pressed">#444851</color>
-    <color name="key_shadow_special">#121417</color>
-    <color name="key_bg_space">#383C43</color>
-    <color name="key_text">#FFFFFF</color>
-    <color name="key_text_special">#E5E7EB</color>
-    <color name="key_text_hint">#9497A0</color>
-    <color name="key_ripple">#30818CF8</color>
+    <!-- Keyboard IME Theming (Material 3 Aligned Design - Dark) -->
+    <color name="keyboard_bg">#12181A</color>
+    <color name="keyboard_bar_bg">#161D1F</color>
+    <color name="key_bg_normal">#242C2F</color>
+    <color name="key_bg_pressed">#323B3E</color>
+    <color name="key_shadow">#0A0E10</color>
+    <color name="key_border">#384245</color>
+    <color name="key_bg_special">#1A2124</color>
+    <color name="key_bg_special_pressed">#2F363A</color>
+    <color name="key_shadow_special">#0A0E10</color>
+    <color name="key_bg_space">#242C2F</color>
+    <color name="key_text">#DEE4E6</color>
+    <color name="key_text_special">#BFC8CB</color>
+    <color name="key_text_hint">#899295</color>
+    <color name="key_ripple">#3000E5FF</color>
 
-    <!-- Subtle Lavender-Blue Accents -->
-    <color name="lavender_blue">#818CF8</color>
-    <color name="lavender_blue_light">#262A45</color>
-    <color name="lavender_blue_hover">#6366F1</color>
-    <color name="lavender_blue_shadow">#1E2038</color>
-    <color name="key_accent_bg">#6366F1</color>
-    <color name="key_accent_pressed">#4F52D0</color>
-    <color name="key_accent_text">#FFFFFF</color>
+    <!-- Palette Primary & Accent Integration -->
+    <color name="lavender_blue">#00E5FF</color>
+    <color name="lavender_blue_light">#00363D</color>
+    <color name="lavender_blue_hover">#33EBFF</color>
+    <color name="lavender_blue_shadow">#00252A</color>
+    <color name="key_accent_bg">#00E5FF</color>
+    <color name="key_accent_pressed">#00B4CC</color>
+    <color name="key_accent_text">#00363D</color>
 
     <!-- Legacy / Semantic fallbacks -->
     <color name="black">#FF000000</color>

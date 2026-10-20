@@ -1,8 +1,10 @@
 package com.chate.thesis
 
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 
 enum class ThemeMode(val id: String, val title: String, val nightMode: Int) {
     SYSTEM("system", "Automatic", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM),
@@ -56,21 +58,31 @@ enum class HeaderEffect(val id: String, val title: String) {
     }
 }
 
-class ThemePreferences(context: Context) {
+class ThemePreferences(private val context: Context) {
+    private val appContext: Context = context.applicationContext ?: context
     private val prefs: SharedPreferences =
-        context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        appContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
     var themeMode: ThemeMode
         get() = ThemeMode.fromId(prefs.getString(KEY_THEME_MODE, ThemeMode.SYSTEM.id))
-        set(value) = prefs.edit().putString(KEY_THEME_MODE, value.id).apply()
+        set(value) {
+            prefs.edit().putString(KEY_THEME_MODE, value.id).apply()
+            notifyThemeChanged()
+        }
 
     var palette: ColorPalette
         get() = ColorPalette.fromId(prefs.getString(KEY_PALETTE, ColorPalette.MONET.id))
-        set(value) = prefs.edit().putString(KEY_PALETTE, value.id).apply()
+        set(value) {
+            prefs.edit().putString(KEY_PALETTE, value.id).apply()
+            notifyThemeChanged()
+        }
 
     var isAmoledBlackEnabled: Boolean
         get() = prefs.getBoolean(KEY_AMOLED_BLACK, false)
-        set(value) = prefs.edit().putBoolean(KEY_AMOLED_BLACK, value).apply()
+        set(value) {
+            prefs.edit().putBoolean(KEY_AMOLED_BLACK, value).apply()
+            notifyThemeChanged()
+        }
 
     var headerEffect: HeaderEffect
         get() = HeaderEffect.fromId(prefs.getString(KEY_HEADER_EFFECT, HeaderEffect.NOTHING.id))
@@ -84,13 +96,25 @@ class ThemePreferences(context: Context) {
         AppCompatDelegate.setDefaultNightMode(themeMode.nightMode)
     }
 
+    private fun notifyThemeChanged() {
+        val intent = Intent(ACTION_THEME_CHANGED)
+        LocalBroadcastManager.getInstance(appContext).sendBroadcast(intent)
+        try {
+            val globalIntent = Intent(ACTION_THEME_CHANGED).setPackage(appContext.packageName)
+            appContext.sendBroadcast(globalIntent)
+        } catch (_: Exception) {
+            // Ignored if broadcast cannot be sent globally
+        }
+    }
+
     companion object {
-        private const val PREFS_NAME = "pukey_theme_prefs"
-        private const val KEY_THEME_MODE = "theme_mode"
-        private const val KEY_PALETTE = "theme_palette"
-        private const val KEY_AMOLED_BLACK = "amoled_black"
-        private const val KEY_HEADER_EFFECT = "header_effect"
-        private const val KEY_PROMPT_KEYBOARD_SWITCH = "prompt_keyboard_switch"
+        const val PREFS_NAME = "pukey_theme_prefs"
+        const val KEY_THEME_MODE = "theme_mode"
+        const val KEY_PALETTE = "theme_palette"
+        const val KEY_AMOLED_BLACK = "amoled_black"
+        const val KEY_HEADER_EFFECT = "header_effect"
+        const val KEY_PROMPT_KEYBOARD_SWITCH = "prompt_keyboard_switch"
+
+        const val ACTION_THEME_CHANGED = "com.chate.thesis.THEME_CHANGED"
     }
 }
-
