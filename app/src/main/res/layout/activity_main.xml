@@ -26,15 +26,19 @@
                 android:orientation="vertical">
 
                 <!-- TOP HERO HIGHLIGHT BANNER (Curved bottom corners matching screenshot) -->
-                <LinearLayout
-                    android:id="@+id/heroHighlightCard"
+                <FrameLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:background="@drawable/card_hero_highlight_bg"
-                    android:paddingHorizontal="20dp"
-                    android:paddingTop="28dp"
-                    android:paddingBottom="24dp">
+                    android:layout_height="wrap_content">
+
+                    <LinearLayout
+                        android:id="@+id/heroHighlightCard"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:background="@drawable/card_hero_highlight_bg"
+                        android:paddingHorizontal="20dp"
+                        android:paddingTop="28dp"
+                        android:paddingBottom="24dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -127,6 +131,14 @@
                             android:alpha="0.85" />
                     </LinearLayout>
                 </LinearLayout>
+
+                <com.chate.thesis.ui.HeaderSurfaceView
+                    android:id="@+id/headerEffectView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clickable="false"
+                    android:focusable="false" />
+            </FrameLayout>
 
                 <!-- Scrollable Body Content -->
                 <LinearLayout
@@ -377,7 +389,7 @@
                                     android:letterSpacing="0.06" />
 
                                 <com.google.android.material.switchmaterial.SwitchMaterial
-                                    android:id="@+id/verifyToggle"
+                                    android:id="@+id/masterSwitch"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="Live Verifier"
