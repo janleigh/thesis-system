@@ -3,7 +3,7 @@
     <string name="ime_label">Keystroke Authenticator</string>
     
     <!-- Navigation & Titles -->
-    <string name="title_dashboard">Biometric Monitor</string>
+    <string name="title_dashboard">Biometric Home</string>
     <string name="subtitle_dashboard">Continuous Keystroke Dynamics Zero-Trust Engine</string>
     <string name="title_enrollment">Biometric Enrollment</string>
     <string name="subtitle_enrollment">Build your behavioral typing profile</string>
@@ -57,4 +57,11 @@
     <string name="prompt_4">Continuous keystroke authentication verifies behavioral typing rhythm.</string>
     <string name="prompt_5">How vexingly quick daft zebras jump over sleek bronze fountains.</string>
     <string name="prompt_6">Zero-trust device protection detects session takeover instantly.</string>
+
+    <!-- Keyboard Offboarding Dialog -->
+    <string name="dialog_switch_keyboard_title">Verifier Standby</string>
+    <string name="dialog_switch_keyboard_message">Continuous biometric verification is now standby. Would you like to switch to your standard keyboard (like Gboard)?</string>
+    <string name="dialog_switch_keyboard_positive">Switch Keyboard</string>
+    <string name="dialog_switch_keyboard_negative">Keep PuKey</string>
+    <string name="dialog_dont_show_again">Don\'t show again</string>
 </resources>

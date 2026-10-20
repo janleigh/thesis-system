@@ -34,11 +34,18 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.chip.Chip
 import com.google.android.material.color.DynamicColors
 import com.google.android.material.switchmaterial.SwitchMaterial
+import android.content.res.Configuration
+import android.widget.CheckBox
+import com.chate.thesis.ui.HeaderSurfaceView
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import java.util.Random
 
 class MainActivity : AppCompatActivity() {
+
+    private lateinit var themePreferences: ThemePreferences
+    private lateinit var headerEffectView: HeaderSurfaceView
 
     // Navigation & Main Containers (4 destinations)
     private lateinit var bottomNavigation: BottomNavigationView
@@ -47,7 +54,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var settingsView: View
     private lateinit var eventLogView: View
 
-    // 1. MONITOR TAB UI ELEMENTS (Styled like the reference image highlight)
+    // 1. HOME TAB UI ELEMENTS
     private lateinit var heroTitleText: TextView
     private lateinit var heroSubtitleText: TextView
     private lateinit var actionText: TextView
@@ -58,17 +65,12 @@ class MainActivity : AppCompatActivity() {
     // Security Control Cards (Live Verifier & Enforcer Policy)
     private lateinit var btnGridVerifier: View
     private lateinit var gridVerifierStatusText: TextView
+    private lateinit var masterSwitch: SwitchMaterial
     private lateinit var btnGridPolicy: View
     private lateinit var gridPolicyStatusText: TextView
 
-    // Telemetry strip
-    private lateinit var telemetryScoreStat: TextView
-    private lateinit var telemetryKeystrokeStat: TextView
-    private lateinit var telemetryVectorStat: TextView
-
     // Sandbox
     private lateinit var testInput: EditText
-    private lateinit var verifyToggle: SwitchMaterial
     private lateinit var clearTextButton: Button
 
     // Recent Activity timeline
@@ -102,8 +104,6 @@ class MainActivity : AppCompatActivity() {
 
     // Step 3: MONKEYTYPE WORD TYPING ARENA
     private lateinit var enrollStep3Typing: View
-    private lateinit var monkeytypeWpmText: TextView
-    private lateinit var monkeytypeAccText: TextView
     private lateinit var monkeytypeWordCountText: TextView
     private lateinit var btnMonkeytypeRestart: Button
     private lateinit var monkeytypeWordsDisplay: TextView
@@ -118,8 +118,6 @@ class MainActivity : AppCompatActivity() {
 
     // Step 4
     private lateinit var enrollStep4Complete: View
-    private lateinit var enrollCompleteWpmText: TextView
-    private lateinit var enrollCompleteAccText: TextView
     private lateinit var btnLaunchMonitor: Button
 
     // 3. SETTINGS TAB UI ELEMENTS (All buttons relocated here)
@@ -172,11 +170,6 @@ class MainActivity : AppCompatActivity() {
     private var currentWordIndex = 0
     private var currentTypedWord = ""
     private val wordResults = mutableListOf<Boolean>()
-    private var typingStartTime: Long = 0L
-    private var totalCorrectChars = 0
-    private var totalTypedChars = 0
-    private var finalWpm = 0
-    private var finalAcc = 100
 
     companion object {
         const val ACTION_RISK_UPDATE = "com.chate.thesis.RISK_UPDATE"
@@ -210,8 +203,22 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Apply Monet Dynamic Colors (wallpaper-derived Material You colors)
-        DynamicColors.applyToActivityIfAvailable(this)
+        themePreferences = ThemePreferences(this)
+        if (themePreferences.palette == ColorPalette.MONET) {
+            DynamicColors.applyToActivityIfAvailable(this)
+        } else {
+            setTheme(themePreferences.palette.getThemeResId())
+        }
+        if (themePreferences.isAmoledBlackEnabled) {
+            val isDark = when (themePreferences.themeMode) {
+                ThemeMode.DARK -> true
+                ThemeMode.LIGHT -> false
+                ThemeMode.SYSTEM -> (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+            }
+            if (isDark) {
+                theme.applyStyle(R.style.Theme_Thesis_Amoled, true)
+            }
+        }
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -221,11 +228,13 @@ class MainActivity : AppCompatActivity() {
 
         initViews()
         setupNavigation()
-        setupMonitorTab()
+        setupHomeTab()
         setupOnboardingFlow()
         setupMonkeytypeEngine()
         setupSettingsTab()
         setupLogsTab()
+
+        heroSubtitleText.text = "commit: ${BuildConfig.GIT_COMMIT_HASH}"
 
         refreshProfileDisplay()
         checkKeyboardState()
@@ -235,6 +244,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        if (::headerEffectView.isInitialized) {
+            headerEffectView.resumeAnimation()
+        }
         val filter = IntentFilter().apply {
             addAction(ACTION_RISK_UPDATE)
             addAction(ACTION_ENROLLMENT_UPDATE)
@@ -248,6 +260,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
+        if (::headerEffectView.isInitialized) {
+            headerEffectView.pauseAnimation()
+        }
         LocalBroadcastManager.getInstance(this).unregisterReceiver(riskUpdateReceiver)
     }
 
@@ -259,7 +274,11 @@ class MainActivity : AppCompatActivity() {
         settingsView = findViewById(R.id.settingsView)
         eventLogView = findViewById(R.id.eventLogView)
 
-        // Monitor Tab
+        // Header Effect Surface
+        headerEffectView = findViewById(R.id.headerEffectView)
+        headerEffectView.setEffect(themePreferences.headerEffect)
+
+        // Home Tab
         heroTitleText = findViewById(R.id.heroTitleText)
         heroSubtitleText = findViewById(R.id.heroSubtitleText)
         actionText = findViewById(R.id.actionText)
@@ -269,15 +288,11 @@ class MainActivity : AppCompatActivity() {
 
         btnGridVerifier = findViewById(R.id.btnGridVerifier)
         gridVerifierStatusText = findViewById(R.id.gridVerifierStatusText)
+        masterSwitch = findViewById(R.id.masterSwitch)
         btnGridPolicy = findViewById(R.id.btnGridPolicy)
         gridPolicyStatusText = findViewById(R.id.gridPolicyStatusText)
 
-        telemetryScoreStat = findViewById(R.id.telemetryScoreStat)
-        telemetryKeystrokeStat = findViewById(R.id.telemetryKeystrokeStat)
-        telemetryVectorStat = findViewById(R.id.telemetryVectorStat)
-
         testInput = findViewById(R.id.testInput)
-        verifyToggle = findViewById(R.id.verifyToggle)
         clearTextButton = findViewById(R.id.clearTextButton)
 
         timelineEvent1Title = findViewById(R.id.timelineEvent1Title)
@@ -310,8 +325,6 @@ class MainActivity : AppCompatActivity() {
 
         // Step 3 Monkeytype
         enrollStep3Typing = findViewById(R.id.enrollStep3Typing)
-        monkeytypeWpmText = findViewById(R.id.monkeytypeWpmText)
-        monkeytypeAccText = findViewById(R.id.monkeytypeAccText)
         monkeytypeWordCountText = findViewById(R.id.monkeytypeWordCountText)
         btnMonkeytypeRestart = findViewById(R.id.btnMonkeytypeRestart)
         monkeytypeWordsDisplay = findViewById(R.id.monkeytypeWordsDisplay)
@@ -326,8 +339,6 @@ class MainActivity : AppCompatActivity() {
 
         // Step 4
         enrollStep4Complete = findViewById(R.id.enrollStep4Complete)
-        enrollCompleteWpmText = findViewById(R.id.enrollCompleteWpmText)
-        enrollCompleteAccText = findViewById(R.id.enrollCompleteAccText)
         btnLaunchMonitor = findViewById(R.id.btnLaunchMonitor)
 
         // Settings Tab
@@ -388,14 +399,21 @@ class MainActivity : AppCompatActivity() {
         enrollmentView.visibility = if (activeView == enrollmentView) View.VISIBLE else View.GONE
         settingsView.visibility = if (activeView == settingsView) View.VISIBLE else View.GONE
         eventLogView.visibility = if (activeView == eventLogView) View.VISIBLE else View.GONE
+        if (::headerEffectView.isInitialized) {
+            if (activeView == dashboardView) {
+                headerEffectView.resumeAnimation()
+            } else {
+                headerEffectView.pauseAnimation()
+            }
+        }
     }
 
-    private fun setupMonitorTab() {
+    private fun setupHomeTab() {
         clearTextButton.setOnClickListener {
             testInput.text.clear()
         }
 
-        verifyToggle.setOnCheckedChangeListener { _, isChecked ->
+        masterSwitch.setOnCheckedChangeListener { _, isChecked ->
             val profile = profileManager.getProfile(DEFAULT_USER_ID)
             if (profile != null && profile.isReady) {
                 val intent = Intent(KeystrokeIMEService.ACTION_SET_MODE).apply {
@@ -405,18 +423,32 @@ class MainActivity : AppCompatActivity() {
                 LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
                 val msg = if (isChecked) "Continuous verification active" else "Verification standby"
                 Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
-                gridVerifierStatusText.text = if (isChecked) "Active" else "Standby"
+                gridVerifierStatusText.text = if (isChecked) "Active · System Protected" else "Standby · System Inactive"
+                heroTitleText.text = if (isChecked) "Status: Active" else "Status: Standby"
+                actionText.text = if (isChecked) "ALLOW" else "STANDBY"
+                val (textColor, bgColor) = if (isChecked) {
+                    Pair(R.color.risk_allow, R.color.risk_allow_bg)
+                } else {
+                    Pair(R.color.text_secondary, R.color.surface_container_high)
+                }
+                actionText.setTextColor(ContextCompat.getColor(this, textColor))
+                val bgDrawable = actionText.background
+                if (bgDrawable is GradientDrawable) {
+                    bgDrawable.setColor(ContextCompat.getColor(this, bgColor))
+                }
                 if (isChecked) {
                     testInput.requestFocus()
+                } else {
+                    promptKeyboardSwitchIfNeeded()
                 }
             } else if (isChecked) {
-                verifyToggle.isChecked = false
+                masterSwitch.isChecked = false
                 Toast.makeText(this, "Profile not ready. Complete enrollment first.", Toast.LENGTH_SHORT).show()
             }
         }
 
         btnGridVerifier.setOnClickListener {
-            verifyToggle.isChecked = !verifyToggle.isChecked
+            masterSwitch.isChecked = !masterSwitch.isChecked
         }
 
         btnGridPolicy.setOnClickListener {
@@ -448,8 +480,8 @@ class MainActivity : AppCompatActivity() {
             }
             LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
 
-            verifyToggle.isChecked = false
-            gridVerifierStatusText.text = "Standby"
+            masterSwitch.isChecked = false
+            gridVerifierStatusText.text = "Standby · System Inactive"
             refreshProfileDisplay()
             resetScoreDisplay()
             setEnrollmentStep(1)
@@ -484,7 +516,7 @@ class MainActivity : AppCompatActivity() {
 
         btnLaunchMonitor.setOnClickListener {
             bottomNavigation.selectedItemId = R.id.nav_dashboard
-            verifyToggle.isChecked = true
+            masterSwitch.isChecked = true
         }
     }
 
@@ -516,11 +548,6 @@ class MainActivity : AppCompatActivity() {
 
                 val rawText = s?.toString() ?: ""
 
-                // Start WPM timer on first keystroke
-                if (rawText.isNotEmpty() && typingStartTime == 0L) {
-                    typingStartTime = SystemClock.elapsedRealtime()
-                }
-
                 // If space is typed, advance to next word!
                 if (rawText.endsWith(" ")) {
                     val typedWord = rawText.trimEnd()
@@ -528,11 +555,6 @@ class MainActivity : AppCompatActivity() {
                     val isMatch = typedWord == targetWord
 
                     wordResults.add(isMatch)
-                    totalTypedChars += typedWord.length + 1
-                    if (isMatch) {
-                        totalCorrectChars += targetWord.length + 1
-                    }
-
                     currentWordIndex++
                     currentTypedWord = ""
 
@@ -569,18 +591,7 @@ class MainActivity : AppCompatActivity() {
         currentWordIndex = 0
         currentTypedWord = ""
         wordResults.clear()
-        typingStartTime = 0L
-        totalCorrectChars = 0
-        totalTypedChars = 0
-        finalWpm = 0
-        finalAcc = 100
-
         monkeytypeInput.setText("")
-        val profile = profileManager.getProfile(DEFAULT_USER_ID)
-        val isReady = profile != null && profile.isReady
-        monkeytypeWpmText.visibility = if (isReady) View.VISIBLE else View.GONE
-        monkeytypeWpmText.text = if (isReady) "$finalWpm WPM" else "-- WPM"
-        monkeytypeAccText.text = "100% ACC"
         monkeytypeWordCountText.text = "0 words"
 
         renderMonkeytypeDisplay()
@@ -594,28 +605,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateMonkeytypeStats() {
-        if (typingStartTime > 0L) {
-            val elapsedMinutes = (SystemClock.elapsedRealtime() - typingStartTime) / 60000.0
-            if (elapsedMinutes > 0.03) {
-                val wordsCounted = (totalCorrectChars + currentTypedWord.length) / 5.0
-                finalWpm = (wordsCounted / elapsedMinutes).toInt().coerceAtLeast(0)
-                monkeytypeWpmText.text = "$finalWpm WPM"
-            }
-        }
-
-        val totalEvaluated = totalTypedChars + currentTypedWord.length
-        if (totalEvaluated > 0) {
-            finalAcc = ((totalCorrectChars.toDouble() / totalEvaluated) * 100.0).toInt().coerceIn(0, 100)
-            monkeytypeAccText.text = "$finalAcc% ACC"
-        } else {
-            finalAcc = 100
-            monkeytypeAccText.text = "100% ACC"
-        }
-
-        val profile = profileManager.getProfile(DEFAULT_USER_ID)
-        val isReady = profile != null && profile.isReady
-        monkeytypeWpmText.visibility = if (isReady) View.VISIBLE else View.GONE
-
         monkeytypeWordCountText.text = "$currentWordIndex words"
     }
 
@@ -698,14 +687,6 @@ class MainActivity : AppCompatActivity() {
         enrollStep3Typing.visibility = if (step == 3) View.VISIBLE else View.GONE
         enrollStep4Complete.visibility = if (step == 4) View.VISIBLE else View.GONE
         updateStepperDots(step)
-
-        val profile = profileManager.getProfile(DEFAULT_USER_ID)
-        val isReady = profile != null && profile.isReady
-        monkeytypeWpmText.visibility = if (isReady) View.VISIBLE else View.GONE
-        if (step == 4) {
-            enrollCompleteWpmText.text = if (finalWpm > 0) "$finalWpm WPM" else "-- WPM"
-            enrollCompleteAccText.text = "$finalAcc% ACC"
-        }
     }
 
     private fun updateStepperDots(step: Int) {
@@ -969,22 +950,26 @@ class MainActivity : AppCompatActivity() {
             enrollKeystrokeCounter.text = "Keystrokes: ${profile.keystrokeCount} / ${profile.minKeystrokes}"
             enrollVectorCounter.text = "Vectors: ${profile.vectors.size} / 5"
 
-            telemetryKeystrokeStat.text = "⌨ ${profile.keystrokeCount} Keys"
-            telemetryVectorStat.text = "⚡ ${profile.vectors.size} Windows"
-
             when (profile.status) {
                 "PENDING" -> {
                     heroTitleText.text = "Status: Calibrating"
                     enrollButton.text = getString(R.string.btn_start_enrollment)
                     enrollButton.isEnabled = true
-                    verifyToggle.isEnabled = false
-                    gridVerifierStatusText.text = "Standby"
+                    masterSwitch.isEnabled = false
+                    masterSwitch.isChecked = false
+                    gridVerifierStatusText.text = "Standby · Calibrating"
                 }
                 "READY", "ACTIVE" -> {
-                    heroTitleText.text = "Status: Active"
                     enrollButton.text = "Profile Calibrated"
                     enrollButton.isEnabled = true
-                    verifyToggle.isEnabled = true
+                    masterSwitch.isEnabled = true
+                    if (masterSwitch.isChecked) {
+                        heroTitleText.text = "Status: Active"
+                        gridVerifierStatusText.text = "Active · System Protected"
+                    } else {
+                        heroTitleText.text = "Status: Standby"
+                        gridVerifierStatusText.text = "Standby · System Inactive"
+                    }
                 }
             }
         } else {
@@ -997,10 +982,9 @@ class MainActivity : AppCompatActivity() {
             enrollTelemetryPercent.text = "0%"
             enrollKeystrokeCounter.text = "Keystrokes: 0 / 250"
             enrollVectorCounter.text = "Vectors: 0 / 5"
-            telemetryKeystrokeStat.text = "⌨ 0 Keys"
-            telemetryVectorStat.text = "⚡ 0 Windows"
-            verifyToggle.isEnabled = false
-            gridVerifierStatusText.text = "Standby"
+            masterSwitch.isEnabled = false
+            masterSwitch.isChecked = false
+            gridVerifierStatusText.text = "Standby · System Inactive"
         }
     }
 
@@ -1009,7 +993,6 @@ class MainActivity : AppCompatActivity() {
         ocsvmScoreText.text = String.format("%.3f", ocsvm)
         mahalScoreText.text = String.format("%.3f", mahal)
         actionText.text = action
-        telemetryScoreStat.text = String.format("★ Risk: %.3f", composite)
 
         val (textColor, bgColor) = when (action) {
             "ALLOW" -> Pair(R.color.risk_allow, R.color.risk_allow_bg)
@@ -1025,7 +1008,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         keystrokeCountText.text = "$keystrokeCount"
-        telemetryKeystrokeStat.text = "⌨ $keystrokeCount Keys"
         updateRecentActivityTimeline()
     }
 
@@ -1045,13 +1027,9 @@ class MainActivity : AppCompatActivity() {
         enrollVectorCounter.text = "Vectors: $vectorCount / 5"
         enrollRhythmStatus.text = "Capturing rhythm: $keystrokeCount keystrokes collected"
 
-        telemetryKeystrokeStat.text = "⌨ $keystrokeCount Keys"
-        telemetryVectorStat.text = "⚡ $vectorCount Windows"
-
         if (status == "READY" || status == "ACTIVE") {
-            heroTitleText.text = "Status: Active"
             setEnrollmentStep(4)
-            verifyToggle.isEnabled = true
+            masterSwitch.isEnabled = true
             Toast.makeText(this, "🎉 Biometric Profile Calibrated!", Toast.LENGTH_LONG).show()
         }
     }
@@ -1083,6 +1061,34 @@ class MainActivity : AppCompatActivity() {
         mahalScoreText.text = "0.000"
         actionText.text = "ALLOW"
         actionText.setTextColor(ContextCompat.getColor(this, R.color.risk_allow))
-        telemetryScoreStat.text = "★ Risk: 0.000"
+    }
+
+    private fun promptKeyboardSwitchIfNeeded() {
+        if (!themePreferences.promptKeyboardSwitchOnDisable) return
+
+        val dialogView = layoutInflater.inflate(R.layout.dialog_switch_keyboard, null)
+        val checkDontShowAgain = dialogView.findViewById<CheckBox>(R.id.checkDontShowAgain)
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.dialog_switch_keyboard_title)
+            .setMessage(R.string.dialog_switch_keyboard_message)
+            .setView(dialogView)
+            .setPositiveButton(R.string.dialog_switch_keyboard_positive) { _, _ ->
+                if (checkDontShowAgain.isChecked) {
+                    themePreferences.promptKeyboardSwitchOnDisable = false
+                }
+                showKeyboardPicker()
+            }
+            .setNegativeButton(R.string.dialog_switch_keyboard_negative) { _, _ ->
+                if (checkDontShowAgain.isChecked) {
+                    themePreferences.promptKeyboardSwitchOnDisable = false
+                }
+            }
+            .show()
+    }
+
+    private fun showKeyboardPicker() {
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+        imm?.showInputMethodPicker()
     }
 }
