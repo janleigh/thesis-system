@@ -38,6 +38,9 @@ import android.content.res.Configuration
 import android.widget.CheckBox
 import com.chate.thesis.ui.HeaderSurfaceView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.button.MaterialButtonToggleGroup
+import com.google.android.material.chip.ChipGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import java.util.Random
@@ -131,6 +134,17 @@ class MainActivity : AppCompatActivity() {
     private lateinit var deviceAdminButton: Button
     private lateinit var enrollButton: Button
     private lateinit var resetButton: Button
+
+    // Enhanced Theming & IME Settings UI
+    private lateinit var themeModeToggleGroup: MaterialButtonToggleGroup
+    private lateinit var btnThemeAuto: MaterialButton
+    private lateinit var btnThemeLight: MaterialButton
+    private lateinit var btnThemeDark: MaterialButton
+    private lateinit var switchAmoledBlack: SwitchMaterial
+    private lateinit var paletteChipGroup: ChipGroup
+    private lateinit var effectChipGroup: ChipGroup
+    private lateinit var switchPromptKeyboardSwitch: SwitchMaterial
+    private lateinit var btnSwitchKeyboardManual: MaterialButton
 
     // 4. LOGS TAB UI ELEMENTS
     private lateinit var logCountText: TextView
@@ -227,7 +241,7 @@ class MainActivity : AppCompatActivity() {
         securityLogger = SecurityLogger(this)
 
         initViews()
-        setupNavigation()
+        setupNavigation(savedInstanceState)
         setupHomeTab()
         setupOnboardingFlow()
         setupMonkeytypeEngine()
@@ -353,6 +367,16 @@ class MainActivity : AppCompatActivity() {
         enrollButton = findViewById(R.id.enrollButton)
         resetButton = findViewById(R.id.resetButton)
 
+        themeModeToggleGroup = findViewById(R.id.themeModeToggleGroup)
+        btnThemeAuto = findViewById(R.id.btnThemeAuto)
+        btnThemeLight = findViewById(R.id.btnThemeLight)
+        btnThemeDark = findViewById(R.id.btnThemeDark)
+        switchAmoledBlack = findViewById(R.id.switchAmoledBlack)
+        paletteChipGroup = findViewById(R.id.paletteChipGroup)
+        effectChipGroup = findViewById(R.id.effectChipGroup)
+        switchPromptKeyboardSwitch = findViewById(R.id.switchPromptKeyboardSwitch)
+        btnSwitchKeyboardManual = findViewById(R.id.btnSwitchKeyboardManual)
+
         // Logs Tab
         logCountText = findViewById(R.id.logCountText)
         logSearchInput = findViewById(R.id.logSearchInput)
@@ -364,7 +388,12 @@ class MainActivity : AppCompatActivity() {
         eventLogRecyclerView = findViewById(R.id.eventLogRecyclerView)
     }
 
-    private fun setupNavigation() {
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt("saved_tab_id", bottomNavigation.selectedItemId)
+    }
+
+    private fun setupNavigation(savedInstanceState: Bundle?) {
         bottomNavigation.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.nav_dashboard -> {
@@ -392,6 +421,8 @@ class MainActivity : AppCompatActivity() {
                 else -> false
             }
         }
+        val targetTabId = savedInstanceState?.getInt("saved_tab_id", R.id.nav_dashboard) ?: R.id.nav_dashboard
+        bottomNavigation.selectedItemId = targetTabId
     }
 
     private fun showTab(activeView: View) {
@@ -487,6 +518,95 @@ class MainActivity : AppCompatActivity() {
             setEnrollmentStep(1)
             resetMonkeytypeWords()
             Toast.makeText(this, "Biometric profile deleted & reset", Toast.LENGTH_SHORT).show()
+        }
+
+        // Theme Mode Toggle Group
+        when (themePreferences.themeMode) {
+            ThemeMode.SYSTEM -> themeModeToggleGroup.check(R.id.btnThemeAuto)
+            ThemeMode.LIGHT -> themeModeToggleGroup.check(R.id.btnThemeLight)
+            ThemeMode.DARK -> themeModeToggleGroup.check(R.id.btnThemeDark)
+        }
+        themeModeToggleGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
+            if (isChecked) {
+                val newMode = when (checkedId) {
+                    R.id.btnThemeLight -> ThemeMode.LIGHT
+                    R.id.btnThemeDark -> ThemeMode.DARK
+                    else -> ThemeMode.SYSTEM
+                }
+                if (themePreferences.themeMode != newMode) {
+                    themePreferences.themeMode = newMode
+                    themePreferences.applyNightMode()
+                }
+            }
+        }
+
+        // AMOLED True Black Switch
+        switchAmoledBlack.isChecked = themePreferences.isAmoledBlackEnabled
+        switchAmoledBlack.setOnCheckedChangeListener { _, isChecked ->
+            if (themePreferences.isAmoledBlackEnabled != isChecked) {
+                themePreferences.isAmoledBlackEnabled = isChecked
+                recreate()
+            }
+        }
+
+        // Palette ChipGroup
+        when (themePreferences.palette) {
+            ColorPalette.MONET -> paletteChipGroup.check(R.id.chipPaletteMonet)
+            ColorPalette.CYAN -> paletteChipGroup.check(R.id.chipPaletteCyan)
+            ColorPalette.BLUE -> paletteChipGroup.check(R.id.chipPaletteBlue)
+            ColorPalette.EMERALD -> paletteChipGroup.check(R.id.chipPaletteEmerald)
+            ColorPalette.AMBER -> paletteChipGroup.check(R.id.chipPaletteAmber)
+            ColorPalette.VIOLET -> paletteChipGroup.check(R.id.chipPaletteViolet)
+            ColorPalette.CRIMSON -> paletteChipGroup.check(R.id.chipPaletteCrimson)
+        }
+        paletteChipGroup.setOnCheckedStateChangeListener { _, checkedIds ->
+            val checkedId = checkedIds.firstOrNull() ?: return@setOnCheckedStateChangeListener
+            val selectedPalette = when (checkedId) {
+                R.id.chipPaletteCyan -> ColorPalette.CYAN
+                R.id.chipPaletteBlue -> ColorPalette.BLUE
+                R.id.chipPaletteEmerald -> ColorPalette.EMERALD
+                R.id.chipPaletteAmber -> ColorPalette.AMBER
+                R.id.chipPaletteViolet -> ColorPalette.VIOLET
+                R.id.chipPaletteCrimson -> ColorPalette.CRIMSON
+                else -> ColorPalette.MONET
+            }
+            if (themePreferences.palette != selectedPalette) {
+                themePreferences.palette = selectedPalette
+                recreate()
+            }
+        }
+
+        // Header Surface Effect ChipGroup
+        when (themePreferences.headerEffect) {
+            HeaderEffect.NOTHING -> effectChipGroup.check(R.id.chipEffectNothing)
+            HeaderEffect.SNOW -> effectChipGroup.check(R.id.chipEffectSnow)
+            HeaderEffect.MAZE -> effectChipGroup.check(R.id.chipEffectMaze)
+            HeaderEffect.CIRCUIT -> effectChipGroup.check(R.id.chipEffectCircuit)
+            HeaderEffect.CODE_RAIN -> effectChipGroup.check(R.id.chipEffectCodeRain)
+        }
+        effectChipGroup.setOnCheckedStateChangeListener { _, checkedIds ->
+            val checkedId = checkedIds.firstOrNull() ?: return@setOnCheckedStateChangeListener
+            val selectedEffect = when (checkedId) {
+                R.id.chipEffectSnow -> HeaderEffect.SNOW
+                R.id.chipEffectMaze -> HeaderEffect.MAZE
+                R.id.chipEffectCircuit -> HeaderEffect.CIRCUIT
+                R.id.chipEffectCodeRain -> HeaderEffect.CODE_RAIN
+                else -> HeaderEffect.NOTHING
+            }
+            if (themePreferences.headerEffect != selectedEffect) {
+                themePreferences.headerEffect = selectedEffect
+                headerEffectView.setEffect(selectedEffect)
+            }
+        }
+
+        // Keyboard Prompt Switch & Manual Switch Button
+        switchPromptKeyboardSwitch.isChecked = themePreferences.promptKeyboardSwitchOnDisable
+        switchPromptKeyboardSwitch.setOnCheckedChangeListener { _, isChecked ->
+            themePreferences.promptKeyboardSwitchOnDisable = isChecked
+        }
+
+        btnSwitchKeyboardManual.setOnClickListener {
+            showKeyboardPicker()
         }
     }
 
