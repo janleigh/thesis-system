@@ -4,11 +4,12 @@
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">match_parent</item>
         <item name="android:gravity">center</item>
-        <item name="android:textSize">20sp</item>
+        <item name="android:textSize">22sp</item>
         <item name="android:textColor">@color/key_text</item>
-        <item name="android:fontFamily">sans-serif-medium</item>
-        <item name="android:layout_marginHorizontal">2dp</item>
-        <item name="android:layout_marginVertical">2dp</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:layout_marginHorizontal">2.5dp</item>
+        <item name="android:layout_marginVertical">3dp</item>
         <item name="android:layout_weight">1</item>
     </style>
 
@@ -19,12 +20,34 @@
 
     <style name="KeyStyle.Special" parent="KeyStyle">
         <item name="android:background">@drawable/key_background_special</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textColor">@color/key_text_special</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <style name="KeyStyle.Accent" parent="KeyStyle">
+        <item name="android:background">@drawable/key_background_accent</item>
         <item name="android:textSize">14sp</item>
-        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/key_accent_text</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
     </style>
 
     <style name="KeyStyle.Space" parent="KeyStyle">
         <item name="android:background">@drawable/key_background_space</item>
-        <item name="android:textSize">14sp</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/key_text_hint</item>
+        <item name="android:fontFamily">sans-serif</item>
+    </style>
+
+    <style name="ResizePresetButton">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingHorizontal">9dp</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:textColor">@color/key_text</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:background">@drawable/resize_chip_bg</item>
+        <item name="android:layout_marginEnd">4dp</item>
     </style>
 </resources>

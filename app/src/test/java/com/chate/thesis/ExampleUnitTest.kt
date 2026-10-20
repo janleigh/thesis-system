@@ -157,4 +157,69 @@ class ExampleUnitTest {
         println("Production Impostor: oScore=$impOScore, mScore=$impMScore, composite=${impDec.compositeScore}, action=${impDec.action}")
         assertTrue("Impostor composite must be > 0.60, was ${impDec.compositeScore}", impDec.compositeScore > 0.60)
     }
+
+    @Test
+    fun testCharacterVariantsAndNumberShortcuts() {
+        // Gboard number shortcuts on top row
+        val qVariants = CharacterVariants.getVariants("q", isShifted = false)
+        assertTrue(qVariants.contains("1"))
+        assertEquals("1", qVariants[0])
+
+        val eVariants = CharacterVariants.getVariants("e", isShifted = false)
+        assertTrue(eVariants.contains("3"))
+        assertTrue(eVariants.contains("é"))
+        assertTrue(eVariants.contains("è"))
+
+        // Shifted variants: alphabet letters must be uppercase, numbers preserved
+        val eShifted = CharacterVariants.getVariants("e", isShifted = true)
+        assertTrue(eShifted.contains("3"))
+        assertTrue(eShifted.contains("É"))
+        assertTrue(eShifted.contains("È"))
+        assertFalse(eShifted.contains("é"))
+
+        // Spanish / International accents
+        val nVariants = CharacterVariants.getVariants("n", isShifted = false)
+        assertTrue(nVariants.contains("ñ"))
+
+        val cVariants = CharacterVariants.getVariants("c", isShifted = false)
+        assertTrue(cVariants.contains("ç"))
+
+        // Currency variants
+        val dollarVariants = CharacterVariants.getVariants("$", isShifted = false)
+        assertTrue(dollarVariants.contains("€"))
+        assertTrue(dollarVariants.contains("£"))
+        assertTrue(dollarVariants.contains("¥"))
+
+        // Period variants
+        val periodVariants = CharacterVariants.getVariants(".", isShifted = false)
+        assertTrue(periodVariants.contains("!"))
+        assertTrue(periodVariants.contains("?"))
+        assertTrue(periodVariants.contains("…"))
+    }
+
+    @Test
+    fun testKeyHintsMapping() {
+        assertEquals("1", CharacterVariants.getKeyHint("q", isSymbols = false))
+        assertEquals("2", CharacterVariants.getKeyHint("w", isSymbols = false))
+        assertEquals("0", CharacterVariants.getKeyHint("p", isSymbols = false))
+        assertEquals("@", CharacterVariants.getKeyHint("a", isSymbols = false))
+        assertEquals("#", CharacterVariants.getKeyHint("s", isSymbols = false))
+        assertEquals("…", CharacterVariants.getKeyHint(".", isSymbols = false))
+
+        // Symbols mode hints
+        assertEquals("¹", CharacterVariants.getKeyHint("1", isSymbols = true))
+        assertEquals("²", CharacterVariants.getKeyHint("2", isSymbols = true))
+        assertEquals("€", CharacterVariants.getKeyHint("$", isSymbols = true))
+    }
+
+    @Test
+    fun testKeyboardPreferencesConstants() {
+        assertEquals(280, KeyboardPreferences.DEFAULT_HEIGHT_DP)
+        assertEquals(190, KeyboardPreferences.MIN_HEIGHT_DP)
+        assertEquals(420, KeyboardPreferences.MAX_HEIGHT_DP)
+        assertEquals("VARIANTS", KeyboardPreferences.MODE_VARIANTS)
+        assertEquals("RAPID_FIRE", KeyboardPreferences.MODE_RAPID_FIRE)
+        assertEquals(350L, KeyboardPreferences.DEFAULT_LONG_PRESS_DELAY)
+        assertEquals(50L, KeyboardPreferences.DEFAULT_REPEAT_INTERVAL)
+    }
 }

@@ -34,6 +34,9 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.chip.Chip
 import com.google.android.material.color.DynamicColors
 import com.google.android.material.switchmaterial.SwitchMaterial
+import android.widget.RadioButton
+import android.widget.RadioGroup
+import com.google.android.material.slider.Slider
 import android.content.res.Configuration
 import android.widget.CheckBox
 import com.chate.thesis.ui.HeaderSurfaceView
@@ -134,6 +137,22 @@ class MainActivity : AppCompatActivity() {
     private lateinit var deviceAdminButton: Button
     private lateinit var enrollButton: Button
     private lateinit var resetButton: Button
+
+    // Keyboard Customization Fields
+    private lateinit var settingsKeyboardHeightLabel: TextView
+    private lateinit var sliderKeyboardHeight: Slider
+    private lateinit var btnSettingsHeightCompact: MaterialButton
+    private lateinit var btnSettingsHeightShort: MaterialButton
+    private lateinit var btnSettingsHeightNormal: MaterialButton
+    private lateinit var btnSettingsHeightTall: MaterialButton
+    private lateinit var btnSettingsHeightXtall: MaterialButton
+    private lateinit var rgLongPressMode: RadioGroup
+    private lateinit var rbModeVariants: RadioButton
+    private lateinit var rbModeRapidFire: RadioButton
+    private lateinit var settingsDelayLabel: TextView
+    private lateinit var sliderLongPressDelay: Slider
+    private lateinit var switchKeyHints: SwitchMaterial
+    private lateinit var keyboardPreferences: KeyboardPreferences
 
     // Enhanced Theming & IME Settings UI
     private lateinit var themeModeToggleGroup: MaterialButtonToggleGroup
@@ -239,6 +258,7 @@ class MainActivity : AppCompatActivity() {
 
         profileManager = ProfileManager(this, testingMode = true)
         securityLogger = SecurityLogger(this)
+        keyboardPreferences = KeyboardPreferences(this)
 
         initViews()
         setupNavigation(savedInstanceState)
@@ -367,6 +387,21 @@ class MainActivity : AppCompatActivity() {
         enrollButton = findViewById(R.id.enrollButton)
         resetButton = findViewById(R.id.resetButton)
 
+        // Keyboard Customization
+        settingsKeyboardHeightLabel = findViewById(R.id.settingsKeyboardHeightLabel)
+        sliderKeyboardHeight = findViewById(R.id.sliderKeyboardHeight)
+        btnSettingsHeightCompact = findViewById(R.id.btnSettingsHeightCompact)
+        btnSettingsHeightShort = findViewById(R.id.btnSettingsHeightShort)
+        btnSettingsHeightNormal = findViewById(R.id.btnSettingsHeightNormal)
+        btnSettingsHeightTall = findViewById(R.id.btnSettingsHeightTall)
+        btnSettingsHeightXtall = findViewById(R.id.btnSettingsHeightXtall)
+        rgLongPressMode = findViewById(R.id.rgLongPressMode)
+        rbModeVariants = findViewById(R.id.rbModeVariants)
+        rbModeRapidFire = findViewById(R.id.rbModeRapidFire)
+        settingsDelayLabel = findViewById(R.id.settingsDelayLabel)
+        sliderLongPressDelay = findViewById(R.id.sliderLongPressDelay)
+        switchKeyHints = findViewById(R.id.switchKeyHints)
+
         themeModeToggleGroup = findViewById(R.id.themeModeToggleGroup)
         btnThemeAuto = findViewById(R.id.btnThemeAuto)
         btnThemeLight = findViewById(R.id.btnThemeLight)
@@ -440,6 +475,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupHomeTab() {
+        val showKeyboardForSandbox = {
+            testInput.requestFocus()
+            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.showSoftInput(testInput, InputMethodManager.SHOW_IMPLICIT)
+        }
+
+        testInput.setOnClickListener { showKeyboardForSandbox() }
+        findViewById<View>(R.id.sandboxContainerCard)?.setOnClickListener { showKeyboardForSandbox() }
+
         clearTextButton.setOnClickListener {
             testInput.text.clear()
         }
@@ -468,7 +512,7 @@ class MainActivity : AppCompatActivity() {
                     bgDrawable.setColor(ContextCompat.getColor(this, bgColor))
                 }
                 if (isChecked) {
-                    testInput.requestFocus()
+                    showKeyboardForSandbox()
                 } else {
                     promptKeyboardSwitchIfNeeded()
                 }
@@ -612,6 +656,111 @@ class MainActivity : AppCompatActivity() {
         btnSwitchKeyboardManual.setOnClickListener {
             showKeyboardPicker()
         }
+
+        setupKeyboardCustomizationControls()
+    }
+
+    private fun setupKeyboardCustomizationControls() {
+        val notifyChange = {
+            LocalBroadcastManager.getInstance(this).sendBroadcast(
+                Intent(KeyboardPreferences.ACTION_SETTINGS_CHANGED)
+            )
+        }
+
+        fun updateHeightUI(dp: Int) {
+            settingsKeyboardHeightLabel.text = "$dp dp"
+            sliderKeyboardHeight.value = snapToSlider(sliderKeyboardHeight, dp.toFloat())
+        }
+
+        sliderKeyboardHeight.addOnChangeListener { _, value, fromUser ->
+            if (fromUser) {
+                val dp = value.toInt()
+                keyboardPreferences.heightDp = dp
+                settingsKeyboardHeightLabel.text = "$dp dp"
+                notifyChange()
+            }
+        }
+
+        btnSettingsHeightCompact.setOnClickListener {
+            keyboardPreferences.heightDp = 210
+            updateHeightUI(210)
+            notifyChange()
+        }
+        btnSettingsHeightShort.setOnClickListener {
+            keyboardPreferences.heightDp = 245
+            updateHeightUI(245)
+            notifyChange()
+        }
+        btnSettingsHeightNormal.setOnClickListener {
+            keyboardPreferences.heightDp = 280
+            updateHeightUI(280)
+            notifyChange()
+        }
+        btnSettingsHeightTall.setOnClickListener {
+            keyboardPreferences.heightDp = 320
+            updateHeightUI(320)
+            notifyChange()
+        }
+        btnSettingsHeightXtall.setOnClickListener {
+            keyboardPreferences.heightDp = 360
+            updateHeightUI(360)
+            notifyChange()
+        }
+
+        rgLongPressMode.setOnCheckedChangeListener { _, checkedId ->
+            val mode = if (checkedId == R.id.rbModeRapidFire) {
+                KeyboardPreferences.MODE_RAPID_FIRE
+            } else {
+                KeyboardPreferences.MODE_VARIANTS
+            }
+            keyboardPreferences.longPressMode = mode
+            notifyChange()
+        }
+
+        sliderLongPressDelay.addOnChangeListener { _, value, fromUser ->
+            val delayMs = value.toLong()
+            settingsDelayLabel.text = "$delayMs ms"
+            if (fromUser) {
+                keyboardPreferences.longPressDelayMs = delayMs
+                notifyChange()
+            }
+        }
+
+        switchKeyHints.setOnCheckedChangeListener { _, isChecked ->
+            keyboardPreferences.showKeyHints = isChecked
+            notifyChange()
+        }
+
+        syncKeyboardSettingsUI()
+    }
+
+    private fun snapToSlider(slider: Slider, rawVal: Float): Float {
+        val from = slider.valueFrom
+        val to = slider.valueTo
+        val step = slider.stepSize
+        val clamped = rawVal.coerceIn(from, to)
+        if (step <= 0f) return clamped
+        val numSteps = Math.round((clamped - from) / step)
+        return (from + numSteps * step).coerceIn(from, to)
+    }
+
+    private fun syncKeyboardSettingsUI() {
+        if (!::settingsKeyboardHeightLabel.isInitialized) return
+        val height = keyboardPreferences.heightDp
+        settingsKeyboardHeightLabel.text = "$height dp"
+        sliderKeyboardHeight.value = snapToSlider(sliderKeyboardHeight, height.toFloat())
+
+        if (keyboardPreferences.longPressMode == KeyboardPreferences.MODE_RAPID_FIRE) {
+            rbModeRapidFire.isChecked = true
+        } else {
+            rbModeVariants.isChecked = true
+        }
+
+        val delay = keyboardPreferences.longPressDelayMs
+        settingsDelayLabel.text = "$delay ms"
+        sliderLongPressDelay.value = snapToSlider(sliderLongPressDelay, delay.toFloat())
+
+        switchKeyHints.isChecked = keyboardPreferences.showKeyHints
     }
 
     private fun setupOnboardingFlow() {
@@ -626,6 +775,8 @@ class MainActivity : AppCompatActivity() {
             setEnrollmentStep(3)
             startEnrollmentSession()
             monkeytypeInput.requestFocus()
+            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.showSoftInput(monkeytypeInput, InputMethodManager.SHOW_IMPLICIT)
         }
         btnStep2Keyboard.setOnClickListener {
             handleKeyboardSetupClick()
@@ -978,9 +1129,9 @@ class MainActivity : AppCompatActivity() {
             step2KeyboardStatusLabel.setTextColor(ContextCompat.getColor(this, R.color.risk_warn))
         } else {
             enableKeyboardButton.text = getString(R.string.btn_keyboard_active)
-            enableKeyboardButton.isEnabled = false
+            enableKeyboardButton.isEnabled = true
             btnStep2Keyboard.text = getString(R.string.btn_keyboard_active)
-            btnStep2Keyboard.isEnabled = false
+            btnStep2Keyboard.isEnabled = true
 
             settingsKeyboardStatusLabel.text = "Active & Ready"
             settingsKeyboardStatusLabel.setTextColor(ContextCompat.getColor(this, R.color.risk_allow))
@@ -1110,6 +1261,7 @@ class MainActivity : AppCompatActivity() {
             masterSwitch.isChecked = false
             gridVerifierStatusText.text = "Standby · System Inactive"
         }
+        syncKeyboardSettingsUI()
     }
 
     private fun updateRiskDisplay(composite: Double, ocsvm: Double, mahal: Double, action: String, keystrokeCount: Int) {

@@ -54,14 +54,30 @@
     <color name="risk_block_bg">#1AC62828</color>
     <color name="risk_block_container">#FFEBEE</color>
 
-    <!-- Keyboard IME Theming -->
-    <color name="keyboard_bg">#EAEFF2</color>
+    <!-- Keyboard IME Theming (iOS-Inspired Design) -->
+    <color name="keyboard_bg">#D0D3D9</color>
+    <color name="keyboard_bar_bg">#E2E5EC</color>
     <color name="key_bg_normal">#FFFFFF</color>
-    <color name="key_bg_special">#DBE4E7</color>
+    <color name="key_bg_pressed">#E5E8EE</color>
+    <color name="key_shadow">#8C929E</color>
+    <color name="key_border">#D1D5DD</color>
+    <color name="key_bg_special">#ADB3BD</color>
+    <color name="key_bg_special_pressed">#FFFFFF</color>
+    <color name="key_shadow_special">#848A94</color>
     <color name="key_bg_space">#FFFFFF</color>
-    <color name="key_text">#171D1E</color>
-    <color name="key_ripple">#3300677E</color>
-    <color name="key_border">#BFC8CB</color>
+    <color name="key_text">#000000</color>
+    <color name="key_text_special">#1C1C1E</color>
+    <color name="key_text_hint">#8E8E93</color>
+    <color name="key_ripple">#225C6BC0</color>
+
+    <!-- Subtle Lavender-Blue Accents -->
+    <color name="lavender_blue">#5C6BC0</color>
+    <color name="lavender_blue_light">#EEF2FF</color>
+    <color name="lavender_blue_hover">#4F5CB5</color>
+    <color name="lavender_blue_shadow">#3C478A</color>
+    <color name="key_accent_bg">#5C6BC0</color>
+    <color name="key_accent_pressed">#4F5CB5</color>
+    <color name="key_accent_text">#FFFFFF</color>
 
     <!-- Legacy / Semantic fallbacks -->
     <color name="black">#FF000000</color>
