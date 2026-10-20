@@ -47,3 +47,4 @@ class HeaderSurfaceLogicTest {
         assertEquals(0f, scanY, 0.001f)
     }
 }
+

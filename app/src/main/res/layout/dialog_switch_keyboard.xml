@@ -14,3 +14,4 @@
         android:text="@string/dialog_dont_show_again"
         android:textSize="14sp" />
 </LinearLayout>
+
