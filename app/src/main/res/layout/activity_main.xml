@@ -159,85 +159,100 @@
                         android:fontFamily="sans-serif-medium"
                         android:layout_marginBottom="12dp" />
 
-                    <!-- ACTION / STATUS CARDS (Live Verifier & Enforcer Policy) -->
+                    <!-- ACTION / STATUS CARDS (Live Verifier Master Switch & Enforcer Policy) -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
+                        android:orientation="vertical"
                         android:layout_marginBottom="16dp">
 
-                        <!-- Card 1: Live Verifier -->
+                        <!-- Card 1: Live Verifier Master Switch -->
                         <LinearLayout
                             android:id="@+id/btnGridVerifier"
-                            android:layout_width="0dp"
-                            android:layout_height="62dp"
-                            android:layout_weight="1"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:minHeight="72dp"
                             android:orientation="horizontal"
                             android:gravity="center_vertical"
-                            android:paddingHorizontal="14dp"
+                            android:paddingHorizontal="16dp"
+                            android:paddingVertical="12dp"
                             android:background="@drawable/card_feature_grid_bg"
-                            android:layout_marginEnd="6dp">
+                            android:clickable="true"
+                            android:focusable="true">
 
                             <ImageView
-                                android:layout_width="22dp"
-                                android:layout_height="22dp"
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
                                 android:src="@drawable/ic_shield_biometric"
                                 app:tint="?attr/colorPrimary" />
 
                             <LinearLayout
-                                android:layout_width="match_parent"
+                                android:layout_width="0dp"
                                 android:layout_height="wrap_content"
+                                android:layout_weight="1"
                                 android:orientation="vertical"
-                                android:layout_marginStart="10dp">
+                                android:layout_marginStart="14dp"
+                                android:layout_marginEnd="10dp">
 
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="Live Verifier"
                                     android:textColor="?attr/colorOnSurface"
-                                    android:textSize="13sp"
+                                    android:textSize="15sp"
                                     android:fontFamily="sans-serif-medium" />
 
                                 <TextView
                                     android:id="@+id/gridVerifierStatusText"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="Standby"
+                                    android:text="Standby · System Inactive"
                                     android:textColor="?attr/colorOnSurfaceVariant"
-                                    android:textSize="11sp" />
+                                    android:textSize="12sp"
+                                    android:layout_marginTop="2dp" />
                             </LinearLayout>
+
+                            <com.google.android.material.switchmaterial.SwitchMaterial
+                                android:id="@+id/masterSwitch"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content" />
                         </LinearLayout>
 
                         <!-- Card 2: Enforcer Policy -->
                         <LinearLayout
                             android:id="@+id/btnGridPolicy"
-                            android:layout_width="0dp"
-                            android:layout_height="62dp"
-                            android:layout_weight="1"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:minHeight="64dp"
                             android:orientation="horizontal"
                             android:gravity="center_vertical"
-                            android:paddingHorizontal="14dp"
+                            android:paddingHorizontal="16dp"
+                            android:paddingVertical="12dp"
                             android:background="@drawable/card_feature_grid_bg"
-                            android:layout_marginStart="6dp">
+                            android:layout_marginTop="10dp"
+                            android:clickable="true"
+                            android:focusable="true">
 
                             <ImageView
-                                android:layout_width="22dp"
-                                android:layout_height="22dp"
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
                                 android:src="@drawable/ic_lock_policy"
                                 app:tint="?attr/colorPrimary" />
 
                             <LinearLayout
-                                android:layout_width="match_parent"
+                                android:layout_width="0dp"
                                 android:layout_height="wrap_content"
+                                android:layout_weight="1"
                                 android:orientation="vertical"
-                                android:layout_marginStart="10dp">
+                                android:layout_marginStart="14dp"
+                                android:layout_marginEnd="10dp">
 
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="Enforcer Policy"
                                     android:textColor="?attr/colorOnSurface"
-                                    android:textSize="13sp"
+                                    android:textSize="14sp"
                                     android:fontFamily="sans-serif-medium" />
 
                                 <TextView
@@ -246,8 +261,15 @@
                                     android:layout_height="wrap_content"
                                     android:text="Auto-Lock"
                                     android:textColor="?attr/colorOnSurfaceVariant"
-                                    android:textSize="11sp" />
+                                    android:textSize="12sp"
+                                    android:layout_marginTop="2dp" />
                             </LinearLayout>
+
+                            <ImageView
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:src="@drawable/ic_arrow_forward"
+                                app:tint="?attr/colorOnSurfaceVariant" />
                         </LinearLayout>
                     </LinearLayout>
 
@@ -351,13 +373,16 @@
                                     android:textAllCaps="true"
                                     android:letterSpacing="0.06" />
 
-                                <com.google.android.material.switchmaterial.SwitchMaterial
-                                    android:id="@+id/masterSwitch"
+                                <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="Live Verifier"
-                                    android:textSize="12sp"
-                                    android:textColor="?attr/colorOnSurfaceVariant" />
+                                    android:text="Interactive Test"
+                                    android:textColor="?attr/colorPrimary"
+                                    android:textSize="11sp"
+                                    android:fontFamily="sans-serif-medium"
+                                    android:paddingHorizontal="8dp"
+                                    android:paddingVertical="3dp"
+                                    android:background="@drawable/badge_status_container" />
                             </LinearLayout>
 
                             <EditText

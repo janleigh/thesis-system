@@ -479,7 +479,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         btnGridVerifier.setOnClickListener {
-            masterSwitch.isChecked = !masterSwitch.isChecked
+            if (masterSwitch.isEnabled) {
+                masterSwitch.isChecked = !masterSwitch.isChecked
+            } else {
+                Toast.makeText(this, "Profile not ready. Complete enrollment first.", Toast.LENGTH_SHORT).show()
+            }
         }
 
         btnGridPolicy.setOnClickListener {
