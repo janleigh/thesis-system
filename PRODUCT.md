@@ -16,7 +16,7 @@ Continuous keystroke dynamics authentication for Android that monitors user typi
 
 ## Positioning
 
-Unlike conventional one-time biometric authentication (fingerprint/face unlock at lock screen), Thesis provides zero-trust, continuous behavioral verification inside the active session. If an unauthorized individual takes over an unlocked phone, their distinct typing cadence triggers stepped-up authentication or automatic lockdown.
+Unlike conventional one-time biometric authentication (fingerprint/face unlock at lock screen), PuKey provides zero-trust, continuous behavioral verification inside the active session. If an unauthorized individual takes over an unlocked phone, their distinct typing cadence triggers stepped-up authentication or automatic lockdown.
 
 ## Operating Context
 

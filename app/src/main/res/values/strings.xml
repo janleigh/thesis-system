@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Thesis Biometrics</string>
+    <string name="app_name">PuKey</string>
     <string name="ime_label">Keystroke Authenticator</string>
     
     <!-- Navigation & Titles -->

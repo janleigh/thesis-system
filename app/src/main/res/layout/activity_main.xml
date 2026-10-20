@@ -691,7 +691,7 @@
                             <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:text="Unlike one-time screen locks, Thesis authenticates you continuously as you type. Your keystroke rhythm, key hold time, and digram latencies form a unique biometric signature that stops unauthorized users."
+                                android:text="Unlike one-time screen locks, PuKey authenticates you continuously as you type. Your keystroke rhythm, key hold time, and digram latencies form a unique biometric signature that stops unauthorized users."
                                 android:textColor="?attr/colorOnSurfaceVariant"
                                 android:textSize="14sp"
                                 android:lineSpacingExtra="3dp"
@@ -873,7 +873,7 @@
                             <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:text="Allows Thesis to immediately lock the screen if an anomalous intruder continues operating the device."
+                                android:text="Allows PuKey to immediately lock the screen if an anomalous intruder continues operating the device."
                                 android:textColor="?attr/colorOnSurfaceVariant"
                                 android:textSize="13sp"
                                 android:layout_marginTop="10dp" />
@@ -1448,7 +1448,7 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Authorizes Thesis to lock device immediately upon threat breach."
+                            android:text="Authorizes PuKey to lock device immediately upon threat breach."
                             android:textColor="?attr/colorOnSurfaceVariant"
                             android:textSize="13sp"
                             android:layout_marginTop="8dp" />
@@ -1644,7 +1644,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Thesis Keystroke Dynamics Engine v1.0"
+                            android:text="PuKey Keystroke Dynamics Engine v1.0"
                             android:textColor="?attr/colorOnSurfaceVariant"
                             android:textSize="12sp"
                             android:fontFamily="monospace" />
