@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Cyan Palette (PuKey Electric Cyan) -->
+    <style name="Theme.Thesis.Palette.Cyan" parent="Theme.Thesis" />
+
+    <!-- Blue Palette (Cyber Blue) -->
+    <style name="Theme.Thesis.Palette.Blue" parent="Theme.Thesis">
+        <item name="colorPrimary">@color/palette_blue_primary</item>
+        <item name="colorOnPrimary">@color/palette_blue_onPrimary</item>
+        <item name="colorPrimaryContainer">@color/palette_blue_primaryContainer</item>
+        <item name="colorOnPrimaryContainer">@color/palette_blue_onPrimaryContainer</item>
+    </style>
+
+    <!-- Emerald Palette (Emerald Forest) -->
+    <style name="Theme.Thesis.Palette.Emerald" parent="Theme.Thesis">
+        <item name="colorPrimary">@color/palette_emerald_primary</item>
+        <item name="colorOnPrimary">@color/palette_emerald_onPrimary</item>
+        <item name="colorPrimaryContainer">@color/palette_emerald_primaryContainer</item>
+        <item name="colorOnPrimaryContainer">@color/palette_emerald_onPrimaryContainer</item>
+    </style>
+
+    <!-- Amber Palette (Sunset Amber) -->
+    <style name="Theme.Thesis.Palette.Amber" parent="Theme.Thesis">
+        <item name="colorPrimary">@color/palette_amber_primary</item>
+        <item name="colorOnPrimary">@color/palette_amber_onPrimary</item>
+        <item name="colorPrimaryContainer">@color/palette_amber_primaryContainer</item>
+        <item name="colorOnPrimaryContainer">@color/palette_amber_onPrimaryContainer</item>
+    </style>
+
+    <!-- Violet Palette (Neon Violet) -->
+    <style name="Theme.Thesis.Palette.Violet" parent="Theme.Thesis">
+        <item name="colorPrimary">@color/palette_violet_primary</item>
+        <item name="colorOnPrimary">@color/palette_violet_onPrimary</item>
+        <item name="colorPrimaryContainer">@color/palette_violet_primaryContainer</item>
+        <item name="colorOnPrimaryContainer">@color/palette_violet_onPrimaryContainer</item>
+    </style>
+
+    <!-- Crimson Palette (Crimson Rose) -->
+    <style name="Theme.Thesis.Palette.Crimson" parent="Theme.Thesis">
+        <item name="colorPrimary">@color/palette_crimson_primary</item>
+        <item name="colorOnPrimary">@color/palette_crimson_onPrimary</item>
+        <item name="colorPrimaryContainer">@color/palette_crimson_primaryContainer</item>
+        <item name="colorOnPrimaryContainer">@color/palette_crimson_onPrimaryContainer</item>
+    </style>
+
+    <!-- AMOLED Dark Mode Pure Black Overlay -->
+    <style name="Theme.Thesis.Amoled">
+        <item name="android:colorBackground">@color/amoled_black</item>
+        <item name="android:windowBackground">@color/amoled_black</item>
+        <item name="colorSurface">@color/amoled_black</item>
+        <item name="colorSurfaceContainerLowest">@color/amoled_surface_lowest</item>
+        <item name="colorSurfaceContainerLow">@color/amoled_surface_low</item>
+        <item name="colorSurfaceContainer">@color/amoled_surface</item>
+        <item name="colorSurfaceContainerHigh">@color/amoled_surface_high</item>
+        <item name="colorSurfaceContainerHighest">@color/amoled_surface_highest</item>
+        <item name="android:statusBarColor">@color/amoled_black</item>
+        <item name="android:navigationBarColor">@color/amoled_black</item>
+    </style>
+</resources>
+

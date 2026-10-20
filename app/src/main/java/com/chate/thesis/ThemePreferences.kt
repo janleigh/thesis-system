@@ -30,6 +30,16 @@ enum class ColorPalette(val id: String, val title: String) {
             return entries.firstOrNull { it.id.equals(id, ignoreCase = true) } ?: MONET
         }
     }
+
+    fun getThemeResId(): Int = when (this) {
+        MONET -> R.style.Theme_Thesis
+        CYAN -> R.style.Theme_Thesis_Palette_Cyan
+        BLUE -> R.style.Theme_Thesis_Palette_Blue
+        EMERALD -> R.style.Theme_Thesis_Palette_Emerald
+        AMBER -> R.style.Theme_Thesis_Palette_Amber
+        VIOLET -> R.style.Theme_Thesis_Palette_Violet
+        CRIMSON -> R.style.Theme_Thesis_Palette_Crimson
+    }
 }
 
 enum class HeaderEffect(val id: String, val title: String) {

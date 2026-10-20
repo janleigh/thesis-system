@@ -74,4 +74,43 @@
     <color name="progress_fill">#00E5FF</color>
     <color name="accent_blue">#00E5FF</color>
     <color name="accent_purple">#00E5FF</color>
+
+    <!-- Built-in Palettes (Dark) -->
+    <!-- Blue -->
+    <color name="palette_blue_primary">#90CAF9</color>
+    <color name="palette_blue_onPrimary">#003258</color>
+    <color name="palette_blue_primaryContainer">#004881</color>
+    <color name="palette_blue_onPrimaryContainer">#D0E4FF</color>
+    
+    <!-- Emerald -->
+    <color name="palette_emerald_primary">#81C784</color>
+    <color name="palette_emerald_onPrimary">#00390E</color>
+    <color name="palette_emerald_primaryContainer">#1B5E20</color>
+    <color name="palette_emerald_onPrimaryContainer">#C8E6C9</color>
+    
+    <!-- Amber -->
+    <color name="palette_amber_primary">#FFB74D</color>
+    <color name="palette_amber_onPrimary">#4B2800</color>
+    <color name="palette_amber_primaryContainer">#7A3600</color>
+    <color name="palette_amber_onPrimaryContainer">#FFE0B2</color>
+    
+    <!-- Violet -->
+    <color name="palette_violet_primary">#CE93D8</color>
+    <color name="palette_violet_onPrimary">#3E0068</color>
+    <color name="palette_violet_primaryContainer">#5C0099</color>
+    <color name="palette_violet_onPrimaryContainer">#E1BEE7</color>
+    
+    <!-- Crimson -->
+    <color name="palette_crimson_primary">#F48FB1</color>
+    <color name="palette_crimson_onPrimary">#5C0028</color>
+    <color name="palette_crimson_primaryContainer">#880E4F</color>
+    <color name="palette_crimson_onPrimaryContainer">#F8BBD0</color>
+
+    <!-- AMOLED Dark Mode Overrides -->
+    <color name="amoled_black">#000000</color>
+    <color name="amoled_surface_lowest">#000000</color>
+    <color name="amoled_surface_low">#050505</color>
+    <color name="amoled_surface">#0A0A0A</color>
+    <color name="amoled_surface_high">#121212</color>
+    <color name="amoled_surface_highest">#181818</color>
 </resources>
