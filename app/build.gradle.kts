@@ -6,12 +6,21 @@ android {
     namespace = "com.chate.thesis"
     compileSdk = 34
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     defaultConfig {
         applicationId = "com.chate.thesis"
         minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
+
+        val gitCommitHash: String = providers.exec {
+            commandLine("git", "rev-parse", "--short", "HEAD")
+        }.standardOutput.asText.map { it.trim() }.getOrElse("7d8135a")
+        buildConfigField("String", "GIT_COMMIT_HASH", "\"$gitCommitHash\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
