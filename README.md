@@ -1,7 +1,7 @@
 # AuthentiKey: Continuous Behavioral Biometric Authentication System
 
 <!-- [![Team](https://img.shields.io/badge/Team-BUGCS-1E88E5?style=flat&logo=github)](https://github.com/BUGCS)
-[![Project](https://img.shields.io/badge/Project-AuthentiKey%20(Working%20Title)-00E5FF)](#system-naming-disclosure)
+[![Project](https://img.shields.io/badge/Project-AuthentiKey-00E5FF)](#overview--problem-statement)
 [![Platform](https://img.shields.io/badge/Platform-Android%208.0%2B%20(API%2026%E2%80%9334)-3DDC84?logo=android&logoColor=white)](https://developer.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin%201.9-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org)
 [![Design](https://img.shields.io/badge/Design-Material%203%20Expressive-00677E?logo=materialdesign&logoColor=white)](https://m3.material.io)
@@ -13,16 +13,12 @@
 > *Development of a Continuous Behavioral Biometric Authentication System Using One-Class Support Vector Machine and Mahalanobis Distance for Mobile Device Keystroke Dynamics*  
 >  
 > **Development Team:** **Team BUGCS**  
-> **System Working Title:** **AuthentiKey** ([*Citation / Disclosure: Working title subject to change*](#system-naming-disclosure))
-
-> ### System Naming Disclosure
-> **AuthentiKey** is the working operational title for this continuous behavioral biometric authentication system developed by **Team BUGCS**. This project designation is preliminary and is **subject to change** or re-titling upon final academic evaluation, committee defense, and institutional archiving.
+> **System Name:** **AuthentiKey**
 
 ---
 
 ## Table of Contents
 
-- [System Naming Disclosure](#system-naming-disclosure)
 - [Overview & Problem Statement](#overview--problem-statement)
 - [Zero-Trust Security Paradigm](#zero-trust-security-paradigm)
 - [System Architecture](#system-architecture)
@@ -525,14 +521,9 @@ This project constitutes the practical engineering implementation of the followi
   year         = {2026},
   school       = {College of Computer Studies},
   address      = {Philippines},
-  note         = {Android Native Zero-Trust Behavioral Biometrics Implementation. 
-                  Citation Note: The system moniker "AuthentiKey" is a working title 
-                  and is subject to change upon final academic defense and publication.}
+  note         = {Android Native Zero-Trust Behavioral Biometrics Implementation.}
 }
 ```
-
-> **Citation & Title Disclaimer**:  
-> The system identifier **"AuthentiKey"** represents an active working project title assigned by **Team BUGCS**. It remains **subject to revision, formal re-titling, or alteration** during the final peer defense, academic review, and publication submission process.
 
 ---
 
