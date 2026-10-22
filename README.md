@@ -1,7 +1,7 @@
-# PuKey: Continuous Behavioral Biometric Authentication System
+# AuthentiKey: Continuous Behavioral Biometric Authentication System
 
 <!-- [![Team](https://img.shields.io/badge/Team-BUGCS-1E88E5?style=flat&logo=github)](https://github.com/BUGCS)
-[![Project](https://img.shields.io/badge/Project-PuKey%20(Working%20Title)-00E5FF)](#system-naming-disclosure)
+[![Project](https://img.shields.io/badge/Project-AuthentiKey%20(Working%20Title)-00E5FF)](#system-naming-disclosure)
 [![Platform](https://img.shields.io/badge/Platform-Android%208.0%2B%20(API%2026%E2%80%9334)-3DDC84?logo=android&logoColor=white)](https://developer.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin%201.9-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org)
 [![Design](https://img.shields.io/badge/Design-Material%203%20Expressive-00677E?logo=materialdesign&logoColor=white)](https://m3.material.io)
@@ -13,10 +13,10 @@
 > *Development of a Continuous Behavioral Biometric Authentication System Using One-Class Support Vector Machine and Mahalanobis Distance for Mobile Device Keystroke Dynamics*  
 >  
 > **Development Team:** **Team BUGCS**  
-> **System Working Title:** **PuKey** ([*Citation / Disclosure: Working title subject to change*](#system-naming-disclosure))
+> **System Working Title:** **AuthentiKey** ([*Citation / Disclosure: Working title subject to change*](#system-naming-disclosure))
 
 > ### System Naming Disclosure
-> **PuKey** is the working operational title for this continuous behavioral biometric authentication system developed by **Team BUGCS**. This project designation is preliminary and is **subject to change** or re-titling upon final academic evaluation, committee defense, and institutional archiving.
+> **AuthentiKey** is the working operational title for this continuous behavioral biometric authentication system developed by **Team BUGCS**. This project designation is preliminary and is **subject to change** or re-titling upon final academic evaluation, committee defense, and institutional archiving.
 
 ---
 
@@ -56,7 +56,7 @@ This model fails against critical mobile attack vectors:
 2. **Co-Worker & Family Impersonation**: An unlocked device left unattended on a desk allows unauthorized third parties to read and manipulate data without re-authenticating.
 3. **Shoulder Surfing & Coerced Unlock**: Static PINs and unlock gestures can be observed from afar and subsequently exploited.
 
-**PuKey** (developed by **Team BUGCS**) solves this vulnerability by introducing **continuous, passive, behavioral biometric verification**. Operating transparently at the operating system layer via an Android Custom Input Method Editor (IME), the system continuously models the legitimate owner's micro-timing rhythm—specifically dwell times, flight times, and inter-key intervals—without degrading user experience or recording keystroke content.
+**AuthentiKey** (developed by **Team BUGCS**) solves this vulnerability by introducing **continuous, passive, behavioral biometric verification**. Operating transparently at the operating system layer via an Android Custom Input Method Editor (IME), the system continuously models the legitimate owner's micro-timing rhythm—specifically dwell times, flight times, and inter-key intervals—without degrading user experience or recording keystroke content.
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
@@ -68,7 +68,7 @@ This model fails against critical mobile attack vectors:
 └────────────────────────────────────────────────────────────────────────┘
 
 ┌────────────────────────────────────────────────────────────────────────┐
-│                      PUKEY ZERO-TRUST CONTINUOUS MODEL                 │
+│                AUTHENTIKEY ZERO-TRUST CONTINUOUS MODEL                 │
 │  [Screen Lock] ──▶ [Active Session] ──▶ Continuous Keystroke Timing    │
 │                           │                    │                       │
 │                           │                    ▼                       │
@@ -434,8 +434,8 @@ thesis-system/
 
 ### 1. Clone Repository
 ```bash
-git clone https://github.com/BUGCS/PuKey.git
-cd PuKey
+git clone https://github.com/BUGCS/AuthentiKey.git
+cd AuthentiKey
 ```
 
 ### 2. Build via Gradle
@@ -472,7 +472,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ## User Walkthrough & Operation
 
 ### Step 1: Initial Permission Setup
-1. Launch **PuKey** (Thesis Biometrics).
+1. Launch **AuthentiKey** (Thesis Biometrics).
 2. Navigate to **Biometric Enrollment** or **Settings**.
 3. Tap **Enable Keyboard** → Toggle on **Keystroke Authenticator** under Android System Settings.
 4. Tap **Select Keyboard** → Choose **Keystroke Authenticator** as your default input method.
@@ -501,7 +501,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ## Privacy & Threat Mitigation
 
-| Risk / Attack Vector | Mitigation Strategy in PuKey (Team BUGCS) |
+| Risk / Attack Vector | Mitigation Strategy in AuthentiKey (Team BUGCS) |
 | :--- | :--- |
 | **Keystroke Snooping & Keylogging** | The system **never stores or transmits typed characters**. Only anonymized millisecond timing intervals ($t_{\text{dwell}}, t_{\text{flight}}, t_{\text{iki}}$) are evaluated. |
 | **Cloud Surveillance & Data Leaks** | Inference and model training execute **100% locally on-device**. The application requests zero network or internet permissions (`android.permission.INTERNET` is omitted). |
@@ -516,23 +516,23 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 This project constitutes the practical engineering implementation of the following research thesis conducted by **Team BUGCS**:
 
 ```bibtex
-@mastersthesis{bugcs2026pukey,
+@mastersthesis{bugcs2026authentikey,
   author       = {{Team BUGCS}},
   title        = {Development of a Continuous Behavioral Biometric Authentication System 
                   Using One-Class Support Vector Machine and Mahalanobis Distance for 
                   Mobile Device Keystroke Dynamics},
-  howpublished = {PuKey Behavioral Biometric Authentication System},
+  howpublished = {AuthentiKey Behavioral Biometric Authentication System},
   year         = {2026},
   school       = {College of Computer Studies},
   address      = {Philippines},
   note         = {Android Native Zero-Trust Behavioral Biometrics Implementation. 
-                  Citation Note: The system moniker "PuKey" is a working title 
+                  Citation Note: The system moniker "AuthentiKey" is a working title 
                   and is subject to change upon final academic defense and publication.}
 }
 ```
 
 > **Citation & Title Disclaimer**:  
-> The system identifier **"PuKey"** represents an active working project title assigned by **Team BUGCS**. It remains **subject to revision, formal re-titling, or alteration** during the final peer defense, academic review, and publication submission process.
+> The system identifier **"AuthentiKey"** represents an active working project title assigned by **Team BUGCS**. It remains **subject to revision, formal re-titling, or alteration** during the final peer defense, academic review, and publication submission process.
 
 ---
 

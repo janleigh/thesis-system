@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Cyan Palette (PuKey Electric Cyan) -->
+    <!-- Cyan Palette (AuthentiKey Electric Cyan) -->
     <style name="Theme.Thesis.Palette.Cyan" parent="Theme.Thesis" />
 
     <!-- Blue Palette (Cyber Blue) -->

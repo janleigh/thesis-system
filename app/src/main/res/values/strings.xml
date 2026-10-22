@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">PuKey</string>
+    <string name="app_name">AuthentiKey</string>
     <string name="ime_label">Keystroke Authenticator</string>
     
     <!-- Navigation & Titles -->
@@ -62,6 +62,6 @@
     <string name="dialog_switch_keyboard_title">Verifier Standby</string>
     <string name="dialog_switch_keyboard_message">Continuous biometric verification is now standby. Would you like to switch to your standard keyboard (like Gboard)?</string>
     <string name="dialog_switch_keyboard_positive">Switch Keyboard</string>
-    <string name="dialog_switch_keyboard_negative">Keep PuKey</string>
+    <string name="dialog_switch_keyboard_negative">Keep AuthentiKey</string>
     <string name="dialog_dont_show_again">Don\'t show again</string>
 </resources>

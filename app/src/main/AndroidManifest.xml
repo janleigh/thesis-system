@@ -45,7 +45,7 @@
 
         <receiver
             android:name=".ThesisDeviceAdminReceiver"
-            android:label="PuKey Device Admin"
+            android:label="AuthentiKey Device Admin"
             android:description="@string/app_name"
             android:permission="android.permission.BIND_DEVICE_ADMIN"
             android:exported="true">

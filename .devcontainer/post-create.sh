@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-echo "=== Initializing PuKey Codespaces Environment ==="
+echo "=== Initializing AuthentiKey Codespaces Environment ==="
 
 # 1. Ensure gradlew is executable
 if [ -f "./gradlew" ]; then
@@ -41,7 +41,7 @@ fi
 # 6. Automatic Tailscale auth if TS_AUTH_KEY is provided
 if [ -n "$TS_AUTH_KEY" ]; then
     echo "[*] Authenticating with Tailscale using secret \$TS_AUTH_KEY..."
-    sudo tailscale up --authkey="$TS_AUTH_KEY" --accept-routes --hostname="pukey-codespace" --operator=vscode || true
+    sudo tailscale up --authkey="$TS_AUTH_KEY" --accept-routes --hostname="authentikey-codespace" --operator=vscode || true
 else
     echo "[i] Tailscale ready. Run 'tailscale-adb up' to authenticate and join your tailnet."
 fi
@@ -60,7 +60,7 @@ sdkmanager --list_installed 2>/dev/null | grep -E "platforms|build-tools|cmake" 
 echo "[i] Validating Gradle Wrapper..."
 ./gradlew --version
 
-echo "=== PuKey Environment Ready! ==="
+echo "=== AuthentiKey Environment Ready! ==="
 echo "Build command:      ./gradlew assembleDebug"
 echo "Run tests:          ./gradlew test"
 echo "Wireless ADB guide: tailscale-adb help"

@@ -108,7 +108,7 @@ class ThemePreferences(private val context: Context) {
     }
 
     companion object {
-        const val PREFS_NAME = "pukey_theme_prefs"
+        const val PREFS_NAME = "authentikey_theme_prefs"
         const val KEY_THEME_MODE = "theme_mode"
         const val KEY_PALETTE = "theme_palette"
         const val KEY_AMOLED_BLACK = "amoled_black"

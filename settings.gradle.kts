@@ -22,5 +22,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "PuKey"
+rootProject.name = "AuthentiKey"
 include(":app")

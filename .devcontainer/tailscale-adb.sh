@@ -7,7 +7,7 @@ CMD="${1:-help}"
 
 print_header() {
     echo "=================================================="
-    echo "       PuKey - Tailscale Wireless ADB Helper      "
+    echo "    AuthentiKey - Tailscale Wireless ADB Helper   "
     echo "=================================================="
 }
 
@@ -33,11 +33,11 @@ case "$CMD" in
 
         if [ -n "$TS_AUTH_KEY" ]; then
             echo "[*] Authenticating with Tailscale using \$TS_AUTH_KEY..."
-            sudo tailscale up --authkey="$TS_AUTH_KEY" --accept-routes --hostname="pukey-codespace" --operator=vscode
+            sudo tailscale up --authkey="$TS_AUTH_KEY" --accept-routes --hostname="authentikey-codespace" --operator=vscode
         else
             echo "[*] Starting Tailscale interactive login..."
             echo "[!] Open the URL displayed below in your browser to authenticate:"
-            sudo tailscale up --accept-routes --hostname="pukey-codespace" --operator=vscode
+            sudo tailscale up --accept-routes --hostname="authentikey-codespace" --operator=vscode
         fi
 
         echo "[✓] Tailscale is connected!"

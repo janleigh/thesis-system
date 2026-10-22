@@ -1,5 +1,5 @@
 {
-  "name": "PuKey (Android Remote Dev)",
+  "name": "AuthentiKey (Android Remote Dev)",
   "build": {
     "dockerfile": "Dockerfile"
   },
