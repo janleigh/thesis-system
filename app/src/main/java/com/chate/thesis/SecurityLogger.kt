@@ -20,8 +20,8 @@ import javax.crypto.spec.GCMParameterSpec
 private const val TAG = "SecurityLogger"
 private const val KEY_ALIAS = "biometric_log_key"
 private const val AES_GCM_TRANSFORMATION = "AES/GCM/NoPadding"
-private const val GCM_IV_LENGTH = 12       // bytes
-private const val GCM_TAG_LENGTH = 128     // bits
+private const val GCM_IV_LENGTH = 12 // bytes
+private const val GCM_TAG_LENGTH = 128 // bits
 
 // ---------------------------------------------------------------------------
 // Data class
@@ -33,7 +33,8 @@ data class LogEntry(
     val eventType: String,
     val riskScore: Double?,
     val action: String?,
-    val payload: String          // decrypted JSON payload
+    // decrypted JSON payload
+    val payload: String,
 )
 
 // ---------------------------------------------------------------------------
@@ -41,7 +42,6 @@ data class LogEntry(
 // ---------------------------------------------------------------------------
 private class SecurityLogDbHelper(context: Context) :
     SQLiteOpenHelper(context, "security_log.db", null, 1) {
-
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
             """
@@ -54,12 +54,16 @@ private class SecurityLogDbHelper(context: Context) :
                 action       TEXT,
                 payload_enc  BLOB    NOT NULL
             )
-            """.trimIndent()
+            """.trimIndent(),
         )
         Log.d(TAG, "security_log table created")
     }
 
-    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+    override fun onUpgrade(
+        db: SQLiteDatabase,
+        oldVersion: Int,
+        newVersion: Int,
+    ) {
         db.execSQL("DROP TABLE IF EXISTS security_log")
         onCreate(db)
     }
@@ -69,7 +73,6 @@ private class SecurityLogDbHelper(context: Context) :
 // SecurityLogger
 // ---------------------------------------------------------------------------
 class SecurityLogger(context: Context) {
-
     private val dbHelper = SecurityLogDbHelper(context)
     private val secretKey: SecretKey = loadOrCreateKey()
 
@@ -91,20 +94,21 @@ class SecurityLogger(context: Context) {
         eventType: String,
         payload: String,
         riskScore: Double? = null,
-        action: String? = null
+        action: String? = null,
     ) {
         val ts = Instant.now().toString()
         val encryptedPayload = encrypt(payload.toByteArray(Charsets.UTF_8))
 
         val db = dbHelper.writableDatabase
-        val cv = ContentValues().apply {
-            put("user_id", userId)
-            put("timestamp", ts)
-            put("event_type", eventType)
-            if (riskScore != null) put("risk_score", riskScore) else putNull("risk_score")
-            if (action != null) put("action", action) else putNull("action")
-            put("payload_enc", encryptedPayload)
-        }
+        val cv =
+            ContentValues().apply {
+                put("user_id", userId)
+                put("timestamp", ts)
+                put("event_type", eventType)
+                if (riskScore != null) put("risk_score", riskScore) else putNull("risk_score")
+                if (action != null) put("action", action) else putNull("action")
+                put("payload_enc", encryptedPayload)
+            }
         db.insert("security_log", null, cv)
         Log.d(TAG, "Logged event '$eventType' for $userId")
     }
@@ -115,20 +119,23 @@ class SecurityLogger(context: Context) {
      */
     fun readAll(userId: String? = null): List<LogEntry> {
         val db = dbHelper.readableDatabase
-        val (selection, args) = if (userId != null) {
-            "user_id = ?" to arrayOf(userId)
-        } else {
-            null to null
-        }
+        val (selection, args) =
+            if (userId != null) {
+                "user_id = ?" to arrayOf(userId)
+            } else {
+                null to null
+            }
 
-        val cursor = db.query(
-            "security_log",
-            null,
-            selection,
-            args,
-            null, null,
-            "id ASC"
-        )
+        val cursor =
+            db.query(
+                "security_log",
+                null,
+                selection,
+                args,
+                null,
+                null,
+                "id ASC",
+            )
 
         val entries = mutableListOf<LogEntry>()
         cursor.use {
@@ -148,8 +155,8 @@ class SecurityLogger(context: Context) {
                             eventType = it.getString(it.getColumnIndexOrThrow("event_type")),
                             riskScore = if (it.isNull(riskIdx)) null else it.getDouble(riskIdx),
                             action = if (it.isNull(actionIdx)) null else it.getString(actionIdx),
-                            payload = payloadPlain
-                        )
+                            payload = payloadPlain,
+                        ),
                     )
                 } catch (e: Exception) {
                     Log.e(TAG, "Failed to decrypt log entry, skipping", e)
@@ -166,7 +173,10 @@ class SecurityLogger(context: Context) {
         val db = dbHelper.readableDatabase
         return if (userId != null) {
             android.database.DatabaseUtils.queryNumEntries(
-                db, "security_log", "user_id = ?", arrayOf(userId)
+                db,
+                "security_log",
+                "user_id = ?",
+                arrayOf(userId),
             )
         } else {
             android.database.DatabaseUtils.queryNumEntries(db, "security_log")
@@ -179,11 +189,12 @@ class SecurityLogger(context: Context) {
      */
     fun clear(userId: String? = null) {
         val db = dbHelper.writableDatabase
-        val deleted = if (userId != null) {
-            db.delete("security_log", "user_id = ?", arrayOf(userId))
-        } else {
-            db.delete("security_log", null, null)
-        }
+        val deleted =
+            if (userId != null) {
+                db.delete("security_log", "user_id = ?", arrayOf(userId))
+            } else {
+                db.delete("security_log", null, null)
+            }
         Log.i(TAG, "Cleared $deleted log entries" + if (userId != null) " for $userId" else "")
     }
 
@@ -197,7 +208,7 @@ class SecurityLogger(context: Context) {
     private fun encrypt(plaintext: ByteArray): ByteArray {
         val cipher = Cipher.getInstance(AES_GCM_TRANSFORMATION)
         cipher.init(Cipher.ENCRYPT_MODE, secretKey)
-        val iv = cipher.iv                               // auto‑generated 12‑byte IV
+        val iv = cipher.iv // auto‑generated 12‑byte IV
         val ciphertext = cipher.doFinal(plaintext)
         // Prepend IV so we can retrieve it during decryption
         return iv + ciphertext
@@ -236,18 +247,20 @@ class SecurityLogger(context: Context) {
         }
 
         Log.i(TAG, "Generating new AES-GCM key in Android Keystore")
-        val keyGen = KeyGenerator.getInstance(
-            KeyProperties.KEY_ALGORITHM_AES,
-            "AndroidKeyStore"
-        )
-        val spec = KeyGenParameterSpec.Builder(
-            KEY_ALIAS,
-            KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
-        )
-            .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
-            .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
-            .setKeySize(256)
-            .build()
+        val keyGen =
+            KeyGenerator.getInstance(
+                KeyProperties.KEY_ALGORITHM_AES,
+                "AndroidKeyStore",
+            )
+        val spec =
+            KeyGenParameterSpec.Builder(
+                KEY_ALIAS,
+                KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT,
+            )
+                .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                .setKeySize(256)
+                .build()
 
         keyGen.init(spec)
         return keyGen.generateKey()

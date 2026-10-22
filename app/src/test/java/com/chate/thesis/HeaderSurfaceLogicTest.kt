@@ -52,7 +52,10 @@ class HeaderSurfaceLogicTest {
     @Test
     fun testPacManMouthOscillation() {
         // Mouth opens from 0 to maxAngle (e.g. 45 degrees)
-        fun calculateMouthAngle(frame: Int, maxAngle: Float): Float {
+        fun calculateMouthAngle(
+            frame: Int,
+            maxAngle: Float,
+        ): Float {
             val progress = kotlin.math.abs(kotlin.math.sin(frame * 0.25)).toFloat()
             return progress * maxAngle
         }
@@ -109,4 +112,3 @@ class HeaderSurfaceLogicTest {
         assertEquals(0f, scanY, 0.001f)
     }
 }
-

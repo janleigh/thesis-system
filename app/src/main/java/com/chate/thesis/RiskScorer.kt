@@ -1,15 +1,17 @@
 package com.chate.thesis
 
 import kotlin.math.sqrt
-import kotlin.math.max
-import kotlin.math.min
 
 // ====================================================================== //
 //  Utility                                                                //
 // ====================================================================== //
 
 /** Clamp [v] into [lo, hi]. */
-fun clip(v: Double, lo: Double, hi: Double): Double = v.coerceIn(lo, hi)
+fun clip(
+    v: Double,
+    lo: Double,
+    hi: Double,
+): Double = v.coerceIn(lo, hi)
 
 // ====================================================================== //
 //  Action enum                                                            //
@@ -23,7 +25,7 @@ enum class Action(val displayName: String) {
     ALLOW("Allow"),
     WARN("Warn"),
     STEP_UP_AUTH("Step-Up Authentication"),
-    BLOCK_SESSION("Block Session")
+    BLOCK_SESSION("Block Session"),
 }
 
 // ====================================================================== //
@@ -48,7 +50,7 @@ data class RiskDecision(
     val action: Action,
     val isAnomaly: Boolean,
     val thresholdUsed: Double,
-    val keystrokeCount: Int
+    val keystrokeCount: Int,
 )
 
 // ====================================================================== //
@@ -72,14 +74,14 @@ class RiskScorer(
     private val stepUpThresh: Double = 0.60,
     private val blockThresh: Double = 0.80,
     private val adaptiveWindow: Int = 20,
-    private val adaptiveK: Double = 1.5
+    private val adaptiveK: Double = 1.5,
 ) {
     // Normalise weights so they sum to 1
     private val ocsvmW: Double
     private val mahalW: Double
 
     private val scoreHistory: ArrayDeque<Double> = ArrayDeque()
-    
+
     /** Strike counter to prevent single-window false positives. */
     private var consecutiveAnomalies: Int = 0
 
@@ -103,15 +105,17 @@ class RiskScorer(
     fun score(
         ocsvmScore: Double,
         mahalScore: Double,
-        keystrokeCount: Int = 0
+        keystrokeCount: Int = 0,
     ): RiskDecision {
         val clampedOcsvm = clip(ocsvmScore, 0.0, 1.0)
         val clampedMahal = clip(mahalScore, 0.0, 1.0)
 
-        val composite = clip(
-            ocsvmW * clampedOcsvm + mahalW * clampedMahal,
-            0.0, 1.0
-        )
+        val composite =
+            clip(
+                ocsvmW * clampedOcsvm + mahalW * clampedMahal,
+                0.0,
+                1.0,
+            )
 
         // Compute adaptive threshold *before* appending the new score
         val adaptiveThresh = adaptiveThreshold()
@@ -123,19 +127,20 @@ class RiskScorer(
         }
 
         val rawAction = mapAction(composite, adaptiveThresh)
-        
+
         // Strike system logic
-        val action = if (rawAction == Action.STEP_UP_AUTH || rawAction == Action.BLOCK_SESSION) {
-            consecutiveAnomalies++
-            when {
-                consecutiveAnomalies >= 3 -> Action.BLOCK_SESSION
-                consecutiveAnomalies >= 2 -> Action.STEP_UP_AUTH
-                else -> Action.WARN // First strike is just a warning
+        val action =
+            if (rawAction == Action.STEP_UP_AUTH || rawAction == Action.BLOCK_SESSION) {
+                consecutiveAnomalies++
+                when {
+                    consecutiveAnomalies >= 3 -> Action.BLOCK_SESSION
+                    consecutiveAnomalies >= 2 -> Action.STEP_UP_AUTH
+                    else -> Action.WARN // First strike is just a warning
+                }
+            } else {
+                consecutiveAnomalies = 0
+                rawAction
             }
-        } else {
-            consecutiveAnomalies = 0
-            rawAction
-        }
 
         val isAnomaly = action == Action.STEP_UP_AUTH || action == Action.BLOCK_SESSION
 
@@ -146,7 +151,7 @@ class RiskScorer(
             action = action,
             isAnomaly = isAnomaly,
             thresholdUsed = adaptiveThresh,
-            keystrokeCount = keystrokeCount
+            keystrokeCount = keystrokeCount,
         )
     }
 
@@ -182,14 +187,15 @@ class RiskScorer(
 
         val typicalUpperBound = mean + adaptiveK * std
         val maxWarnThresh = stepUpThresh - 0.05
-        
-        val adaptive = if (typicalUpperBound < baseWarnThresh) {
-            val leniencyRatio = (baseWarnThresh - typicalUpperBound) / baseWarnThresh
-            val maxLeniency = maxWarnThresh - baseWarnThresh
-            baseWarnThresh + (maxLeniency * leniencyRatio)
-        } else {
-            baseWarnThresh
-        }
+
+        val adaptive =
+            if (typicalUpperBound < baseWarnThresh) {
+                val leniencyRatio = (baseWarnThresh - typicalUpperBound) / baseWarnThresh
+                val maxLeniency = maxWarnThresh - baseWarnThresh
+                baseWarnThresh + (maxLeniency * leniencyRatio)
+            } else {
+                baseWarnThresh
+            }
 
         return clip(adaptive, baseWarnThresh, maxWarnThresh)
     }
@@ -197,12 +203,15 @@ class RiskScorer(
     /**
      * Map a composite score to an [Action] based on the current thresholds.
      */
-    private fun mapAction(score: Double, warnThresh: Double): Action {
+    private fun mapAction(
+        score: Double,
+        warnThresh: Double,
+    ): Action {
         return when {
-            score >= blockThresh   -> Action.BLOCK_SESSION
-            score >= stepUpThresh  -> Action.STEP_UP_AUTH
-            score >= warnThresh    -> Action.WARN
-            else                   -> Action.ALLOW
+            score >= blockThresh -> Action.BLOCK_SESSION
+            score >= stepUpThresh -> Action.STEP_UP_AUTH
+            score >= warnThresh -> Action.WARN
+            else -> Action.ALLOW
         }
     }
 }

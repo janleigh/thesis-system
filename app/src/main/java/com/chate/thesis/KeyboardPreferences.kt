@@ -47,4 +47,3 @@ class KeyboardPreferences(context: Context) {
         get() = prefs.getBoolean(KEY_SHOW_KEY_HINTS, false)
         set(value) = prefs.edit().putBoolean(KEY_SHOW_KEY_HINTS, value).apply()
 }
-

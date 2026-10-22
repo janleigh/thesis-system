@@ -1,15 +1,15 @@
 package com.chate.thesis
 
 import android.app.admin.DevicePolicyManager
-import android.content.ComponentName
 import android.content.BroadcastReceiver
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.res.Configuration
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
-import android.os.SystemClock
 import android.provider.Settings
 import android.text.Editable
 import android.text.Spannable
@@ -23,33 +23,31 @@ import android.text.style.UnderlineSpan
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
+import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.ProgressBar
+import android.widget.RadioButton
+import android.widget.RadioGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.google.android.material.chip.Chip
-import com.google.android.material.color.DynamicColors
-import com.google.android.material.switchmaterial.SwitchMaterial
-import android.widget.RadioButton
-import android.widget.RadioGroup
-import com.google.android.material.slider.Slider
-import android.content.res.Configuration
-import android.widget.CheckBox
-import com.chate.thesis.ui.HeaderSurfaceView
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.button.MaterialButton
-import com.google.android.material.button.MaterialButtonToggleGroup
-import com.google.android.material.chip.ChipGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.chate.thesis.ui.HeaderSurfaceView
+import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.button.MaterialButtonToggleGroup
+import com.google.android.material.chip.Chip
+import com.google.android.material.chip.ChipGroup
+import com.google.android.material.color.DynamicColors
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.slider.Slider
+import com.google.android.material.switchmaterial.SwitchMaterial
 import java.util.Random
 
 class MainActivity : AppCompatActivity() {
-
     private lateinit var themePreferences: ThemePreferences
     private lateinit var headerEffectView: HeaderSurfaceView
 
@@ -184,21 +182,22 @@ class MainActivity : AppCompatActivity() {
     private var currentSearchQuery: String = ""
 
     // MONKEYTYPE ENGINE STATE
-    private val monkeytypeDictionary = listOf(
-        "the", "be", "to", "of", "and", "a", "in", "that", "have", "it",
-        "for", "not", "on", "with", "he", "as", "you", "do", "at", "this",
-        "but", "his", "by", "from", "they", "we", "say", "her", "she", "or",
-        "an", "will", "my", "one", "all", "would", "there", "their", "what",
-        "so", "up", "out", "if", "about", "who", "get", "which", "go", "me",
-        "when", "make", "can", "like", "time", "no", "just", "him", "know",
-        "take", "people", "into", "year", "your", "good", "some", "could",
-        "them", "see", "other", "than", "then", "now", "look", "only", "come",
-        "its", "over", "think", "also", "back", "after", "use", "two", "how",
-        "our", "work", "first", "well", "way", "even", "new", "want", "because",
-        "any", "these", "give", "day", "most", "us", "system", "secure", "device",
-        "keystroke", "rhythm", "cadence", "behavior", "typing", "biometric", "protect",
-        "speed", "focus", "finger", "hand", "input", "sensor", "model", "pattern"
-    )
+    private val monkeytypeDictionary =
+        listOf(
+            "the", "be", "to", "of", "and", "a", "in", "that", "have", "it",
+            "for", "not", "on", "with", "he", "as", "you", "do", "at", "this",
+            "but", "his", "by", "from", "they", "we", "say", "her", "she", "or",
+            "an", "will", "my", "one", "all", "would", "there", "their", "what",
+            "so", "up", "out", "if", "about", "who", "get", "which", "go", "me",
+            "when", "make", "can", "like", "time", "no", "just", "him", "know",
+            "take", "people", "into", "year", "your", "good", "some", "could",
+            "them", "see", "other", "than", "then", "now", "look", "only", "come",
+            "its", "over", "think", "also", "back", "after", "use", "two", "how",
+            "our", "work", "first", "well", "way", "even", "new", "want", "because",
+            "any", "these", "give", "day", "most", "us", "system", "secure", "device",
+            "keystroke", "rhythm", "cadence", "behavior", "typing", "biometric", "protect",
+            "speed", "focus", "finger", "hand", "input", "sensor", "model", "pattern",
+        )
     private val targetWords = mutableListOf<String>()
     private var currentWordIndex = 0
     private var currentTypedWord = ""
@@ -210,30 +209,34 @@ class MainActivity : AppCompatActivity() {
         const val DEFAULT_USER_ID = "default_user"
     }
 
-    private val riskUpdateReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            intent ?: return
-            when (intent.action) {
-                ACTION_RISK_UPDATE -> {
-                    val composite = intent.getDoubleExtra("composite_score", 0.0)
-                    val ocsvm = intent.getDoubleExtra("ocsvm_score", 0.0)
-                    val mahal = intent.getDoubleExtra("mahal_score", 0.0)
-                    val action = intent.getStringExtra("action") ?: "ALLOW"
-                    val keystrokeCount = intent.getIntExtra("keystroke_count", 0)
-                    updateRiskDisplay(composite, ocsvm, mahal, action, keystrokeCount)
-                    if (eventLogView.visibility == View.VISIBLE) {
-                        loadEventLogs()
+    private val riskUpdateReceiver =
+        object : BroadcastReceiver() {
+            override fun onReceive(
+                context: Context?,
+                intent: Intent?,
+            ) {
+                intent ?: return
+                when (intent.action) {
+                    ACTION_RISK_UPDATE -> {
+                        val composite = intent.getDoubleExtra("composite_score", 0.0)
+                        val ocsvm = intent.getDoubleExtra("ocsvm_score", 0.0)
+                        val mahal = intent.getDoubleExtra("mahal_score", 0.0)
+                        val action = intent.getStringExtra("action") ?: "ALLOW"
+                        val keystrokeCount = intent.getIntExtra("keystroke_count", 0)
+                        updateRiskDisplay(composite, ocsvm, mahal, action, keystrokeCount)
+                        if (eventLogView.visibility == View.VISIBLE) {
+                            loadEventLogs()
+                        }
                     }
-                }
-                ACTION_ENROLLMENT_UPDATE -> {
-                    val keystrokeCount = intent.getIntExtra("keystroke_count", 0)
-                    val progress = intent.getDoubleExtra("progress_pct", 0.0)
-                    val status = intent.getStringExtra("status") ?: "PENDING"
-                    updateEnrollmentDisplay(keystrokeCount, progress, status)
+                    ACTION_ENROLLMENT_UPDATE -> {
+                        val keystrokeCount = intent.getIntExtra("keystroke_count", 0)
+                        val progress = intent.getDoubleExtra("progress_pct", 0.0)
+                        val status = intent.getStringExtra("status") ?: "PENDING"
+                        updateEnrollmentDisplay(keystrokeCount, progress, status)
+                    }
                 }
             }
         }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         themePreferences = ThemePreferences(this)
@@ -243,11 +246,12 @@ class MainActivity : AppCompatActivity() {
             setTheme(themePreferences.palette.getThemeResId())
         }
         if (themePreferences.isAmoledBlackEnabled) {
-            val isDark = when (themePreferences.themeMode) {
-                ThemeMode.DARK -> true
-                ThemeMode.LIGHT -> false
-                ThemeMode.SYSTEM -> (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
-            }
+            val isDark =
+                when (themePreferences.themeMode) {
+                    ThemeMode.DARK -> true
+                    ThemeMode.LIGHT -> false
+                    ThemeMode.SYSTEM -> (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+                }
             if (isDark) {
                 theme.applyStyle(R.style.Theme_Thesis_Amoled, true)
             }
@@ -281,10 +285,11 @@ class MainActivity : AppCompatActivity() {
         if (::headerEffectView.isInitialized) {
             headerEffectView.resumeAnimation()
         }
-        val filter = IntentFilter().apply {
-            addAction(ACTION_RISK_UPDATE)
-            addAction(ACTION_ENROLLMENT_UPDATE)
-        }
+        val filter =
+            IntentFilter().apply {
+                addAction(ACTION_RISK_UPDATE)
+                addAction(ACTION_ENROLLMENT_UPDATE)
+            }
         LocalBroadcastManager.getInstance(this).registerReceiver(riskUpdateReceiver, filter)
         refreshProfileDisplay()
         checkKeyboardState()
@@ -491,21 +496,23 @@ class MainActivity : AppCompatActivity() {
         masterSwitch.setOnCheckedChangeListener { _, isChecked ->
             val profile = profileManager.getProfile(DEFAULT_USER_ID)
             if (profile != null && profile.isReady) {
-                val intent = Intent(KeystrokeIMEService.ACTION_SET_MODE).apply {
-                    putExtra("mode", if (isChecked) "VERIFY" else "IDLE")
-                    putExtra("user_id", DEFAULT_USER_ID)
-                }
+                val intent =
+                    Intent(KeystrokeIMEService.ACTION_SET_MODE).apply {
+                        putExtra("mode", if (isChecked) "VERIFY" else "IDLE")
+                        putExtra("user_id", DEFAULT_USER_ID)
+                    }
                 LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
                 val msg = if (isChecked) "Continuous verification active" else "Verification standby"
                 Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
                 gridVerifierStatusText.text = if (isChecked) "Active · System Protected" else "Standby · System Inactive"
                 heroTitleText.text = if (isChecked) "Status: Active" else "Status: Standby"
                 actionText.text = if (isChecked) "ALLOW" else "STANDBY"
-                val (textColor, bgColor) = if (isChecked) {
-                    Pair(R.color.risk_allow, R.color.risk_allow_bg)
-                } else {
-                    Pair(R.color.text_secondary, R.color.surface_container_high)
-                }
+                val (textColor, bgColor) =
+                    if (isChecked) {
+                        Pair(R.color.risk_allow, R.color.risk_allow_bg)
+                    } else {
+                        Pair(R.color.text_secondary, R.color.surface_container_high)
+                    }
                 actionText.setTextColor(ContextCompat.getColor(this, textColor))
                 val bgDrawable = actionText.background
                 if (bgDrawable is GradientDrawable) {
@@ -557,9 +564,10 @@ class MainActivity : AppCompatActivity() {
 
         resetButton.setOnClickListener {
             profileManager.deleteUser(DEFAULT_USER_ID)
-            val intent = Intent(KeystrokeIMEService.ACTION_SET_MODE).apply {
-                putExtra("mode", "IDLE")
-            }
+            val intent =
+                Intent(KeystrokeIMEService.ACTION_SET_MODE).apply {
+                    putExtra("mode", "IDLE")
+                }
             LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
 
             masterSwitch.isChecked = false
@@ -579,11 +587,12 @@ class MainActivity : AppCompatActivity() {
         }
         themeModeToggleGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
             if (isChecked) {
-                val newMode = when (checkedId) {
-                    R.id.btnThemeLight -> ThemeMode.LIGHT
-                    R.id.btnThemeDark -> ThemeMode.DARK
-                    else -> ThemeMode.SYSTEM
-                }
+                val newMode =
+                    when (checkedId) {
+                        R.id.btnThemeLight -> ThemeMode.LIGHT
+                        R.id.btnThemeDark -> ThemeMode.DARK
+                        else -> ThemeMode.SYSTEM
+                    }
                 if (themePreferences.themeMode != newMode) {
                     themePreferences.themeMode = newMode
                     themePreferences.applyNightMode()
@@ -612,15 +621,16 @@ class MainActivity : AppCompatActivity() {
         }
         paletteChipGroup.setOnCheckedStateChangeListener { _, checkedIds ->
             val checkedId = checkedIds.firstOrNull() ?: return@setOnCheckedStateChangeListener
-            val selectedPalette = when (checkedId) {
-                R.id.chipPaletteCyan -> ColorPalette.CYAN
-                R.id.chipPaletteBlue -> ColorPalette.BLUE
-                R.id.chipPaletteEmerald -> ColorPalette.EMERALD
-                R.id.chipPaletteAmber -> ColorPalette.AMBER
-                R.id.chipPaletteViolet -> ColorPalette.VIOLET
-                R.id.chipPaletteCrimson -> ColorPalette.CRIMSON
-                else -> ColorPalette.MONET
-            }
+            val selectedPalette =
+                when (checkedId) {
+                    R.id.chipPaletteCyan -> ColorPalette.CYAN
+                    R.id.chipPaletteBlue -> ColorPalette.BLUE
+                    R.id.chipPaletteEmerald -> ColorPalette.EMERALD
+                    R.id.chipPaletteAmber -> ColorPalette.AMBER
+                    R.id.chipPaletteViolet -> ColorPalette.VIOLET
+                    R.id.chipPaletteCrimson -> ColorPalette.CRIMSON
+                    else -> ColorPalette.MONET
+                }
             if (themePreferences.palette != selectedPalette) {
                 themePreferences.palette = selectedPalette
                 recreate()
@@ -637,13 +647,14 @@ class MainActivity : AppCompatActivity() {
         }
         effectChipGroup.setOnCheckedStateChangeListener { _, checkedIds ->
             val checkedId = checkedIds.firstOrNull() ?: return@setOnCheckedStateChangeListener
-            val selectedEffect = when (checkedId) {
-                R.id.chipEffectSnow -> HeaderEffect.SNOW
-                R.id.chipEffectMaze -> HeaderEffect.MAZE
-                R.id.chipEffectCircuit -> HeaderEffect.CIRCUIT
-                R.id.chipEffectCodeRain -> HeaderEffect.CODE_RAIN
-                else -> HeaderEffect.NOTHING
-            }
+            val selectedEffect =
+                when (checkedId) {
+                    R.id.chipEffectSnow -> HeaderEffect.SNOW
+                    R.id.chipEffectMaze -> HeaderEffect.MAZE
+                    R.id.chipEffectCircuit -> HeaderEffect.CIRCUIT
+                    R.id.chipEffectCodeRain -> HeaderEffect.CODE_RAIN
+                    else -> HeaderEffect.NOTHING
+                }
             if (themePreferences.headerEffect != selectedEffect) {
                 themePreferences.headerEffect = selectedEffect
                 headerEffectView.setEffect(selectedEffect)
@@ -666,7 +677,7 @@ class MainActivity : AppCompatActivity() {
     private fun setupKeyboardCustomizationControls() {
         val notifyChange = {
             LocalBroadcastManager.getInstance(this).sendBroadcast(
-                Intent(KeyboardPreferences.ACTION_SETTINGS_CHANGED)
+                Intent(KeyboardPreferences.ACTION_SETTINGS_CHANGED),
             )
         }
 
@@ -711,11 +722,12 @@ class MainActivity : AppCompatActivity() {
         }
 
         rgLongPressMode.setOnCheckedChangeListener { _, checkedId ->
-            val mode = if (checkedId == R.id.rbModeRapidFire) {
-                KeyboardPreferences.MODE_RAPID_FIRE
-            } else {
-                KeyboardPreferences.MODE_VARIANTS
-            }
+            val mode =
+                if (checkedId == R.id.rbModeRapidFire) {
+                    KeyboardPreferences.MODE_RAPID_FIRE
+                } else {
+                    KeyboardPreferences.MODE_VARIANTS
+                }
             keyboardPreferences.longPressMode = mode
             notifyChange()
         }
@@ -737,7 +749,10 @@ class MainActivity : AppCompatActivity() {
         syncKeyboardSettingsUI()
     }
 
-    private fun snapToSlider(slider: Slider, rawVal: Float): Float {
+    private fun snapToSlider(
+        slider: Slider,
+        rawVal: Float,
+    ): Float {
         val from = slider.valueFrom
         val to = slider.valueTo
         val step = slider.stepSize
@@ -819,43 +834,57 @@ class MainActivity : AppCompatActivity() {
             imm.showSoftInput(monkeytypeInput, InputMethodManager.SHOW_IMPLICIT)
         }
 
-        monkeytypeInput.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                if (targetWords.isEmpty()) return
+        monkeytypeInput.addTextChangedListener(
+            object : TextWatcher {
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int,
+                ) {}
 
-                val rawText = s?.toString() ?: ""
+                override fun onTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    before: Int,
+                    count: Int,
+                ) {
+                    if (targetWords.isEmpty()) return
 
-                // If space is typed, advance to next word!
-                if (rawText.endsWith(" ")) {
-                    val typedWord = rawText.trimEnd()
-                    val targetWord = targetWords.getOrElse(currentWordIndex) { "" }
-                    val isMatch = typedWord == targetWord
+                    val rawText = s?.toString() ?: ""
 
-                    wordResults.add(isMatch)
-                    currentWordIndex++
-                    currentTypedWord = ""
+                    // If space is typed, advance to next word!
+                    if (rawText.endsWith(" ")) {
+                        val typedWord = rawText.trimEnd()
+                        val targetWord = targetWords.getOrElse(currentWordIndex) { "" }
+                        val isMatch = typedWord == targetWord
 
-                    // If approaching end of buffered words, replenish continuously so it is endless!
-                    if (currentWordIndex + 15 >= targetWords.size) {
-                        generateMoreWords()
+                        wordResults.add(isMatch)
+                        currentWordIndex++
+                        currentTypedWord = ""
+
+                        // If approaching end of buffered words, replenish continuously so it is endless!
+                        if (currentWordIndex + 15 >= targetWords.size) {
+                            generateMoreWords()
+                        }
+
+                        // Reset input field without triggering recursive space
+                        monkeytypeInput.removeTextChangedListener(this)
+                        monkeytypeInput.setText("")
+                        monkeytypeInput.addTextChangedListener(this)
+
+                        updateMonkeytypeStats()
+                        renderMonkeytypeDisplay()
+                    } else {
+                        currentTypedWord = rawText
+                        updateMonkeytypeStats()
+                        renderMonkeytypeDisplay()
                     }
-
-                    // Reset input field without triggering recursive space
-                    monkeytypeInput.removeTextChangedListener(this)
-                    monkeytypeInput.setText("")
-                    monkeytypeInput.addTextChangedListener(this)
-
-                    updateMonkeytypeStats()
-                    renderMonkeytypeDisplay()
-                } else {
-                    currentTypedWord = rawText
-                    updateMonkeytypeStats()
-                    renderMonkeytypeDisplay()
                 }
-            }
-            override fun afterTextChanged(s: Editable?) {}
-        })
+
+                override fun afterTextChanged(s: Editable?) {}
+            },
+        )
     }
 
     private fun resetMonkeytypeWords() {
@@ -1042,10 +1071,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun startEnrollmentSession() {
         profileManager.getOrCreateProfile(DEFAULT_USER_ID)
-        val intent = Intent(KeystrokeIMEService.ACTION_SET_MODE).apply {
-            putExtra("mode", "ENROLL")
-            putExtra("user_id", DEFAULT_USER_ID)
-        }
+        val intent =
+            Intent(KeystrokeIMEService.ACTION_SET_MODE).apply {
+                putExtra("mode", "ENROLL")
+                putExtra("user_id", DEFAULT_USER_ID)
+            }
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
         enrollRhythmStatus.text = "IME listening in ENROLL mode • Type words naturally"
         monkeytypeInput.requestFocus()
@@ -1085,10 +1115,14 @@ class MainActivity : AppCompatActivity() {
 
     private fun handleAdminSetupClick() {
         val adminComponent = ComponentName(this, ThesisDeviceAdminReceiver::class.java)
-        val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN).apply {
-            putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, adminComponent)
-            putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "Required to automatically lock the device upon continuous anomaly detection.")
-        }
+        val intent =
+            Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN).apply {
+                putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, adminComponent)
+                putExtra(
+                    DevicePolicyManager.EXTRA_ADD_EXPLANATION,
+                    "Required to automatically lock the device upon continuous anomaly detection.",
+                )
+            }
         startActivity(intent)
     }
 
@@ -1104,10 +1138,11 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        val currentInputMethodId = Settings.Secure.getString(
-            contentResolver,
-            Settings.Secure.DEFAULT_INPUT_METHOD
-        )
+        val currentInputMethodId =
+            Settings.Secure.getString(
+                contentResolver,
+                Settings.Secure.DEFAULT_INPUT_METHOD,
+            )
         val isSelected = currentInputMethodId != null && currentInputMethodId.startsWith(ourPackage)
 
         if (!isEnabled) {
@@ -1173,14 +1208,28 @@ class MainActivity : AppCompatActivity() {
         chipFilterStepUp.setOnClickListener { setLogFilter("STEP_UP_AUTH") }
         chipFilterBlock.setOnClickListener { setLogFilter("BLOCK_SESSION") }
 
-        logSearchInput.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                currentSearchQuery = s?.toString()?.trim() ?: ""
-                applyLogFilters()
-            }
-            override fun afterTextChanged(s: Editable?) {}
-        })
+        logSearchInput.addTextChangedListener(
+            object : TextWatcher {
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int,
+                ) {}
+
+                override fun onTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    before: Int,
+                    count: Int,
+                ) {
+                    currentSearchQuery = s?.toString()?.trim() ?: ""
+                    applyLogFilters()
+                }
+
+                override fun afterTextChanged(s: Editable?) {}
+            },
+        )
     }
 
     private fun setLogFilter(filter: String) {
@@ -1204,11 +1253,12 @@ class MainActivity : AppCompatActivity() {
             filtered = filtered.filter { it.action == currentFilter }
         }
         if (currentSearchQuery.isNotEmpty()) {
-            filtered = filtered.filter {
-                (it.action?.contains(currentSearchQuery, ignoreCase = true) == true) ||
-                (it.eventType.contains(currentSearchQuery, ignoreCase = true)) ||
-                (it.payload.contains(currentSearchQuery, ignoreCase = true))
-            }
+            filtered =
+                filtered.filter {
+                    (it.action?.contains(currentSearchQuery, ignoreCase = true) == true) ||
+                        (it.eventType.contains(currentSearchQuery, ignoreCase = true)) ||
+                        (it.payload.contains(currentSearchQuery, ignoreCase = true))
+                }
         }
         eventLogAdapter.updateLogs(filtered)
         logCountText.text = "${filtered.size} of ${allLogs.size} events"
@@ -1221,10 +1271,10 @@ class MainActivity : AppCompatActivity() {
             keystrokeCountText.text = "${profile.keystrokeCount}"
             val progress = profile.progressPct.toInt().coerceIn(0, 100)
             enrollmentProgress.progress = progress
-            enrollmentPercentText.text = "${progress}%"
+            enrollmentPercentText.text = "$progress%"
 
             enrollTelemetryProgressBar.progress = progress
-            enrollTelemetryPercent.text = "${progress}%"
+            enrollTelemetryPercent.text = "$progress%"
             enrollKeystrokeCounter.text = "Keystrokes: ${profile.keystrokeCount} / ${profile.minKeystrokes}"
             enrollVectorCounter.text = "Vectors: ${profile.vectors.size} / 5"
 
@@ -1267,19 +1317,26 @@ class MainActivity : AppCompatActivity() {
         syncKeyboardSettingsUI()
     }
 
-    private fun updateRiskDisplay(composite: Double, ocsvm: Double, mahal: Double, action: String, keystrokeCount: Int) {
+    private fun updateRiskDisplay(
+        composite: Double,
+        ocsvm: Double,
+        mahal: Double,
+        action: String,
+        keystrokeCount: Int,
+    ) {
         compositeScoreText.text = String.format("%.3f", composite)
         ocsvmScoreText.text = String.format("%.3f", ocsvm)
         mahalScoreText.text = String.format("%.3f", mahal)
         actionText.text = action
 
-        val (textColor, bgColor) = when (action) {
-            "ALLOW" -> Pair(R.color.risk_allow, R.color.risk_allow_bg)
-            "WARN" -> Pair(R.color.risk_warn, R.color.risk_warn_bg)
-            "STEP_UP_AUTH" -> Pair(R.color.risk_step_up, R.color.risk_step_up_bg)
-            "BLOCK_SESSION" -> Pair(R.color.risk_block, R.color.risk_block_bg)
-            else -> Pair(R.color.text_secondary, R.color.surface_container_high)
-        }
+        val (textColor, bgColor) =
+            when (action) {
+                "ALLOW" -> Pair(R.color.risk_allow, R.color.risk_allow_bg)
+                "WARN" -> Pair(R.color.risk_warn, R.color.risk_warn_bg)
+                "STEP_UP_AUTH" -> Pair(R.color.risk_step_up, R.color.risk_step_up_bg)
+                "BLOCK_SESSION" -> Pair(R.color.risk_block, R.color.risk_block_bg)
+                else -> Pair(R.color.text_secondary, R.color.surface_container_high)
+            }
         actionText.setTextColor(ContextCompat.getColor(this, textColor))
         val bgDrawable = actionText.background
         if (bgDrawable is GradientDrawable) {
@@ -1290,15 +1347,19 @@ class MainActivity : AppCompatActivity() {
         updateRecentActivityTimeline()
     }
 
-    private fun updateEnrollmentDisplay(keystrokeCount: Int, progress: Double, status: String) {
+    private fun updateEnrollmentDisplay(
+        keystrokeCount: Int,
+        progress: Double,
+        status: String,
+    ) {
         keystrokeCountText.text = "$keystrokeCount"
         val progressInt = progress.toInt().coerceIn(0, 100)
         enrollmentProgress.progress = progressInt
-        enrollmentPercentText.text = "${progressInt}%"
+        enrollmentPercentText.text = "$progressInt%"
         profileStatusText.text = status
 
         enrollTelemetryProgressBar.progress = progressInt
-        enrollTelemetryPercent.text = "${progressInt}%"
+        enrollTelemetryPercent.text = "$progressInt%"
         val profile = profileManager.getProfile(DEFAULT_USER_ID)
         val minKs = profile?.minKeystrokes ?: 250
         val vectorCount = profile?.vectors?.size ?: 0

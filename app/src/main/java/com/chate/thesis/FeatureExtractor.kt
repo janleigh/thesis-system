@@ -5,8 +5,9 @@ import kotlin.math.sqrt
 
 data class KeystrokeEvent(
     val keyCode: Int,
-    val eventType: Int, // 0 for DOWN, 1 for UP
-    val timestampMs: Double
+    // 0 for DOWN, 1 for UP
+    val eventType: Int,
+    val timestampMs: Double,
 )
 
 data class FeatureVector(
@@ -19,13 +20,16 @@ data class FeatureVector(
     var flightStd: Double = 0.0,
     var ikiMean: Double = 0.0,
     var ikiStd: Double = 0.0,
-    var keystrokeCount: Int = 0
+    var keystrokeCount: Int = 0,
 ) {
     fun toStatArray(): DoubleArray {
         return doubleArrayOf(
-            dwellMean, dwellStd,
-            flightMean, flightStd,
-            ikiMean, ikiStd
+            dwellMean,
+            dwellStd,
+            flightMean,
+            flightStd,
+            ikiMean,
+            ikiStd,
         )
     }
 
@@ -35,7 +39,6 @@ data class FeatureVector(
 }
 
 class FeatureExtractor {
-
     fun extract(events: List<KeystrokeEvent>): FeatureVector? {
         if (events.isEmpty()) return null
 
@@ -43,7 +46,7 @@ class FeatureExtractor {
 
         data class PairedKey(val keyCode: Int, val downTs: Double, val upTs: Double)
         val pairedKeys = mutableListOf<PairedKey>()
-        
+
         val pendingDowns = mutableMapOf<Int, ArrayDeque<Double>>()
 
         for (event in sortedEvents) {

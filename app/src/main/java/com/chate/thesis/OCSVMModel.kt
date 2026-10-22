@@ -2,10 +2,9 @@ package com.chate.thesis
 
 import com.google.gson.Gson
 import kotlin.math.exp
-import kotlin.math.sqrt
 import kotlin.math.max
 import kotlin.math.min
-import kotlin.math.abs
+import kotlin.math.sqrt
 
 // ====================================================================== //
 //  Default hyper-parameters                                               //
@@ -25,7 +24,7 @@ private const val DEFAULT_GAMMA_SCALE = "scale"
  */
 class OCSVMModel(
     private val nu: Double = DEFAULT_NU,
-    private val gammaMode: String = DEFAULT_GAMMA_SCALE
+    private val gammaMode: String = DEFAULT_GAMMA_SCALE,
 ) {
     // -- Trained model state ------------------------------------------------
     var isFitted: Boolean = false
@@ -33,7 +32,7 @@ class OCSVMModel(
 
     private var supportVectors: Array<DoubleArray> = emptyArray()
     private var dualCoefficients: DoubleArray = doubleArrayOf()
-    private var intercept: Double = 0.0               // ρ (rho)
+    private var intercept: Double = 0.0 // ρ (rho)
     private var gamma: Double = 0.0
 
     // StandardScaler parameters
@@ -79,7 +78,7 @@ class OCSVMModel(
             }
             for (j in 0 until d) {
                 std[j] = sqrt(std[j] / n)
-                if (std[j] < 1e-12) std[j] = 1.0   // avoid division by zero
+                if (std[j] < 1e-12) std[j] = 1.0 // avoid division by zero
             }
 
             return transform(x)
@@ -92,8 +91,7 @@ class OCSVMModel(
             }
 
         /** Scale a single vector using already-fitted mean/std. */
-        fun transform(x: DoubleArray): DoubleArray =
-            DoubleArray(x.size) { j -> (x[j] - mean[j]) / std[j] }
+        fun transform(x: DoubleArray): DoubleArray = DoubleArray(x.size) { j -> (x[j] - mean[j]) / std[j] }
     }
 
     // ====================================================================== //
@@ -101,7 +99,11 @@ class OCSVMModel(
     // ====================================================================== //
 
     /** RBF (Gaussian) kernel: K(a, b) = exp(-γ · ||a - b||²) */
-    private fun rbfKernel(a: DoubleArray, b: DoubleArray, g: Double): Double {
+    private fun rbfKernel(
+        a: DoubleArray,
+        b: DoubleArray,
+        g: Double,
+    ): Double {
         var sq = 0.0
         for (i in a.indices) {
             val d = a[i] - b[i]
@@ -138,18 +140,19 @@ class OCSVMModel(
         scalerStd = scaler.std
 
         // 2. Gamma
-        gamma = if (gammaMode == DEFAULT_GAMMA_SCALE) {
-            // For small enrollment samples (10-25 vectors in 6D), gamma = 1 / (2*d) prevents
-            // isolated RBF support vector spikes while maintaining a distinct decision boundary.
-            1.0 / (2.0 * d)
-        } else {
-            gammaMode.toDoubleOrNull() ?: (1.0 / (2.0 * d))
-        }
+        gamma =
+            if (gammaMode == DEFAULT_GAMMA_SCALE) {
+                // For small enrollment samples (10-25 vectors in 6D), gamma = 1 / (2*d) prevents
+                // isolated RBF support vector spikes while maintaining a distinct decision boundary.
+                1.0 / (2.0 * d)
+            } else {
+                gammaMode.toDoubleOrNull() ?: (1.0 / (2.0 * d))
+            }
 
         // 3. Kernel matrix (symmetric)
         val K = Array(n) { DoubleArray(n) }
         for (i in 0 until n) {
-            K[i][i] = 1.0   // K(x,x) = 1 for RBF
+            K[i][i] = 1.0 // K(x,x) = 1 for RBF
             for (j in i + 1 until n) {
                 val v = rbfKernel(xScaled[i], xScaled[j], gamma)
                 K[i][j] = v
@@ -161,7 +164,7 @@ class OCSVMModel(
         //    Objective: min 0.5 αᵀKα,  s.t. 0 ≤ αᵢ ≤ C,  Σαᵢ = 1
         //    where C = 1 / (n * ν)
         val C = 1.0 / (n * nu)
-        val alpha = DoubleArray(n) { 1.0 / n }   // uniform initialisation (satisfies Σα=1)
+        val alpha = DoubleArray(n) { 1.0 / n } // uniform initialisation (satisfies Σα=1)
 
         // Gradient: g_i = ∂/∂α_i (0.5 αᵀKα) = Σ_j K_ij α_j
         val grad = DoubleArray(n)
@@ -176,23 +179,33 @@ class OCSVMModel(
 
         for (iter in 0 until maxIter) {
             // Find most violating pair (i = argmin grad among α < C, j = argmax grad among α > 0)
-            var iUp = -1; var minGrad = Double.MAX_VALUE
-            var jLow = -1; var maxGrad = -Double.MAX_VALUE
+            var iUp = -1
+            var minGrad = Double.MAX_VALUE
+            var jLow = -1
+            var maxGrad = -Double.MAX_VALUE
 
             for (k in 0 until n) {
-                if (alpha[k] < C - tol && grad[k] < minGrad) { minGrad = grad[k]; iUp = k }
-                if (alpha[k] > tol && grad[k] > maxGrad) { maxGrad = grad[k]; jLow = k }
+                if (alpha[k] < C - tol && grad[k] < minGrad) {
+                    minGrad = grad[k]
+                    iUp = k
+                }
+                if (alpha[k] > tol && grad[k] > maxGrad) {
+                    maxGrad = grad[k]
+                    jLow = k
+                }
             }
 
-            if (iUp == -1 || jLow == -1 || maxGrad - minGrad < tol) break   // converged
+            if (iUp == -1 || jLow == -1 || maxGrad - minGrad < tol) break // converged
 
             val i = iUp
             val j = jLow
 
             // Analytic update
-            val kii = K[i][i]; val kjj = K[j][j]; val kij = K[i][j]
+            val kii = K[i][i]
+            val kjj = K[j][j]
+            val kij = K[i][j]
             val denom = kii + kjj - 2.0 * kij
-            if (denom < 1e-12) continue   // skip degenerate pair
+            if (denom < 1e-12) continue // skip degenerate pair
 
             val delta = (grad[j] - grad[i]) / denom
 
@@ -229,9 +242,10 @@ class OCSVMModel(
         intercept = rhoSum / svIndices.size
 
         // 6. Training scores for normalisation
-        val trainScores = DoubleArray(n) { idx ->
-            decisionFunctionInternal(xScaled[idx])
-        }
+        val trainScores =
+            DoubleArray(n) { idx ->
+                decisionFunctionInternal(xScaled[idx])
+            }
         trainScoreMin = trainScores.min()
         trainScoreMax = trainScores.max()
 
@@ -304,22 +318,23 @@ class OCSVMModel(
         val scalerMean: DoubleArray,
         val scalerStd: DoubleArray,
         val trainScoreMin: Double,
-        val trainScoreMax: Double
+        val trainScoreMax: Double,
     )
 
     fun toJson(): String {
-        val snapshot = ModelSnapshot(
-            supportVectors = supportVectors,
-            dualCoefficients = dualCoefficients,
-            intercept = intercept,
-            gamma = gamma,
-            nu = nu,
-            gammaMode = gammaMode,
-            scalerMean = scalerMean,
-            scalerStd = scalerStd,
-            trainScoreMin = trainScoreMin,
-            trainScoreMax = trainScoreMax
-        )
+        val snapshot =
+            ModelSnapshot(
+                supportVectors = supportVectors,
+                dualCoefficients = dualCoefficients,
+                intercept = intercept,
+                gamma = gamma,
+                nu = nu,
+                gammaMode = gammaMode,
+                scalerMean = scalerMean,
+                scalerStd = scalerStd,
+                trainScoreMin = trainScoreMin,
+                trainScoreMax = trainScoreMax,
+            )
         return Gson().toJson(snapshot)
     }
 

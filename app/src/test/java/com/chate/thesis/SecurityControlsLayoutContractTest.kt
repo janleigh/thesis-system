@@ -6,15 +6,16 @@ import org.junit.Test
 import java.io.File
 
 class SecurityControlsLayoutContractTest {
-
     private fun loadLayoutXml(): String {
-        val candidates = listOf(
-            File("app/src/main/res/layout/activity_main.xml"),
-            File("src/main/res/layout/activity_main.xml"),
-            File("/workspaces/thesis-system/app/src/main/res/layout/activity_main.xml")
-        )
-        val file = candidates.firstOrNull { it.exists() }
-            ?: throw IllegalStateException("activity_main.xml not found")
+        val candidates =
+            listOf(
+                File("app/src/main/res/layout/activity_main.xml"),
+                File("src/main/res/layout/activity_main.xml"),
+                File("/workspaces/thesis-system/app/src/main/res/layout/activity_main.xml"),
+            )
+        val file =
+            candidates.firstOrNull { it.exists() }
+                ?: throw IllegalStateException("activity_main.xml not found")
         return file.readText()
     }
 
@@ -52,4 +53,3 @@ class SecurityControlsLayoutContractTest {
         assertTrue("masterSwitch must appear before sandboxContainerCard", masterSwitchIndex < sandboxIndex)
     }
 }
-

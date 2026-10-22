@@ -6,7 +6,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class CapsModeLogicTest {
-
     @Test
     fun testModeCycleOnTap() {
         var mode = CapsMode.OFF

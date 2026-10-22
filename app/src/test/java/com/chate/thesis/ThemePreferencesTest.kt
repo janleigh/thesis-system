@@ -28,4 +28,3 @@ class ThemePreferencesTest {
         assertEquals(HeaderEffect.NOTHING, HeaderEffect.fromId("invalid_effect"))
     }
 }
-

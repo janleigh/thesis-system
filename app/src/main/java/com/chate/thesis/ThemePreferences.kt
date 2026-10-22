@@ -9,7 +9,8 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
 enum class ThemeMode(val id: String, val title: String, val nightMode: Int) {
     SYSTEM("system", "Automatic", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM),
     LIGHT("light", "Light", AppCompatDelegate.MODE_NIGHT_NO),
-    DARK("dark", "Dark", AppCompatDelegate.MODE_NIGHT_YES);
+    DARK("dark", "Dark", AppCompatDelegate.MODE_NIGHT_YES),
+    ;
 
     companion object {
         fun fromId(id: String?): ThemeMode {
@@ -25,7 +26,8 @@ enum class ColorPalette(val id: String, val title: String) {
     EMERALD("emerald", "Emerald Forest"),
     AMBER("amber", "Sunset Amber"),
     VIOLET("violet", "Neon Violet"),
-    CRIMSON("crimson", "Crimson Rose");
+    CRIMSON("crimson", "Crimson Rose"),
+    ;
 
     companion object {
         fun fromId(id: String?): ColorPalette {
@@ -33,15 +35,16 @@ enum class ColorPalette(val id: String, val title: String) {
         }
     }
 
-    fun getThemeResId(): Int = when (this) {
-        MONET -> R.style.Theme_Thesis
-        CYAN -> R.style.Theme_Thesis_Palette_Cyan
-        BLUE -> R.style.Theme_Thesis_Palette_Blue
-        EMERALD -> R.style.Theme_Thesis_Palette_Emerald
-        AMBER -> R.style.Theme_Thesis_Palette_Amber
-        VIOLET -> R.style.Theme_Thesis_Palette_Violet
-        CRIMSON -> R.style.Theme_Thesis_Palette_Crimson
-    }
+    fun getThemeResId(): Int =
+        when (this) {
+            MONET -> R.style.Theme_Thesis
+            CYAN -> R.style.Theme_Thesis_Palette_Cyan
+            BLUE -> R.style.Theme_Thesis_Palette_Blue
+            EMERALD -> R.style.Theme_Thesis_Palette_Emerald
+            AMBER -> R.style.Theme_Thesis_Palette_Amber
+            VIOLET -> R.style.Theme_Thesis_Palette_Violet
+            CRIMSON -> R.style.Theme_Thesis_Palette_Crimson
+        }
 }
 
 enum class HeaderEffect(val id: String, val title: String) {
@@ -49,7 +52,8 @@ enum class HeaderEffect(val id: String, val title: String) {
     SNOW("snow", "Snow"),
     MAZE("maze", "Maze"),
     CIRCUIT("circuit", "Circuit"),
-    CODE_RAIN("code_rain", "Code Rain");
+    CODE_RAIN("code_rain", "Code Rain"),
+    ;
 
     companion object {
         fun fromId(id: String?): HeaderEffect {

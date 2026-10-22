@@ -2,9 +2,9 @@ package com.chate.thesis
 
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
-import kotlin.math.sqrt
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.sqrt
 
 /**
  * Minimum number of samples required to compute a full covariance matrix.
@@ -19,7 +19,6 @@ const val MIN_SAMPLES_FOR_COVARIANCE = 50
  * implemented in pure Kotlin using DoubleArray / Array<DoubleArray>.
  */
 class MahalanobisNormalizer {
-
     @SerializedName("mean")
     var mean: DoubleArray? = null
         private set
@@ -68,16 +67,17 @@ class MahalanobisNormalizer {
         } else {
             // Full covariance path (sample covariance, ddof=1)
             val cov = matCovariance(x, mean!!)
-            covInv = try {
-                val inv = matInverse(cov)
-                coldStart = false
-                inv
-            } catch (_: Exception) {
-                // Regularisation fallback: cov + 1e-6 * I
-                val reg = Array(d) { i -> DoubleArray(d) { j -> cov[i][j] + if (i == j) 1e-6 else 0.0 } }
-                coldStart = true
-                matInverse(reg)
-            }
+            covInv =
+                try {
+                    val inv = matInverse(cov)
+                    coldStart = false
+                    inv
+                } catch (_: Exception) {
+                    // Regularisation fallback: cov + 1e-6 * I
+                    val reg = Array(d) { i -> DoubleArray(d) { j -> cov[i][j] + if (i == j) 1e-6 else 0.0 } }
+                    coldStart = true
+                    matInverse(reg)
+                }
         }
 
         isFitted = true
@@ -96,7 +96,7 @@ class MahalanobisNormalizer {
     fun distance(vector: DoubleArray): Double {
         check(isFitted) { "MahalanobisNormalizer has not been fitted" }
         val diff = DoubleArray(vector.size) { vector[it] - mean!![it] }
-        val tmp = matVecMul(covInv!!, diff)      // Σ⁻¹ · diff
+        val tmp = matVecMul(covInv!!, diff) // Σ⁻¹ · diff
         var distSq = 0.0
         for (i in diff.indices) distSq += diff[i] * tmp[i]
         return sqrt(max(distSq, 0.0))
@@ -108,7 +108,10 @@ class MahalanobisNormalizer {
      * range between 1.5 - 3.5 (mean sqrt(6) ≈ 2.45), mapping to 0.15 - 0.35 (ALLOW).
      * Impostor distances (typically 8.0 - 25.0) scale to high-risk (0.80 - 1.00).
      */
-    fun normalizedScore(vector: DoubleArray, maxDist: Double = 10.0): Double {
+    fun normalizedScore(
+        vector: DoubleArray,
+        maxDist: Double = 10.0,
+    ): Double {
         val raw = distance(vector)
         return min(raw / maxDist, 1.0)
     }
@@ -120,8 +123,7 @@ class MahalanobisNormalizer {
     fun toJson(): String = Gson().toJson(this)
 
     companion object {
-        fun fromJson(json: String): MahalanobisNormalizer =
-            Gson().fromJson(json, MahalanobisNormalizer::class.java)
+        fun fromJson(json: String): MahalanobisNormalizer = Gson().fromJson(json, MahalanobisNormalizer::class.java)
     }
 }
 
@@ -144,7 +146,10 @@ internal fun matMean(x: Array<DoubleArray>): DoubleArray {
 /**
  * Column-wise population variance of [x] around the given [mean].
  */
-internal fun matVariance(x: Array<DoubleArray>, mean: DoubleArray): DoubleArray {
+internal fun matVariance(
+    x: Array<DoubleArray>,
+    mean: DoubleArray,
+): DoubleArray {
     val n = x.size
     val d = mean.size
     val v = DoubleArray(d)
@@ -161,7 +166,10 @@ internal fun matVariance(x: Array<DoubleArray>, mean: DoubleArray): DoubleArray 
  *
  * Returns a d × d matrix where `cov[i][j] = Σ (xₖᵢ - μᵢ)(xₖⱼ - μⱼ) / (n - 1)`.
  */
-internal fun matCovariance(x: Array<DoubleArray>, mean: DoubleArray): Array<DoubleArray> {
+internal fun matCovariance(
+    x: Array<DoubleArray>,
+    mean: DoubleArray,
+): Array<DoubleArray> {
     val n = x.size
     val d = mean.size
     val cov = Array(d) { DoubleArray(d) }
@@ -194,11 +202,18 @@ internal fun matCovariance(x: Array<DoubleArray>, mean: DoubleArray): Array<Doub
 internal fun matInverse(matrix: Array<DoubleArray>): Array<DoubleArray> {
     val n = matrix.size
     // Augmented matrix [A | I]
-    val aug = Array(n) { i ->
-        DoubleArray(2 * n) { j ->
-            if (j < n) matrix[i][j] else if (j - n == i) 1.0 else 0.0
+    val aug =
+        Array(n) { i ->
+            DoubleArray(2 * n) { j ->
+                if (j < n) {
+                    matrix[i][j]
+                } else if (j - n == i) {
+                    1.0
+                } else {
+                    0.0
+                }
+            }
         }
-    }
 
     for (col in 0 until n) {
         // Partial pivoting: find the row with the largest absolute value in the column
@@ -206,13 +221,18 @@ internal fun matInverse(matrix: Array<DoubleArray>): Array<DoubleArray> {
         var maxVal = kotlin.math.abs(aug[col][col])
         for (row in col + 1 until n) {
             val v = kotlin.math.abs(aug[row][col])
-            if (v > maxVal) { maxVal = v; maxRow = row }
+            if (v > maxVal) {
+                maxVal = v
+                maxRow = row
+            }
         }
         if (maxVal < 1e-12) throw ArithmeticException("Singular matrix in matInverse")
 
         // Swap rows
         if (maxRow != col) {
-            val tmp = aug[col]; aug[col] = aug[maxRow]; aug[maxRow] = tmp
+            val tmp = aug[col]
+            aug[col] = aug[maxRow]
+            aug[maxRow] = tmp
         }
 
         // Scale pivot row
@@ -242,7 +262,10 @@ internal fun matDiag(v: DoubleArray): Array<DoubleArray> {
 /**
  * Matrix-vector multiplication: A (n×n) · v (n) → result (n).
  */
-internal fun matVecMul(a: Array<DoubleArray>, v: DoubleArray): DoubleArray {
+internal fun matVecMul(
+    a: Array<DoubleArray>,
+    v: DoubleArray,
+): DoubleArray {
     val n = a.size
     val result = DoubleArray(n)
     for (i in 0 until n) {

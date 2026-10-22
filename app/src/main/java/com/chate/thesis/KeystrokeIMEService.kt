@@ -41,7 +41,6 @@ import com.google.android.material.color.MaterialColors
 import kotlin.math.abs
 
 class KeystrokeIMEService : InputMethodService() {
-
     private val eventBuffer = mutableListOf<KeystrokeEvent>()
     private val featureExtractor = FeatureExtractor()
     private var capsMode = CapsMode.OFF
@@ -76,7 +75,7 @@ class KeystrokeIMEService : InputMethodService() {
     private lateinit var profileManager: ProfileManager
     private lateinit var riskScorer: RiskScorer
     private lateinit var securityLogger: SecurityLogger
-    
+
     private var currentMode = "IDLE"
     private var currentUserId = MainActivity.DEFAULT_USER_ID
     private val windowThreshold = 20 // Window size for extraction
@@ -103,129 +102,136 @@ class KeystrokeIMEService : InputMethodService() {
     private var currentOnSurfaceVariant: Int = 0
     private var isAmoledActive: Boolean = false
 
-    private val themePreferenceListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-        if (key in listOf(ThemePreferences.KEY_THEME_MODE, ThemePreferences.KEY_PALETTE, ThemePreferences.KEY_AMOLED_BLACK)) {
-            mainHandler.post {
-                reloadInputView()
+    private val themePreferenceListener =
+        SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key in listOf(ThemePreferences.KEY_THEME_MODE, ThemePreferences.KEY_PALETTE, ThemePreferences.KEY_AMOLED_BLACK)) {
+                mainHandler.post {
+                    reloadInputView()
+                }
             }
         }
-    }
 
     companion object {
         const val ACTION_SET_MODE = "com.chate.thesis.SET_MODE"
         const val ACTION_STEP_UP_RESULT = "com.chate.thesis.STEP_UP_RESULT"
     }
 
-    private val modeReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            intent ?: return
-            when (intent.action) {
-                ACTION_SET_MODE -> {
-                    currentMode = intent.getStringExtra("mode") ?: "IDLE"
-                    currentUserId = intent.getStringExtra("user_id") ?: MainActivity.DEFAULT_USER_ID
-                    
-                    if (::enrollmentText.isInitialized) {
-                        if (currentMode == "ENROLL") {
-                            enrollmentText.text = "ENROLLING..."
-                            statusText.text = "PENDING"
-                            setIndicatorColor(R.color.risk_warn)
-                            scoreText.text = ""
-                        } else if (currentMode == "VERIFY") {
-                            enrollmentText.text = ""
-                            statusText.text = "READY"
-                            setIndicatorColor(R.color.risk_allow)
-                            scoreText.text = "0.00"
+    private val modeReceiver =
+        object : BroadcastReceiver() {
+            override fun onReceive(
+                context: Context?,
+                intent: Intent?,
+            ) {
+                intent ?: return
+                when (intent.action) {
+                    ACTION_SET_MODE -> {
+                        currentMode = intent.getStringExtra("mode") ?: "IDLE"
+                        currentUserId = intent.getStringExtra("user_id") ?: MainActivity.DEFAULT_USER_ID
+
+                        if (::enrollmentText.isInitialized) {
+                            if (currentMode == "ENROLL") {
+                                enrollmentText.text = "ENROLLING..."
+                                statusText.text = "PENDING"
+                                setIndicatorColor(R.color.risk_warn)
+                                scoreText.text = ""
+                            } else if (currentMode == "VERIFY") {
+                                enrollmentText.text = ""
+                                statusText.text = "READY"
+                                setIndicatorColor(R.color.risk_allow)
+                                scoreText.text = "0.00"
+                                riskScorer.resetHistory()
+                            } else {
+                                enrollmentText.text = ""
+                                statusText.text = "IDLE"
+                                setIndicatorColor(R.color.text_secondary)
+                                scoreText.text = ""
+                            }
+                        }
+                        eventBuffer.clear()
+                    }
+                    ACTION_STEP_UP_RESULT -> {
+                        val success = intent.getBooleanExtra("success", false)
+                        if (success) {
                             riskScorer.resetHistory()
+                            if (::scoreText.isInitialized) {
+                                scoreText.text = "0.00"
+                                statusText.text = "READY"
+                                setIndicatorColor(R.color.risk_allow)
+                            }
                         } else {
-                            enrollmentText.text = ""
-                            statusText.text = "IDLE"
-                            setIndicatorColor(R.color.text_secondary)
-                            scoreText.text = ""
+                            lockDevice(this@KeystrokeIMEService)
                         }
                     }
-                    eventBuffer.clear()
-                }
-                ACTION_STEP_UP_RESULT -> {
-                    val success = intent.getBooleanExtra("success", false)
-                    if (success) {
-                        riskScorer.resetHistory()
-                        if (::scoreText.isInitialized) {
-                            scoreText.text = "0.00"
-                            statusText.text = "READY"
-                            setIndicatorColor(R.color.risk_allow)
-                        }
-                    } else {
-                        lockDevice(this@KeystrokeIMEService)
+                    KeyboardPreferences.ACTION_SETTINGS_CHANGED -> {
+                        applyKeyboardPreferences()
                     }
-                }
-                KeyboardPreferences.ACTION_SETTINGS_CHANGED -> {
-                    applyKeyboardPreferences()
-                }
-                ThemePreferences.ACTION_THEME_CHANGED -> {
-                    reloadInputView()
+                    ThemePreferences.ACTION_THEME_CHANGED -> {
+                        reloadInputView()
+                    }
                 }
             }
         }
-    }
 
     // Map of button IDs to key codes and labels
-    private val keyMap = mapOf(
-        R.id.key_q to Pair(KeyEvent.KEYCODE_Q, "q"),
-        R.id.key_w to Pair(KeyEvent.KEYCODE_W, "w"),
-        R.id.key_e to Pair(KeyEvent.KEYCODE_E, "e"),
-        R.id.key_r to Pair(KeyEvent.KEYCODE_R, "r"),
-        R.id.key_t to Pair(KeyEvent.KEYCODE_T, "t"),
-        R.id.key_y to Pair(KeyEvent.KEYCODE_Y, "y"),
-        R.id.key_u to Pair(KeyEvent.KEYCODE_U, "u"),
-        R.id.key_i to Pair(KeyEvent.KEYCODE_I, "i"),
-        R.id.key_o to Pair(KeyEvent.KEYCODE_O, "o"),
-        R.id.key_p to Pair(KeyEvent.KEYCODE_P, "p"),
-        R.id.key_a to Pair(KeyEvent.KEYCODE_A, "a"),
-        R.id.key_s to Pair(KeyEvent.KEYCODE_S, "s"),
-        R.id.key_d to Pair(KeyEvent.KEYCODE_D, "d"),
-        R.id.key_f to Pair(KeyEvent.KEYCODE_F, "f"),
-        R.id.key_g to Pair(KeyEvent.KEYCODE_G, "g"),
-        R.id.key_h to Pair(KeyEvent.KEYCODE_H, "h"),
-        R.id.key_j to Pair(KeyEvent.KEYCODE_J, "j"),
-        R.id.key_k to Pair(KeyEvent.KEYCODE_K, "k"),
-        R.id.key_l to Pair(KeyEvent.KEYCODE_L, "l"),
-        R.id.key_z to Pair(KeyEvent.KEYCODE_Z, "z"),
-        R.id.key_x to Pair(KeyEvent.KEYCODE_X, "x"),
-        R.id.key_c to Pair(KeyEvent.KEYCODE_C, "c"),
-        R.id.key_v to Pair(KeyEvent.KEYCODE_V, "v"),
-        R.id.key_b to Pair(KeyEvent.KEYCODE_B, "b"),
-        R.id.key_n to Pair(KeyEvent.KEYCODE_N, "n"),
-        R.id.key_m to Pair(KeyEvent.KEYCODE_M, "m")
-    )
+    private val keyMap =
+        mapOf(
+            R.id.key_q to Pair(KeyEvent.KEYCODE_Q, "q"),
+            R.id.key_w to Pair(KeyEvent.KEYCODE_W, "w"),
+            R.id.key_e to Pair(KeyEvent.KEYCODE_E, "e"),
+            R.id.key_r to Pair(KeyEvent.KEYCODE_R, "r"),
+            R.id.key_t to Pair(KeyEvent.KEYCODE_T, "t"),
+            R.id.key_y to Pair(KeyEvent.KEYCODE_Y, "y"),
+            R.id.key_u to Pair(KeyEvent.KEYCODE_U, "u"),
+            R.id.key_i to Pair(KeyEvent.KEYCODE_I, "i"),
+            R.id.key_o to Pair(KeyEvent.KEYCODE_O, "o"),
+            R.id.key_p to Pair(KeyEvent.KEYCODE_P, "p"),
+            R.id.key_a to Pair(KeyEvent.KEYCODE_A, "a"),
+            R.id.key_s to Pair(KeyEvent.KEYCODE_S, "s"),
+            R.id.key_d to Pair(KeyEvent.KEYCODE_D, "d"),
+            R.id.key_f to Pair(KeyEvent.KEYCODE_F, "f"),
+            R.id.key_g to Pair(KeyEvent.KEYCODE_G, "g"),
+            R.id.key_h to Pair(KeyEvent.KEYCODE_H, "h"),
+            R.id.key_j to Pair(KeyEvent.KEYCODE_J, "j"),
+            R.id.key_k to Pair(KeyEvent.KEYCODE_K, "k"),
+            R.id.key_l to Pair(KeyEvent.KEYCODE_L, "l"),
+            R.id.key_z to Pair(KeyEvent.KEYCODE_Z, "z"),
+            R.id.key_x to Pair(KeyEvent.KEYCODE_X, "x"),
+            R.id.key_c to Pair(KeyEvent.KEYCODE_C, "c"),
+            R.id.key_v to Pair(KeyEvent.KEYCODE_V, "v"),
+            R.id.key_b to Pair(KeyEvent.KEYCODE_B, "b"),
+            R.id.key_n to Pair(KeyEvent.KEYCODE_N, "n"),
+            R.id.key_m to Pair(KeyEvent.KEYCODE_M, "m"),
+        )
 
-    private val symbolsMap = mapOf(
-        R.id.key_q to Pair(KeyEvent.KEYCODE_1, "1"),
-        R.id.key_w to Pair(KeyEvent.KEYCODE_2, "2"),
-        R.id.key_e to Pair(KeyEvent.KEYCODE_3, "3"),
-        R.id.key_r to Pair(KeyEvent.KEYCODE_4, "4"),
-        R.id.key_t to Pair(KeyEvent.KEYCODE_5, "5"),
-        R.id.key_y to Pair(KeyEvent.KEYCODE_6, "6"),
-        R.id.key_u to Pair(KeyEvent.KEYCODE_7, "7"),
-        R.id.key_i to Pair(KeyEvent.KEYCODE_8, "8"),
-        R.id.key_o to Pair(KeyEvent.KEYCODE_9, "9"),
-        R.id.key_p to Pair(KeyEvent.KEYCODE_0, "0"),
-        R.id.key_a to Pair(KeyEvent.KEYCODE_AT, "@"),
-        R.id.key_s to Pair(KeyEvent.KEYCODE_POUND, "#"),
-        R.id.key_d to Pair(KeyEvent.KEYCODE_4, "$"),
-        R.id.key_f to Pair(KeyEvent.KEYCODE_STAR, "*"),
-        R.id.key_g to Pair(KeyEvent.KEYCODE_MINUS, "-"),
-        R.id.key_h to Pair(KeyEvent.KEYCODE_PLUS, "+"),
-        R.id.key_j to Pair(KeyEvent.KEYCODE_EQUALS, "="),
-        R.id.key_k to Pair(KeyEvent.KEYCODE_SLASH, "/"),
-        R.id.key_l to Pair(KeyEvent.KEYCODE_BACKSLASH, "\\"),
-        R.id.key_z to Pair(KeyEvent.KEYCODE_LEFT_BRACKET, "["),
-        R.id.key_x to Pair(KeyEvent.KEYCODE_RIGHT_BRACKET, "]"),
-        R.id.key_c to Pair(KeyEvent.KEYCODE_APOSTROPHE, "'"),
-        R.id.key_v to Pair(KeyEvent.KEYCODE_GRAVE, "`"),
-        R.id.key_b to Pair(KeyEvent.KEYCODE_SEMICOLON, ";"),
-        R.id.key_n to Pair(KeyEvent.KEYCODE_COMMA, ","),
-        R.id.key_m to Pair(KeyEvent.KEYCODE_PERIOD, ".")
-    )
+    private val symbolsMap =
+        mapOf(
+            R.id.key_q to Pair(KeyEvent.KEYCODE_1, "1"),
+            R.id.key_w to Pair(KeyEvent.KEYCODE_2, "2"),
+            R.id.key_e to Pair(KeyEvent.KEYCODE_3, "3"),
+            R.id.key_r to Pair(KeyEvent.KEYCODE_4, "4"),
+            R.id.key_t to Pair(KeyEvent.KEYCODE_5, "5"),
+            R.id.key_y to Pair(KeyEvent.KEYCODE_6, "6"),
+            R.id.key_u to Pair(KeyEvent.KEYCODE_7, "7"),
+            R.id.key_i to Pair(KeyEvent.KEYCODE_8, "8"),
+            R.id.key_o to Pair(KeyEvent.KEYCODE_9, "9"),
+            R.id.key_p to Pair(KeyEvent.KEYCODE_0, "0"),
+            R.id.key_a to Pair(KeyEvent.KEYCODE_AT, "@"),
+            R.id.key_s to Pair(KeyEvent.KEYCODE_POUND, "#"),
+            R.id.key_d to Pair(KeyEvent.KEYCODE_4, "$"),
+            R.id.key_f to Pair(KeyEvent.KEYCODE_STAR, "*"),
+            R.id.key_g to Pair(KeyEvent.KEYCODE_MINUS, "-"),
+            R.id.key_h to Pair(KeyEvent.KEYCODE_PLUS, "+"),
+            R.id.key_j to Pair(KeyEvent.KEYCODE_EQUALS, "="),
+            R.id.key_k to Pair(KeyEvent.KEYCODE_SLASH, "/"),
+            R.id.key_l to Pair(KeyEvent.KEYCODE_BACKSLASH, "\\"),
+            R.id.key_z to Pair(KeyEvent.KEYCODE_LEFT_BRACKET, "["),
+            R.id.key_x to Pair(KeyEvent.KEYCODE_RIGHT_BRACKET, "]"),
+            R.id.key_c to Pair(KeyEvent.KEYCODE_APOSTROPHE, "'"),
+            R.id.key_v to Pair(KeyEvent.KEYCODE_GRAVE, "`"),
+            R.id.key_b to Pair(KeyEvent.KEYCODE_SEMICOLON, ";"),
+            R.id.key_n to Pair(KeyEvent.KEYCODE_COMMA, ","),
+            R.id.key_m to Pair(KeyEvent.KEYCODE_PERIOD, "."),
+        )
 
     override fun onCreate() {
         super.onCreate()
@@ -234,13 +240,14 @@ class KeystrokeIMEService : InputMethodService() {
         riskScorer = RiskScorer()
         securityLogger = SecurityLogger(this)
         touchSlop = ViewConfiguration.get(this).scaledTouchSlop
-        
-        val filter = IntentFilter().apply {
-            addAction(ACTION_SET_MODE)
-            addAction(ACTION_STEP_UP_RESULT)
-            addAction(KeyboardPreferences.ACTION_SETTINGS_CHANGED)
-            addAction(ThemePreferences.ACTION_THEME_CHANGED)
-        }
+
+        val filter =
+            IntentFilter().apply {
+                addAction(ACTION_SET_MODE)
+                addAction(ACTION_STEP_UP_RESULT)
+                addAction(KeyboardPreferences.ACTION_SETTINGS_CHANGED)
+                addAction(ThemePreferences.ACTION_THEME_CHANGED)
+            }
         LocalBroadcastManager.getInstance(this).registerReceiver(modeReceiver, filter)
 
         val themePrefs = getSharedPreferences(ThemePreferences.PREFS_NAME, Context.MODE_PRIVATE)
@@ -258,7 +265,7 @@ class KeystrokeIMEService : InputMethodService() {
     override fun onCreateInputView(): View {
         themedContext = getThemedContext()
         keyboardView = LayoutInflater.from(themedContext).inflate(R.layout.keyboard_layout, null)
-        
+
         keyboardRootFrame = keyboardView.findViewById(R.id.keyboard_root_frame)
         keyboardRowsContainer = keyboardView.findViewById(R.id.keyboard_rows_container)
         resizePanel = keyboardView.findViewById(R.id.resize_panel)
@@ -374,7 +381,10 @@ class KeystrokeIMEService : InputMethodService() {
         return keyboardView
     }
 
-    override fun onStartInputView(info: android.view.inputmethod.EditorInfo?, restarting: Boolean) {
+    override fun onStartInputView(
+        info: android.view.inputmethod.EditorInfo?,
+        restarting: Boolean,
+    ) {
         super.onStartInputView(info, restarting)
         applyKeyboardPreferences()
     }
@@ -394,7 +404,10 @@ class KeystrokeIMEService : InputMethodService() {
         return false
     }
 
-    override fun onShowInputRequested(flags: Int, configChange: Boolean): Boolean {
+    override fun onShowInputRequested(
+        flags: Int,
+        configChange: Boolean,
+    ): Boolean {
         return true
     }
 
@@ -442,7 +455,7 @@ class KeystrokeIMEService : InputMethodService() {
                     // Dragging upwards increases keyboard height
                     val deltaY = dragStartY - event.rawY
                     val targetHeight = (startHeightPx + deltaY).toInt().coerceIn(minAllowedPx, maxAllowedPx)
-                    
+
                     val params = keyboardRowsContainer.layoutParams
                     params.height = targetHeight
                     keyboardRowsContainer.layoutParams = params
@@ -454,10 +467,11 @@ class KeystrokeIMEService : InputMethodService() {
                 }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     resizeDragHandleArea.isPressed = false
-                    val finalDp = (keyboardRowsContainer.height / density).toInt().coerceIn(
-                        KeyboardPreferences.MIN_HEIGHT_DP,
-                        KeyboardPreferences.MAX_HEIGHT_DP
-                    )
+                    val finalDp =
+                        (keyboardRowsContainer.height / density).toInt().coerceIn(
+                            KeyboardPreferences.MIN_HEIGHT_DP,
+                            KeyboardPreferences.MAX_HEIGHT_DP,
+                        )
                     preferences.heightDp = finalDp
                     updateResizeHeightLabel(finalDp)
                     true
@@ -507,13 +521,14 @@ class KeystrokeIMEService : InputMethodService() {
 
     private fun updatePresetHighlights(currentDp: Int) {
         if (!::keyboardView.isInitialized) return
-        val presets = mapOf(
-            R.id.btn_size_compact to 210,
-            R.id.btn_size_short to 245,
-            R.id.btn_size_normal to 280,
-            R.id.btn_size_tall to 320,
-            R.id.btn_size_xtall to 360
-        )
+        val presets =
+            mapOf(
+                R.id.btn_size_compact to 210,
+                R.id.btn_size_short to 245,
+                R.id.btn_size_normal to 280,
+                R.id.btn_size_tall to 320,
+                R.id.btn_size_xtall to 360,
+            )
         val activeTextColor = currentOnPrimaryColor
         val defaultTextColor = currentKeyTextColor
         presets.forEach { (btnId, dpVal) ->
@@ -528,23 +543,24 @@ class KeystrokeIMEService : InputMethodService() {
         }
     }
 
-
     private fun setupModeToggle() {
         updateModeToggleButton()
         btnModeToggle.setOnClickListener {
-            val newMode = if (preferences.longPressMode == KeyboardPreferences.MODE_VARIANTS) {
-                KeyboardPreferences.MODE_RAPID_FIRE
-            } else {
-                KeyboardPreferences.MODE_VARIANTS
-            }
+            val newMode =
+                if (preferences.longPressMode == KeyboardPreferences.MODE_VARIANTS) {
+                    KeyboardPreferences.MODE_RAPID_FIRE
+                } else {
+                    KeyboardPreferences.MODE_VARIANTS
+                }
             preferences.longPressMode = newMode
             updateModeToggleButton()
 
-            val msg = if (newMode == KeyboardPreferences.MODE_VARIANTS) {
-                "Long-press: Variants (Gboard style)"
-            } else {
-                "Long-press: Rapid-fire repeat"
-            }
+            val msg =
+                if (newMode == KeyboardPreferences.MODE_VARIANTS) {
+                    "Long-press: Variants (Gboard style)"
+                } else {
+                    "Long-press: Rapid-fire repeat"
+                }
             Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
         }
     }
@@ -567,7 +583,7 @@ class KeystrokeIMEService : InputMethodService() {
         val density = resources.displayMetrics.density
         val savedHeightDp = preferences.heightDp
         val targetPx = (savedHeightDp * density).toInt()
-        
+
         if (keyboardRowsContainer.layoutParams.height != targetPx) {
             val params = keyboardRowsContainer.layoutParams
             params.height = targetPx
@@ -584,7 +600,11 @@ class KeystrokeIMEService : InputMethodService() {
     // TOUCH & LONG-PRESS (RAPID-FIRE / VARIANTS) HANDLING
     // =========================================================================
 
-    private fun handleKeyTouch(view: View, event: MotionEvent, buttonId: Int) {
+    private fun handleKeyTouch(
+        view: View,
+        event: MotionEvent,
+        buttonId: Int,
+    ) {
         val currentMap = if (isSymbols) symbolsMap else keyMap
         val keyData = currentMap[buttonId] ?: Pair(0, "")
         val actualKeyCode = keyData.first
@@ -599,11 +619,16 @@ class KeystrokeIMEService : InputMethodService() {
             variantsKey = rawChar,
             commitAction = {
                 currentInputConnection?.commitText(actualKeyLabel, 1)
-            }
+            },
         )
     }
 
-    private fun handleKeyWithVariantsTouch(view: View, event: MotionEvent, keyCode: Int, keyChar: String) {
+    private fun handleKeyWithVariantsTouch(
+        view: View,
+        event: MotionEvent,
+        keyCode: Int,
+        keyChar: String,
+    ) {
         processKeyGesture(
             view = view,
             event = event,
@@ -612,7 +637,7 @@ class KeystrokeIMEService : InputMethodService() {
             variantsKey = keyChar,
             commitAction = {
                 currentInputConnection?.commitText(keyChar, 1)
-            }
+            },
         )
     }
 
@@ -622,7 +647,7 @@ class KeystrokeIMEService : InputMethodService() {
         keyCode: Int,
         keyLabel: String,
         allowRepeat: Boolean,
-        commitAction: () -> Unit
+        commitAction: () -> Unit,
     ) {
         val currentTime = event.eventTime.toDouble()
         when (event.action) {
@@ -634,19 +659,21 @@ class KeystrokeIMEService : InputMethodService() {
                 if (allowRepeat) {
                     val repeatInterval = preferences.repeatIntervalMs
                     val delay = preferences.longPressDelayMs
-                    activeLongPressRunnable = Runnable {
-                        isRapidFiring = true
-                        activeRepeatRunnable = object : Runnable {
-                            override fun run() {
-                                commitAction()
-                                view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-                                eventBuffer.add(KeystrokeEvent(keyCode, 0, SystemClock.uptimeMillis().toDouble()))
-                                eventBuffer.add(KeystrokeEvent(keyCode, 1, (SystemClock.uptimeMillis() + 15).toDouble()))
-                                mainHandler.postDelayed(this, repeatInterval)
-                            }
+                    activeLongPressRunnable =
+                        Runnable {
+                            isRapidFiring = true
+                            activeRepeatRunnable =
+                                object : Runnable {
+                                    override fun run() {
+                                        commitAction()
+                                        view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                        eventBuffer.add(KeystrokeEvent(keyCode, 0, SystemClock.uptimeMillis().toDouble()))
+                                        eventBuffer.add(KeystrokeEvent(keyCode, 1, (SystemClock.uptimeMillis() + 15).toDouble()))
+                                        mainHandler.postDelayed(this, repeatInterval)
+                                    }
+                                }
+                            mainHandler.post(activeRepeatRunnable!!)
                         }
-                        mainHandler.post(activeRepeatRunnable!!)
-                    }
                     mainHandler.postDelayed(activeLongPressRunnable!!, delay)
                 }
             }
@@ -668,7 +695,10 @@ class KeystrokeIMEService : InputMethodService() {
         }
     }
 
-    private fun handleDeleteKeyTouch(view: View, event: MotionEvent) {
+    private fun handleDeleteKeyTouch(
+        view: View,
+        event: MotionEvent,
+    ) {
         val currentTime = event.eventTime.toDouble()
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
@@ -680,20 +710,22 @@ class KeystrokeIMEService : InputMethodService() {
                 // Delete key ALWAYS supports rapid-fire auto-repeat!
                 val delay = preferences.longPressDelayMs
                 val repeatInterval = preferences.repeatIntervalMs
-                activeLongPressRunnable = Runnable {
-                    isRapidFiring = true
-                    activeRepeatRunnable = object : Runnable {
-                        override fun run() {
-                            currentInputConnection?.deleteSurroundingText(1, 0)
-                            view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-                            val now = SystemClock.uptimeMillis().toDouble()
-                            eventBuffer.add(KeystrokeEvent(KeyEvent.KEYCODE_DEL, 0, now))
-                            eventBuffer.add(KeystrokeEvent(KeyEvent.KEYCODE_DEL, 1, now + 10))
-                            mainHandler.postDelayed(this, repeatInterval)
-                        }
+                activeLongPressRunnable =
+                    Runnable {
+                        isRapidFiring = true
+                        activeRepeatRunnable =
+                            object : Runnable {
+                                override fun run() {
+                                    currentInputConnection?.deleteSurroundingText(1, 0)
+                                    view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                    val now = SystemClock.uptimeMillis().toDouble()
+                                    eventBuffer.add(KeystrokeEvent(KeyEvent.KEYCODE_DEL, 0, now))
+                                    eventBuffer.add(KeystrokeEvent(KeyEvent.KEYCODE_DEL, 1, now + 10))
+                                    mainHandler.postDelayed(this, repeatInterval)
+                                }
+                            }
+                        mainHandler.post(activeRepeatRunnable!!)
                     }
-                    mainHandler.post(activeRepeatRunnable!!)
-                }
                 mainHandler.postDelayed(activeLongPressRunnable!!, delay)
             }
             MotionEvent.ACTION_UP -> {
@@ -717,7 +749,7 @@ class KeystrokeIMEService : InputMethodService() {
         keyCode: Int,
         keyChar: String,
         variantsKey: String,
-        commitAction: () -> Unit
+        commitAction: () -> Unit,
     ) {
         val currentTime = event.eventTime.toDouble()
         when (event.action) {
@@ -736,30 +768,32 @@ class KeystrokeIMEService : InputMethodService() {
                 val mode = preferences.longPressMode
                 val variants = CharacterVariants.getVariants(variantsKey, isShifted)
 
-                activeLongPressRunnable = Runnable {
-                    isLongPressActive = true
-                    view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                activeLongPressRunnable =
+                    Runnable {
+                        isLongPressActive = true
+                        view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
 
-                    if (mode == KeyboardPreferences.MODE_RAPID_FIRE || variants.isEmpty()) {
-                        // Rapid-fire key repeat
-                        isRapidFiring = true
-                        val repeatInterval = preferences.repeatIntervalMs
-                        activeRepeatRunnable = object : Runnable {
-                            override fun run() {
-                                commitAction()
-                                view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-                                val now = SystemClock.uptimeMillis().toDouble()
-                                eventBuffer.add(KeystrokeEvent(keyCode, 0, now))
-                                eventBuffer.add(KeystrokeEvent(keyCode, 1, now + 15))
-                                mainHandler.postDelayed(this, repeatInterval)
-                            }
+                        if (mode == KeyboardPreferences.MODE_RAPID_FIRE || variants.isEmpty()) {
+                            // Rapid-fire key repeat
+                            isRapidFiring = true
+                            val repeatInterval = preferences.repeatIntervalMs
+                            activeRepeatRunnable =
+                                object : Runnable {
+                                    override fun run() {
+                                        commitAction()
+                                        view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                        val now = SystemClock.uptimeMillis().toDouble()
+                                        eventBuffer.add(KeystrokeEvent(keyCode, 0, now))
+                                        eventBuffer.add(KeystrokeEvent(keyCode, 1, now + 15))
+                                        mainHandler.postDelayed(this, repeatInterval)
+                                    }
+                                }
+                            mainHandler.post(activeRepeatRunnable!!)
+                        } else {
+                            // Gboard-style Character Variants Popup
+                            showVariantsPopup(view, variants)
                         }
-                        mainHandler.post(activeRepeatRunnable!!)
-                    } else {
-                        // Gboard-style Character Variants Popup
-                        showVariantsPopup(view, variants)
                     }
-                }
                 mainHandler.postDelayed(activeLongPressRunnable!!, delay)
             }
             MotionEvent.ACTION_MOVE -> {
@@ -838,7 +872,10 @@ class KeystrokeIMEService : InputMethodService() {
         return ::keyboardOverlayContainer.isInitialized && keyboardOverlayContainer.visibility == View.VISIBLE
     }
 
-    private fun showVariantsPopup(anchorKey: View, variants: List<String>) {
+    private fun showVariantsPopup(
+        anchorKey: View,
+        variants: List<String>,
+    ) {
         if (!::keyboardOverlayContainer.isInitialized || variants.isEmpty()) return
 
         currentVariantsList = variants
@@ -851,16 +888,17 @@ class KeystrokeIMEService : InputMethodService() {
         // Build variant item views
         val tvContext = if (::themedContext.isInitialized) themedContext else this
         variants.forEachIndexed { index, variantStr ->
-            val tv = TextView(tvContext).apply {
-                text = variantStr
-                textSize = 20f
-                gravity = Gravity.CENTER
-                minWidth = itemMinWidth
-                height = itemHeight
-                setTextColor(currentKeyTextColor)
-                tag = index
-                setPadding((6 * density).toInt(), 0, (6 * density).toInt(), 0)
-            }
+            val tv =
+                TextView(tvContext).apply {
+                    text = variantStr
+                    textSize = 20f
+                    gravity = Gravity.CENTER
+                    minWidth = itemMinWidth
+                    height = itemHeight
+                    setTextColor(currentKeyTextColor)
+                    tag = index
+                    setPadding((6 * density).toInt(), 0, (6 * density).toInt(), 0)
+                }
             variantsPopupCard.addView(tv)
         }
 
@@ -871,7 +909,7 @@ class KeystrokeIMEService : InputMethodService() {
         // Measure and position the popup card
         variantsPopupCard.measure(
             View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
-            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
         )
         val popupWidth = variantsPopupCard.measuredWidth
         val popupHeight = variantsPopupCard.measuredHeight
@@ -899,13 +937,14 @@ class KeystrokeIMEService : InputMethodService() {
             posY = (2 * density).toInt() // keep visible inside top area
         }
 
-        val lp = FrameLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply {
-            leftMargin = posX
-            topMargin = posY
-        }
+        val lp =
+            FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            ).apply {
+                leftMargin = posX
+                topMargin = posY
+            }
         variantsPopupCard.layoutParams = lp
 
         keyboardOverlayContainer.visibility = View.VISIBLE
@@ -930,12 +969,13 @@ class KeystrokeIMEService : InputMethodService() {
 
         for (i in 0 until count) {
             val child = variantsPopupCard.getChildAt(i)
-            val childCenterX = if (child.width > 0) {
-                relCardX + child.left + (child.width / 2f)
-            } else {
-                val itemWidth = variantsPopupCard.measuredWidth / count.toFloat()
-                variantsPopupCard.left + (i * itemWidth) + (itemWidth / 2f)
-            }
+            val childCenterX =
+                if (child.width > 0) {
+                    relCardX + child.left + (child.width / 2f)
+                } else {
+                    val itemWidth = variantsPopupCard.measuredWidth / count.toFloat()
+                    variantsPopupCard.left + (i * itemWidth) + (itemWidth / 2f)
+                }
             val dist = abs(relTouchX - childCenterX)
             if (dist < minDistance) {
                 minDistance = dist
@@ -987,12 +1027,13 @@ class KeystrokeIMEService : InputMethodService() {
         when (capsMode) {
             CapsMode.OFF -> {
                 if (isAmoledActive) {
-                    shiftButton.background = createKeyDrawable(
-                        normalColor = Color.parseColor("#0C0E10"),
-                        pressedColor = Color.parseColor("#1F2327"),
-                        shadowColor = Color.BLACK,
-                        borderColor = Color.parseColor("#1D2024")
-                    )
+                    shiftButton.background =
+                        createKeyDrawable(
+                            normalColor = Color.parseColor("#0C0E10"),
+                            pressedColor = Color.parseColor("#1F2327"),
+                            shadowColor = Color.BLACK,
+                            borderColor = Color.parseColor("#1D2024"),
+                        )
                     shiftButton.setTextColor(Color.parseColor("#DEE4E6"))
                 } else {
                     shiftButton.background = createSpecialKeyDrawable(currentPrimaryContainer)
@@ -1050,7 +1091,7 @@ class KeystrokeIMEService : InputMethodService() {
 
         if (validPairs >= windowThreshold) {
             val fv = featureExtractor.extract(eventBuffer)
-            
+
             if (fv != null && fv.isValid()) {
                 if (currentMode == "ENROLL") {
                     handleEnrollment(fv)
@@ -1058,17 +1099,17 @@ class KeystrokeIMEService : InputMethodService() {
                     handleVerification(fv)
                 }
             }
-            
+
             // Sliding window: Retain unpaired DOWN events for the next window
             val unpairedDowns = mutableListOf<KeystrokeEvent>()
             val upCounts = mutableMapOf<Int, Int>()
-            
+
             for (e in eventBuffer) {
                 if (e.eventType == 1) { // UP
                     upCounts[e.keyCode] = (upCounts[e.keyCode] ?: 0) + 1
                 }
             }
-            
+
             for (e in eventBuffer) {
                 if (e.eventType == 0) { // DOWN
                     val ups = upCounts[e.keyCode] ?: 0
@@ -1079,24 +1120,25 @@ class KeystrokeIMEService : InputMethodService() {
                     }
                 }
             }
-            
+
             eventBuffer.clear()
             eventBuffer.addAll(unpairedDowns)
         }
     }
-    
+
     private fun handleEnrollment(fv: FeatureVector) {
         val profile = profileManager.addEnrollmentWindow(currentUserId, fv)
-        
+
         enrollmentText.text = "${profile.progressPct.toInt()}%"
-        
-        val intent = Intent(MainActivity.ACTION_ENROLLMENT_UPDATE).apply {
-            putExtra("keystroke_count", profile.keystrokeCount)
-            putExtra("progress_pct", profile.progressPct)
-            putExtra("status", profile.status)
-        }
+
+        val intent =
+            Intent(MainActivity.ACTION_ENROLLMENT_UPDATE).apply {
+                putExtra("keystroke_count", profile.keystrokeCount)
+                putExtra("progress_pct", profile.progressPct)
+                putExtra("status", profile.status)
+            }
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
-        
+
         if (profile.isReady) {
             currentMode = "VERIFY"
             statusText.text = "READY"
@@ -1104,66 +1146,70 @@ class KeystrokeIMEService : InputMethodService() {
             enrollmentText.text = ""
         }
     }
-    
+
     private fun handleVerification(fv: FeatureVector) {
         val ocsvm = profileManager.getOcsvm(currentUserId)
         val mahal = profileManager.getMahalanobis(currentUserId)
-        
+
         if (ocsvm == null || mahal == null) {
             Log.e("KeystrokeIMEService", "Models not found for user $currentUserId")
             return
         }
-        
+
         val statArr = fv.toStatArray()
         val ocsvmScore = ocsvm.anomalyScore(statArr)
         val mahalScore = mahal.normalizedScore(statArr)
-        
+
         val decision = riskScorer.score(ocsvmScore, mahalScore, fv.keystrokeCount)
-        
+
         // Update IME UI
         scoreText.text = String.format("%.2f", decision.compositeScore)
         statusText.text = decision.action.displayName
-        
-        val colorRes = when (decision.action) {
-            Action.ALLOW -> R.color.risk_allow
-            Action.WARN -> R.color.risk_warn
-            Action.STEP_UP_AUTH -> R.color.risk_step_up
-            Action.BLOCK_SESSION -> R.color.risk_block
-        }
+
+        val colorRes =
+            when (decision.action) {
+                Action.ALLOW -> R.color.risk_allow
+                Action.WARN -> R.color.risk_warn
+                Action.STEP_UP_AUTH -> R.color.risk_step_up
+                Action.BLOCK_SESSION -> R.color.risk_block
+            }
         setIndicatorColor(colorRes)
-        
+
         // Log event
-        val payload = mapOf(
-            "composite" to decision.compositeScore.toString(),
-            "ocsvm" to decision.ocsvmScore.toString(),
-            "mahal" to decision.mahalScore.toString(),
-            "threshold" to decision.thresholdUsed.toString()
-        )
+        val payload =
+            mapOf(
+                "composite" to decision.compositeScore.toString(),
+                "ocsvm" to decision.ocsvmScore.toString(),
+                "mahal" to decision.mahalScore.toString(),
+                "threshold" to decision.thresholdUsed.toString(),
+            )
         securityLogger.log(
             userId = currentUserId,
             eventType = "AUTH_EVALUATION",
             payload = com.google.gson.Gson().toJson(payload),
             riskScore = decision.compositeScore,
-            action = decision.action.displayName
+            action = decision.action.displayName,
         )
-        
+
         // Broadcast to Activity
         val profile = profileManager.getProfile(currentUserId)
-        val intent = Intent(MainActivity.ACTION_RISK_UPDATE).apply {
-            putExtra("composite_score", decision.compositeScore)
-            putExtra("ocsvm_score", decision.ocsvmScore)
-            putExtra("mahal_score", decision.mahalScore)
-            putExtra("action", decision.action.displayName)
-            putExtra("keystroke_count", profile?.keystrokeCount ?: 0)
-        }
+        val intent =
+            Intent(MainActivity.ACTION_RISK_UPDATE).apply {
+                putExtra("composite_score", decision.compositeScore)
+                putExtra("ocsvm_score", decision.ocsvmScore)
+                putExtra("mahal_score", decision.mahalScore)
+                putExtra("action", decision.action.displayName)
+                putExtra("keystroke_count", profile?.keystrokeCount ?: 0)
+            }
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
 
         if (decision.action == Action.BLOCK_SESSION) {
             lockDevice(this)
         } else if (decision.action == Action.STEP_UP_AUTH) {
-            val stepUpIntent = Intent(this, StepUpAuthActivity::class.java).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
+            val stepUpIntent =
+                Intent(this, StepUpAuthActivity::class.java).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
             startActivity(stepUpIntent)
         }
     }
@@ -1183,14 +1229,15 @@ class KeystrokeIMEService : InputMethodService() {
                 Runtime.getRuntime().exec(arrayOf("su", "-c", "input keyevent 26"))
             } catch (e: Exception) {
                 Log.e("KeystrokeIMEService", "Root fallback failed, showing BlockedActivity.", e)
-                val intent = Intent(context, BlockedActivity::class.java).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                }
+                val intent =
+                    Intent(context, BlockedActivity::class.java).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                    }
                 context.startActivity(intent)
             }
         }
     }
-    
+
     private fun setIndicatorColor(colorRes: Int) {
         val bg = statusIndicator.background
         if (bg is GradientDrawable) {
@@ -1235,25 +1282,28 @@ class KeystrokeIMEService : InputMethodService() {
 
     private fun getThemedContext(): Context {
         val themePrefs = ThemePreferences(this)
-        val isNight = when (themePrefs.themeMode) {
-            ThemeMode.LIGHT -> false
-            ThemeMode.DARK -> true
-            ThemeMode.SYSTEM -> {
-                (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+        val isNight =
+            when (themePrefs.themeMode) {
+                ThemeMode.LIGHT -> false
+                ThemeMode.DARK -> true
+                ThemeMode.SYSTEM -> {
+                    (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+                }
             }
-        }
 
-        val overrideConfig = Configuration(resources.configuration).apply {
-            uiMode = (uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()) or
+        val overrideConfig =
+            Configuration(resources.configuration).apply {
+                uiMode = (uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()) or
                     (if (isNight) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO)
-        }
+            }
         val configContext = createConfigurationContext(overrideConfig)
 
-        val themeResId = if (themePrefs.palette == ColorPalette.MONET) {
-            R.style.Theme_Thesis
-        } else {
-            themePrefs.palette.getThemeResId()
-        }
+        val themeResId =
+            if (themePrefs.palette == ColorPalette.MONET) {
+                R.style.Theme_Thesis
+            } else {
+                themePrefs.palette.getThemeResId()
+            }
 
         var themed: Context = ContextThemeWrapper(configContext, themeResId)
 
@@ -1273,46 +1323,54 @@ class KeystrokeIMEService : InputMethodService() {
         val isNight = (ctx.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
         isAmoledActive = isNight && themePrefs.isAmoledBlackEnabled
 
-        currentPrimaryColor = MaterialColors.getColor(
-            ctx,
-            com.google.android.material.R.attr.colorPrimary,
-            ContextCompat.getColor(ctx, R.color.md_theme_primary)
-        )
-        currentOnPrimaryColor = MaterialColors.getColor(
-            ctx,
-            com.google.android.material.R.attr.colorOnPrimary,
-            ContextCompat.getColor(ctx, R.color.md_theme_onPrimary)
-        )
-        currentPrimaryContainer = MaterialColors.getColor(
-            ctx,
-            com.google.android.material.R.attr.colorPrimaryContainer,
-            ContextCompat.getColor(ctx, R.color.key_bg_special)
-        )
-        currentOnPrimaryContainer = MaterialColors.getColor(
-            ctx,
-            com.google.android.material.R.attr.colorOnPrimaryContainer,
-            ContextCompat.getColor(ctx, R.color.key_text_special)
-        )
-        currentKeyTextColor = MaterialColors.getColor(
-            ctx,
-            com.google.android.material.R.attr.colorOnSurface,
-            ContextCompat.getColor(ctx, R.color.key_text)
-        )
-        currentOnSurfaceVariant = MaterialColors.getColor(
-            ctx,
-            com.google.android.material.R.attr.colorOnSurfaceVariant,
-            ContextCompat.getColor(ctx, R.color.key_text_special)
-        )
-        val surfaceContainer = MaterialColors.getColor(
-            ctx,
-            com.google.android.material.R.attr.colorSurfaceContainer,
-            ContextCompat.getColor(ctx, R.color.keyboard_bg)
-        )
-        val surfaceContainerLow = MaterialColors.getColor(
-            ctx,
-            com.google.android.material.R.attr.colorSurfaceContainerLow,
-            ContextCompat.getColor(ctx, R.color.keyboard_bar_bg)
-        )
+        currentPrimaryColor =
+            MaterialColors.getColor(
+                ctx,
+                com.google.android.material.R.attr.colorPrimary,
+                ContextCompat.getColor(ctx, R.color.md_theme_primary),
+            )
+        currentOnPrimaryColor =
+            MaterialColors.getColor(
+                ctx,
+                com.google.android.material.R.attr.colorOnPrimary,
+                ContextCompat.getColor(ctx, R.color.md_theme_onPrimary),
+            )
+        currentPrimaryContainer =
+            MaterialColors.getColor(
+                ctx,
+                com.google.android.material.R.attr.colorPrimaryContainer,
+                ContextCompat.getColor(ctx, R.color.key_bg_special),
+            )
+        currentOnPrimaryContainer =
+            MaterialColors.getColor(
+                ctx,
+                com.google.android.material.R.attr.colorOnPrimaryContainer,
+                ContextCompat.getColor(ctx, R.color.key_text_special),
+            )
+        currentKeyTextColor =
+            MaterialColors.getColor(
+                ctx,
+                com.google.android.material.R.attr.colorOnSurface,
+                ContextCompat.getColor(ctx, R.color.key_text),
+            )
+        currentOnSurfaceVariant =
+            MaterialColors.getColor(
+                ctx,
+                com.google.android.material.R.attr.colorOnSurfaceVariant,
+                ContextCompat.getColor(ctx, R.color.key_text_special),
+            )
+        val surfaceContainer =
+            MaterialColors.getColor(
+                ctx,
+                com.google.android.material.R.attr.colorSurfaceContainer,
+                ContextCompat.getColor(ctx, R.color.keyboard_bg),
+            )
+        val surfaceContainerLow =
+            MaterialColors.getColor(
+                ctx,
+                com.google.android.material.R.attr.colorSurfaceContainerLow,
+                ContextCompat.getColor(ctx, R.color.keyboard_bar_bg),
+            )
 
         val mainContent = keyboardView.findViewById<LinearLayout>(R.id.keyboard_main_content)
         if (isAmoledActive) {
@@ -1378,18 +1436,20 @@ class KeystrokeIMEService : InputMethodService() {
     }
 
     private fun applyAmoledKeyBackgrounds() {
-        val normalAmoledDrawable = createKeyDrawable(
-            normalColor = Color.parseColor("#15181C"),
-            pressedColor = Color.parseColor("#262B31"),
-            shadowColor = Color.BLACK,
-            borderColor = Color.parseColor("#252A2F")
-        )
-        val specialAmoledDrawable = createKeyDrawable(
-            normalColor = Color.parseColor("#0C0E10"),
-            pressedColor = Color.parseColor("#1F2327"),
-            shadowColor = Color.BLACK,
-            borderColor = Color.parseColor("#1D2024")
-        )
+        val normalAmoledDrawable =
+            createKeyDrawable(
+                normalColor = Color.parseColor("#15181C"),
+                pressedColor = Color.parseColor("#262B31"),
+                shadowColor = Color.BLACK,
+                borderColor = Color.parseColor("#252A2F"),
+            )
+        val specialAmoledDrawable =
+            createKeyDrawable(
+                normalColor = Color.parseColor("#0C0E10"),
+                pressedColor = Color.parseColor("#1F2327"),
+                shadowColor = Color.BLACK,
+                borderColor = Color.parseColor("#1D2024"),
+            )
 
         keyMap.keys.forEach { buttonId ->
             keyboardView.findViewById<TextView>(buttonId)?.apply {
@@ -1427,7 +1487,7 @@ class KeystrokeIMEService : InputMethodService() {
 
     private fun createAccentDrawable(
         primaryColor: Int,
-        cornerRadiusDp: Float = 7f
+        cornerRadiusDp: Float = 7f,
     ): Drawable {
         val density = resources.displayMetrics.density
         val radiusPx = cornerRadiusDp * density
@@ -1438,50 +1498,57 @@ class KeystrokeIMEService : InputMethodService() {
         val shadowColor = adjustColorBrightness(primaryColor, 0.60f)
         val borderColor = adjustColorBrightness(primaryColor, 0.75f)
 
-        val pressedShape = GradientDrawable().apply {
-            shape = GradientDrawable.RECTANGLE
-            cornerRadius = radiusPx
-            setColor(pressedColor)
-            setStroke(strokePx, borderColor)
-        }
-        val pressedLayer = LayerDrawable(arrayOf(pressedShape)).apply {
-            setLayerInset(0, 0, insetPx, 0, 0)
-        }
+        val pressedShape =
+            GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = radiusPx
+                setColor(pressedColor)
+                setStroke(strokePx, borderColor)
+            }
+        val pressedLayer =
+            LayerDrawable(arrayOf(pressedShape)).apply {
+                setLayerInset(0, 0, insetPx, 0, 0)
+            }
 
-        val shadowShape = GradientDrawable().apply {
-            shape = GradientDrawable.RECTANGLE
-            cornerRadius = radiusPx
-            setColor(shadowColor)
-        }
-        val surfaceShape = GradientDrawable().apply {
-            shape = GradientDrawable.RECTANGLE
-            cornerRadius = radiusPx
-            setColor(primaryColor)
-            setStroke(strokePx, borderColor)
-        }
-        val normalLayer = LayerDrawable(arrayOf(shadowShape, surfaceShape)).apply {
-            setLayerInset(0, 0, insetPx, 0, 0)
-            setLayerInset(1, 0, 0, 0, insetPx)
-        }
+        val shadowShape =
+            GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = radiusPx
+                setColor(shadowColor)
+            }
+        val surfaceShape =
+            GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = radiusPx
+                setColor(primaryColor)
+                setStroke(strokePx, borderColor)
+            }
+        val normalLayer =
+            LayerDrawable(arrayOf(shadowShape, surfaceShape)).apply {
+                setLayerInset(0, 0, insetPx, 0, 0)
+                setLayerInset(1, 0, 0, 0, insetPx)
+            }
 
-        val stateList = StateListDrawable().apply {
-            addState(intArrayOf(android.R.attr.state_pressed), pressedLayer)
-            addState(intArrayOf(), normalLayer)
-        }
+        val stateList =
+            StateListDrawable().apply {
+                addState(intArrayOf(android.R.attr.state_pressed), pressedLayer)
+                addState(intArrayOf(), normalLayer)
+            }
 
         val rippleAlpha = 60
-        val rippleColor = Color.argb(
-            rippleAlpha,
-            Color.red(primaryColor),
-            Color.green(primaryColor),
-            Color.blue(primaryColor)
-        )
+        val rippleColor =
+            Color.argb(
+                rippleAlpha,
+                Color.red(primaryColor),
+                Color.green(primaryColor),
+                Color.blue(primaryColor),
+            )
         return RippleDrawable(ColorStateList.valueOf(rippleColor), stateList, null)
     }
 
     private fun createSpecialKeyDrawable(
         containerColor: Int,
-        cornerRadiusDp: Float = 7f
+        cornerRadiusDp: Float = 7f,
     ): Drawable {
         val density = resources.displayMetrics.density
         val radiusPx = cornerRadiusDp * density
@@ -1492,44 +1559,51 @@ class KeystrokeIMEService : InputMethodService() {
         val shadowColor = adjustColorBrightness(containerColor, 0.65f)
         val borderColor = adjustColorBrightness(containerColor, 0.78f)
 
-        val pressedShape = GradientDrawable().apply {
-            shape = GradientDrawable.RECTANGLE
-            cornerRadius = radiusPx
-            setColor(pressedColor)
-            setStroke(strokePx, borderColor)
-        }
-        val pressedLayer = LayerDrawable(arrayOf(pressedShape)).apply {
-            setLayerInset(0, 0, insetPx, 0, 0)
-        }
+        val pressedShape =
+            GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = radiusPx
+                setColor(pressedColor)
+                setStroke(strokePx, borderColor)
+            }
+        val pressedLayer =
+            LayerDrawable(arrayOf(pressedShape)).apply {
+                setLayerInset(0, 0, insetPx, 0, 0)
+            }
 
-        val shadowShape = GradientDrawable().apply {
-            shape = GradientDrawable.RECTANGLE
-            cornerRadius = radiusPx
-            setColor(shadowColor)
-        }
-        val surfaceShape = GradientDrawable().apply {
-            shape = GradientDrawable.RECTANGLE
-            cornerRadius = radiusPx
-            setColor(containerColor)
-            setStroke(strokePx, borderColor)
-        }
-        val normalLayer = LayerDrawable(arrayOf(shadowShape, surfaceShape)).apply {
-            setLayerInset(0, 0, insetPx, 0, 0)
-            setLayerInset(1, 0, 0, 0, insetPx)
-        }
+        val shadowShape =
+            GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = radiusPx
+                setColor(shadowColor)
+            }
+        val surfaceShape =
+            GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = radiusPx
+                setColor(containerColor)
+                setStroke(strokePx, borderColor)
+            }
+        val normalLayer =
+            LayerDrawable(arrayOf(shadowShape, surfaceShape)).apply {
+                setLayerInset(0, 0, insetPx, 0, 0)
+                setLayerInset(1, 0, 0, 0, insetPx)
+            }
 
-        val stateList = StateListDrawable().apply {
-            addState(intArrayOf(android.R.attr.state_pressed), pressedLayer)
-            addState(intArrayOf(), normalLayer)
-        }
+        val stateList =
+            StateListDrawable().apply {
+                addState(intArrayOf(android.R.attr.state_pressed), pressedLayer)
+                addState(intArrayOf(), normalLayer)
+            }
 
         val rippleAlpha = 55
-        val rippleColor = Color.argb(
-            rippleAlpha,
-            Color.red(currentPrimaryColor),
-            Color.green(currentPrimaryColor),
-            Color.blue(currentPrimaryColor)
-        )
+        val rippleColor =
+            Color.argb(
+                rippleAlpha,
+                Color.red(currentPrimaryColor),
+                Color.green(currentPrimaryColor),
+                Color.blue(currentPrimaryColor),
+            )
         return RippleDrawable(ColorStateList.valueOf(rippleColor), stateList, null)
     }
 
@@ -1538,55 +1612,65 @@ class KeystrokeIMEService : InputMethodService() {
         pressedColor: Int,
         shadowColor: Int,
         borderColor: Int,
-        cornerRadiusDp: Float = 7f
+        cornerRadiusDp: Float = 7f,
     ): Drawable {
         val density = resources.displayMetrics.density
         val radiusPx = cornerRadiusDp * density
         val strokePx = (0.75f * density).toInt().coerceAtLeast(1)
         val insetPx = (1.5f * density).toInt().coerceAtLeast(1)
 
-        val pressedShape = GradientDrawable().apply {
-            shape = GradientDrawable.RECTANGLE
-            cornerRadius = radiusPx
-            setColor(pressedColor)
-            setStroke(strokePx, borderColor)
-        }
-        val pressedLayer = LayerDrawable(arrayOf(pressedShape)).apply {
-            setLayerInset(0, 0, insetPx, 0, 0)
-        }
+        val pressedShape =
+            GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = radiusPx
+                setColor(pressedColor)
+                setStroke(strokePx, borderColor)
+            }
+        val pressedLayer =
+            LayerDrawable(arrayOf(pressedShape)).apply {
+                setLayerInset(0, 0, insetPx, 0, 0)
+            }
 
-        val shadowShape = GradientDrawable().apply {
-            shape = GradientDrawable.RECTANGLE
-            cornerRadius = radiusPx
-            setColor(shadowColor)
-        }
-        val surfaceShape = GradientDrawable().apply {
-            shape = GradientDrawable.RECTANGLE
-            cornerRadius = radiusPx
-            setColor(normalColor)
-            setStroke(strokePx, borderColor)
-        }
-        val normalLayer = LayerDrawable(arrayOf(shadowShape, surfaceShape)).apply {
-            setLayerInset(0, 0, insetPx, 0, 0)
-            setLayerInset(1, 0, 0, 0, insetPx)
-        }
+        val shadowShape =
+            GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = radiusPx
+                setColor(shadowColor)
+            }
+        val surfaceShape =
+            GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = radiusPx
+                setColor(normalColor)
+                setStroke(strokePx, borderColor)
+            }
+        val normalLayer =
+            LayerDrawable(arrayOf(shadowShape, surfaceShape)).apply {
+                setLayerInset(0, 0, insetPx, 0, 0)
+                setLayerInset(1, 0, 0, 0, insetPx)
+            }
 
-        val stateList = StateListDrawable().apply {
-            addState(intArrayOf(android.R.attr.state_pressed), pressedLayer)
-            addState(intArrayOf(), normalLayer)
-        }
+        val stateList =
+            StateListDrawable().apply {
+                addState(intArrayOf(android.R.attr.state_pressed), pressedLayer)
+                addState(intArrayOf(), normalLayer)
+            }
 
         val rippleAlpha = 40
-        val rippleColor = Color.argb(
-            rippleAlpha,
-            (Color.red(normalColor) + 50).coerceAtMost(255),
-            (Color.green(normalColor) + 50).coerceAtMost(255),
-            (Color.blue(normalColor) + 50).coerceAtMost(255)
-        )
+        val rippleColor =
+            Color.argb(
+                rippleAlpha,
+                (Color.red(normalColor) + 50).coerceAtMost(255),
+                (Color.green(normalColor) + 50).coerceAtMost(255),
+                (Color.blue(normalColor) + 50).coerceAtMost(255),
+            )
         return RippleDrawable(ColorStateList.valueOf(rippleColor), stateList, null)
     }
 
-    private fun createRoundedDrawable(color: Int, radiusDp: Float): Drawable {
+    private fun createRoundedDrawable(
+        color: Int,
+        radiusDp: Float,
+    ): Drawable {
         val density = resources.displayMetrics.density
         return GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
@@ -1595,7 +1679,10 @@ class KeystrokeIMEService : InputMethodService() {
         }
     }
 
-    private fun adjustColorBrightness(color: Int, factor: Float): Int {
+    private fun adjustColorBrightness(
+        color: Int,
+        factor: Float,
+    ): Int {
         val a = Color.alpha(color)
         val r = (Color.red(color) * factor).toInt().coerceIn(0, 255)
         val g = (Color.green(color) * factor).toInt().coerceIn(0, 255)

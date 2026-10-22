@@ -57,4 +57,11 @@ dependencies {
 
 ktlint {
     android.set(true)
+    kotlinScriptAdditionalPaths {
+        include(
+            fileTree("src") {
+                include("**/*.kt")
+            },
+        )
+    }
 }

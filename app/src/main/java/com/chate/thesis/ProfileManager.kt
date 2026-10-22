@@ -24,11 +24,12 @@ private const val TAG = "ProfileManager"
 data class UserProfile(
     val userId: String,
     var keystrokeCount: Int,
-    var status: String,           // PENDING | READY | ACTIVE
+    // PENDING | READY | ACTIVE
+    var status: String,
     val createdAt: String,
     var updatedAt: String,
     val minKeystrokes: Int,
-    val vectors: MutableList<DoubleArray>
+    val vectors: MutableList<DoubleArray>,
 ) {
     /** Enrollment progress as a percentage (0‑100). */
     val progressPct: Double
@@ -44,7 +45,6 @@ data class UserProfile(
 // ---------------------------------------------------------------------------
 private class ProfileDbHelper(context: Context) :
     SQLiteOpenHelper(context, "profiles.db", null, 1) {
-
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
             """
@@ -57,12 +57,16 @@ private class ProfileDbHelper(context: Context) :
                 min_keystrokes INTEGER NOT NULL,
                 vectors_json   TEXT    NOT NULL DEFAULT '[]'
             )
-            """.trimIndent()
+            """.trimIndent(),
         )
         Log.d(TAG, "profiles table created")
     }
 
-    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+    override fun onUpgrade(
+        db: SQLiteDatabase,
+        oldVersion: Int,
+        newVersion: Int,
+    ) {
         db.execSQL("DROP TABLE IF EXISTS profiles")
         onCreate(db)
     }
@@ -73,7 +77,7 @@ private class ProfileDbHelper(context: Context) :
 // ---------------------------------------------------------------------------
 class ProfileManager(
     context: Context,
-    private val testingMode: Boolean = true
+    private val testingMode: Boolean = true,
 ) {
     private val dbHelper = ProfileDbHelper(context)
     private val modelDir: File = File(context.filesDir, "models").also { it.mkdirs() }
@@ -90,7 +94,10 @@ class ProfileManager(
      * OCSVM and Mahalanobis models are fitted automatically and the profile
      * transitions from PENDING → READY.
      */
-    fun addEnrollmentWindow(userId: String, featureVector: FeatureVector): UserProfile {
+    fun addEnrollmentWindow(
+        userId: String,
+        featureVector: FeatureVector,
+    ): UserProfile {
         val profile = getOrCreateProfile(userId)
 
         if (!featureVector.isValid()) {
@@ -105,9 +112,9 @@ class ProfileManager(
         val now = Instant.now().toString()
         profile.updatedAt = now
 
-        if (profile.status == "PENDING"
-            && profile.keystrokeCount >= profile.minKeystrokes
-            && profile.vectors.size >= 5
+        if (profile.status == "PENDING" &&
+            profile.keystrokeCount >= profile.minKeystrokes &&
+            profile.vectors.size >= 5
         ) {
             Log.i(TAG, "Enrollment threshold reached for $userId — fitting models")
             fitModels(userId, profile.vectors)
@@ -153,13 +160,16 @@ class ProfileManager(
     /** Retrieve a single profile, or null if it does not exist. */
     fun getProfile(userId: String): UserProfile? {
         val db = dbHelper.readableDatabase
-        val cursor = db.query(
-            "profiles",
-            null,
-            "user_id = ?",
-            arrayOf(userId),
-            null, null, null
-        )
+        val cursor =
+            db.query(
+                "profiles",
+                null,
+                "user_id = ?",
+                arrayOf(userId),
+                null,
+                null,
+                null,
+            )
         cursor.use {
             if (!it.moveToFirst()) return null
             return cursorToProfile(it)
@@ -169,12 +179,16 @@ class ProfileManager(
     /** Return every enrolled user id. */
     fun listUsers(): List<String> {
         val db = dbHelper.readableDatabase
-        val cursor = db.query(
-            "profiles",
-            arrayOf("user_id"),
-            null, null, null, null,
-            "user_id ASC"
-        )
+        val cursor =
+            db.query(
+                "profiles",
+                arrayOf("user_id"),
+                null,
+                null,
+                null,
+                null,
+                "user_id ASC",
+            )
         val users = mutableListOf<String>()
         cursor.use {
             while (it.moveToNext()) {
@@ -204,21 +218,25 @@ class ProfileManager(
         if (existing != null) return existing
 
         val now = Instant.now().toString()
-        val profile = UserProfile(
-            userId = userId,
-            keystrokeCount = 0,
-            status = "PENDING",
-            createdAt = now,
-            updatedAt = now,
-            minKeystrokes = minKs,
-            vectors = mutableListOf()
-        )
+        val profile =
+            UserProfile(
+                userId = userId,
+                keystrokeCount = 0,
+                status = "PENDING",
+                createdAt = now,
+                updatedAt = now,
+                minKeystrokes = minKs,
+                vectors = mutableListOf(),
+            )
         saveProfile(profile)
         Log.i(TAG, "Created new profile for $userId (minKs=$minKs)")
         return profile
     }
 
-    private fun fitModels(userId: String, vectors: MutableList<DoubleArray>) {
+    private fun fitModels(
+        userId: String,
+        vectors: MutableList<DoubleArray>,
+    ) {
         val vectorList: List<DoubleArray> = vectors.toList()
 
         // Train & persist OCSVM
@@ -240,15 +258,16 @@ class ProfileManager(
         val db = dbHelper.writableDatabase
         val vectorsJson = gson.toJson(profile.vectors.map { it.toList() })
 
-        val cv = ContentValues().apply {
-            put("user_id", profile.userId)
-            put("keystroke_count", profile.keystrokeCount)
-            put("status", profile.status)
-            put("created_at", profile.createdAt)
-            put("updated_at", profile.updatedAt)
-            put("min_keystrokes", profile.minKeystrokes)
-            put("vectors_json", vectorsJson)
-        }
+        val cv =
+            ContentValues().apply {
+                put("user_id", profile.userId)
+                put("keystroke_count", profile.keystrokeCount)
+                put("status", profile.status)
+                put("created_at", profile.createdAt)
+                put("updated_at", profile.updatedAt)
+                put("min_keystrokes", profile.minKeystrokes)
+                put("vectors_json", vectorsJson)
+            }
         db.insertWithOnConflict("profiles", null, cv, SQLiteDatabase.CONFLICT_REPLACE)
     }
 
@@ -265,7 +284,7 @@ class ProfileManager(
             createdAt = cursor.getString(cursor.getColumnIndexOrThrow("created_at")),
             updatedAt = cursor.getString(cursor.getColumnIndexOrThrow("updated_at")),
             minKeystrokes = cursor.getInt(cursor.getColumnIndexOrThrow("min_keystrokes")),
-            vectors = vectors
+            vectors = vectors,
         )
     }
 }

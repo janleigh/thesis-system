@@ -4,7 +4,10 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 object LiveVerifierStatusHelper {
-    fun getStatusText(profile: UserProfile?, isChecked: Boolean): String {
+    fun getStatusText(
+        profile: UserProfile?,
+        isChecked: Boolean,
+    ): String {
         return when {
             profile == null -> "Standby · No Enrolled Profile"
             profile.status == "PENDING" -> "Standby · Calibrating"
@@ -15,7 +18,6 @@ object LiveVerifierStatusHelper {
 }
 
 class LiveVerifierStatusTest {
-
     @Test
     fun testNoEnrolledProfileShowsDistinctMessage() {
         val status = LiveVerifierStatusHelper.getStatusText(null, false)
@@ -27,45 +29,48 @@ class LiveVerifierStatusTest {
 
     @Test
     fun testCalibratingProfileShowsCalibratingMessage() {
-        val profile = UserProfile(
-            userId = "test_user",
-            status = "PENDING",
-            keystrokeCount = 50,
-            minKeystrokes = 250,
-            createdAt = "2026-10-22",
-            updatedAt = "2026-10-22",
-            vectors = mutableListOf()
-        )
+        val profile =
+            UserProfile(
+                userId = "test_user",
+                status = "PENDING",
+                keystrokeCount = 50,
+                minKeystrokes = 250,
+                createdAt = "2026-10-22",
+                updatedAt = "2026-10-22",
+                vectors = mutableListOf(),
+            )
         val status = LiveVerifierStatusHelper.getStatusText(profile, false)
         assertEquals("Standby · Calibrating", status)
     }
 
     @Test
     fun testReadyProfileShowsActiveWhenChecked() {
-        val profile = UserProfile(
-            userId = "test_user",
-            status = "READY",
-            keystrokeCount = 250,
-            minKeystrokes = 250,
-            createdAt = "2026-10-22",
-            updatedAt = "2026-10-22",
-            vectors = mutableListOf()
-        )
+        val profile =
+            UserProfile(
+                userId = "test_user",
+                status = "READY",
+                keystrokeCount = 250,
+                minKeystrokes = 250,
+                createdAt = "2026-10-22",
+                updatedAt = "2026-10-22",
+                vectors = mutableListOf(),
+            )
         val status = LiveVerifierStatusHelper.getStatusText(profile, true)
         assertEquals("Active · System Protected", status)
     }
 
     @Test
     fun testReadyProfileShowsStandbyInactiveWhenUnchecked() {
-        val profile = UserProfile(
-            userId = "test_user",
-            status = "READY",
-            keystrokeCount = 250,
-            minKeystrokes = 250,
-            createdAt = "2026-10-22",
-            updatedAt = "2026-10-22",
-            vectors = mutableListOf()
-        )
+        val profile =
+            UserProfile(
+                userId = "test_user",
+                status = "READY",
+                keystrokeCount = 250,
+                minKeystrokes = 250,
+                createdAt = "2026-10-22",
+                updatedAt = "2026-10-22",
+                vectors = mutableListOf(),
+            )
         val status = LiveVerifierStatusHelper.getStatusText(profile, false)
         assertEquals("Standby · System Inactive", status)
     }
