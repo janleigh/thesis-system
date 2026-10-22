@@ -518,6 +518,7 @@ class MainActivity : AppCompatActivity() {
                 }
             } else if (isChecked) {
                 masterSwitch.isChecked = false
+                gridVerifierStatusText.text = if (profile == null) "Standby · No Enrolled Profile" else "Standby · Calibrating"
                 Toast.makeText(this, "Profile not ready. Complete enrollment first.", Toast.LENGTH_SHORT).show()
             }
         }
@@ -526,7 +527,9 @@ class MainActivity : AppCompatActivity() {
             if (masterSwitch.isEnabled) {
                 masterSwitch.isChecked = !masterSwitch.isChecked
             } else {
-                Toast.makeText(this, "Profile not ready. Complete enrollment first.", Toast.LENGTH_SHORT).show()
+                val profile = profileManager.getProfile(DEFAULT_USER_ID)
+                val msg = if (profile == null) "No enrolled profile. Complete enrollment first." else "Profile not ready. Complete enrollment first."
+                Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -560,7 +563,7 @@ class MainActivity : AppCompatActivity() {
             LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
 
             masterSwitch.isChecked = false
-            gridVerifierStatusText.text = "Standby · System Inactive"
+            gridVerifierStatusText.text = "Standby · No Enrolled Profile"
             refreshProfileDisplay()
             resetScoreDisplay()
             setEnrollmentStep(1)
@@ -1259,7 +1262,7 @@ class MainActivity : AppCompatActivity() {
             enrollVectorCounter.text = "Vectors: 0 / 5"
             masterSwitch.isEnabled = false
             masterSwitch.isChecked = false
-            gridVerifierStatusText.text = "Standby · System Inactive"
+            gridVerifierStatusText.text = "Standby · No Enrolled Profile"
         }
         syncKeyboardSettingsUI()
     }

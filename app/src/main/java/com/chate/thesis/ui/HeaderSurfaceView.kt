@@ -5,12 +5,14 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
+import android.graphics.PathMeasure
 import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.View
 import androidx.core.content.ContextCompat
 import com.chate.thesis.HeaderEffect
 import com.chate.thesis.R
+import kotlin.math.abs
 import kotlin.math.sin
 import kotlin.random.Random
 
@@ -41,16 +43,59 @@ class HeaderSurfaceView @JvmOverloads constructor(
     )
     private val snowflakes = mutableListOf<Snowflake>()
 
-    // 2. Maze effect state
-    private data class MazeLine(val startX: Float, val startY: Float, val endX: Float, val endY: Float)
-    private val mazeLines = mutableListOf<MazeLine>()
-    private var mazeScanY: Float = 0f
+    // 2. Pac-Man Maze effect state
+    private data class MazeCorridor(val path: Path)
+    private data class MazePellet(val x: Float, val y: Float, val isPower: Boolean, var isEaten: Boolean)
+    private data class PacManState(
+        var x: Float,
+        var y: Float,
+        var speed: Float,
+        var direction: Float,
+        var mouthProgress: Float,
+        var mouthOpening: Boolean
+    )
+    private data class GhostState(
+        var x: Float,
+        var y: Float,
+        var color: Int,
+        var speed: Float,
+        var direction: Float
+    )
 
-    // 3. Circuit effect state
-    private data class CircuitNode(val x: Float, val y: Float, val isTerminal: Boolean)
-    private data class CircuitTrace(val path: Path, val startNode: CircuitNode, val endNode: CircuitNode, var pulseProgress: Float)
-    private val circuitNodes = mutableListOf<CircuitNode>()
-    private val circuitTraces = mutableListOf<CircuitTrace>()
+    private val mazeCorridors = mutableListOf<MazeCorridor>()
+    private val mazePellets = mutableListOf<MazePellet>()
+    private var pacMan = PacManState(0f, 0f, 2.5f, 1f, 0f, true)
+    private var ghost = GhostState(0f, 0f, Color.parseColor("#FF5555"), 2.2f, 1f)
+    private val pacRect = RectF()
+    private val ghostPath = Path()
+    private var mazeAnimTicks = 0
+
+    // 3. Authentic PCB Circuit effect state
+    private data class PcbTrace(
+        val path: Path,
+        val pathMeasure: PathMeasure,
+        val length: Float,
+        var pulseProgress: Float,
+        val pulseSpeed: Float
+    )
+    private data class PcbVia(
+        val x: Float,
+        val y: Float,
+        val outerRadius: Float,
+        val innerRadius: Float
+    )
+    private data class PcbChip(
+        val rect: RectF,
+        val label: String,
+        val pinsLeft: Int,
+        val pinsRight: Int
+    )
+
+    private val pcbTraces = mutableListOf<PcbTrace>()
+    private val pcbVias = mutableListOf<PcbVia>()
+    private val pcbChips = mutableListOf<PcbChip>()
+    private val pulsePos = FloatArray(2)
+    private val pulseTan = FloatArray(2)
 
     // 4. Code Rain effect state
     private data class RainColumn(
@@ -121,9 +166,11 @@ class HeaderSurfaceView @JvmOverloads constructor(
         when (currentEffect) {
             HeaderEffect.NOTHING -> {
                 snowflakes.clear()
-                mazeLines.clear()
-                circuitNodes.clear()
-                circuitTraces.clear()
+                mazeCorridors.clear()
+                mazePellets.clear()
+                pcbTraces.clear()
+                pcbVias.clear()
+                pcbChips.clear()
                 rainColumns.clear()
             }
             HeaderEffect.SNOW -> initSnow(w, h)
@@ -154,56 +201,187 @@ class HeaderSurfaceView @JvmOverloads constructor(
     }
 
     private fun initMaze(w: Float, h: Float) {
-        mazeLines.clear()
-        mazeScanY = 0f
-        val step = 20f * resources.displayMetrics.density
-        var x = 0f
-        while (x < w) {
-            var y = 0f
-            while (y < h) {
-                if (Random.nextBoolean()) {
-                    mazeLines.add(MazeLine(x, y, x + step, y + step))
-                } else {
-                    mazeLines.add(MazeLine(x, y + step, x + step, y))
-                }
-                y += step
-            }
-            x += step
+        mazeCorridors.clear()
+        mazePellets.clear()
+        val density = resources.displayMetrics.density
+
+        // Setup arcade corridors
+        val wallPath = Path()
+        val midY = h * 0.52f
+        val topY = h * 0.22f
+        val botY = h * 0.82f
+        val cornerRadius = 6f * density
+
+        // Top horizontal corridor wall with gap
+        wallPath.moveTo(0f, topY)
+        wallPath.lineTo(w * 0.38f, topY)
+        wallPath.moveTo(w * 0.62f, topY)
+        wallPath.lineTo(w, topY)
+
+        // Bottom horizontal corridor wall with gap
+        wallPath.moveTo(0f, botY)
+        wallPath.lineTo(w * 0.38f, botY)
+        wallPath.moveTo(w * 0.62f, botY)
+        wallPath.lineTo(w, botY)
+
+        // Mid maze obstacle blocks (classic retro rounded rectangles)
+        val block1 = RectF(w * 0.12f, h * 0.32f, w * 0.28f, h * 0.44f)
+        val block2 = RectF(w * 0.72f, h * 0.32f, w * 0.88f, h * 0.44f)
+        val block3 = RectF(w * 0.12f, h * 0.60f, w * 0.28f, h * 0.72f)
+        val block4 = RectF(w * 0.72f, h * 0.60f, w * 0.88f, h * 0.72f)
+        val centerT = RectF(w * 0.42f, h * 0.34f, w * 0.58f, h * 0.42f)
+
+        wallPath.addRoundRect(block1, cornerRadius, cornerRadius, Path.Direction.CW)
+        wallPath.addRoundRect(block2, cornerRadius, cornerRadius, Path.Direction.CW)
+        wallPath.addRoundRect(block3, cornerRadius, cornerRadius, Path.Direction.CW)
+        wallPath.addRoundRect(block4, cornerRadius, cornerRadius, Path.Direction.CW)
+        wallPath.addRoundRect(centerT, cornerRadius, cornerRadius, Path.Direction.CW)
+
+        mazeCorridors.add(MazeCorridor(wallPath))
+
+        // Populate pellets across the main mid corridor and vertical crossways
+        val pelletSpacing = 18f * density
+        var px = pelletSpacing * 0.8f
+        while (px < w) {
+            val isPower = (px < pelletSpacing * 2f) || (px > w - pelletSpacing * 2f)
+            mazePellets.add(MazePellet(px, midY, isPower, false))
+            px += pelletSpacing
         }
+
+        // Additional pellets in upper and lower alleys
+        var ux = pelletSpacing * 1.5f
+        while (ux < w) {
+            mazePellets.add(MazePellet(ux, topY - 10f * density, false, false))
+            mazePellets.add(MazePellet(ux, botY + 10f * density, false, false))
+            ux += pelletSpacing * 2.5f
+        }
+
+        // Initialize Pac-Man & Ghost
+        pacMan = PacManState(
+            x = -15f * density,
+            y = midY,
+            speed = 2.4f * density,
+            direction = 1f,
+            mouthProgress = 0f,
+            mouthOpening = true
+        )
+
+        ghost = GhostState(
+            x = -65f * density,
+            y = midY,
+            color = Color.parseColor("#FF5252"),
+            speed = 2.1f * density,
+            direction = 1f
+        )
     }
 
     private fun initCircuit(w: Float, h: Float) {
-        circuitNodes.clear()
-        circuitTraces.clear()
+        pcbTraces.clear()
+        pcbVias.clear()
+        pcbChips.clear()
         val density = resources.displayMetrics.density
-        val step = 32f * density
-        val cols = (w / step).toInt().coerceAtLeast(4)
-        val rows = (h / step).toInt().coerceAtLeast(3)
 
-        val grid = Array(cols) { c ->
-            Array(rows) { r ->
-                val nx = (c + 0.5f) * step + (Random.nextFloat() - 0.5f) * 8f * density
-                val ny = (r + 0.5f) * step + (Random.nextFloat() - 0.5f) * 8f * density
-                val isTerminal = Random.nextFloat() < 0.35f
-                CircuitNode(nx, ny, isTerminal).also { circuitNodes.add(it) }
+        // 1. SMD IC Chips
+        val chip1Rect = RectF(w * 0.14f, h * 0.28f, w * 0.32f, h * 0.62f)
+        val chip2Rect = RectF(w * 0.66f, h * 0.36f, w * 0.84f, h * 0.70f)
+        pcbChips.add(PcbChip(chip1Rect, "SEC-MCU", 4, 4))
+        pcbChips.add(PcbChip(chip2Rect, "BUS-IC", 3, 3))
+
+        // 2. PCB Bus Traces with authentic 45° chamfers
+        fun createChamferedTrace(
+            x1: Float, y1: Float,
+            x2: Float, y2: Float,
+            initialHorizontal: Float,
+            speed: Float
+        ) {
+            val path = Path()
+            path.moveTo(x1, y1)
+            val dy = y2 - y1
+            val chamferDx = abs(dy)
+            val bx1 = x1 + initialHorizontal
+            path.lineTo(bx1, y1)
+            val bx2 = bx1 + (if (x2 > x1) chamferDx else -chamferDx)
+            path.lineTo(bx2, y2)
+            path.lineTo(x2, y2)
+
+            val pm = PathMeasure(path, false)
+            val length = pm.length
+            if (length > 0f) {
+                pcbTraces.add(PcbTrace(path, pm, length, Random.nextFloat(), speed))
             }
         }
 
-        for (c in 0 until cols - 1) {
-            for (r in 0 until rows) {
-                if (Random.nextFloat() < 0.45f) {
-                    val p = Path()
-                    val from = grid[c][r]
-                    val targetR = if (Random.nextBoolean() && r + 1 < rows) r + 1 else if (r - 1 >= 0) r - 1 else r
-                    val to = grid[c + 1][targetR]
-                    p.moveTo(from.x, from.y)
-                    val midX = (from.x + to.x) / 2f
-                    p.lineTo(midX, from.y)
-                    p.lineTo(midX, to.y)
-                    p.lineTo(to.x, to.y)
-                    circuitTraces.add(CircuitTrace(p, from, to, Random.nextFloat()))
-                }
-            }
+        // Chip 1 pin breakout traces
+        val c1Top = chip1Rect.top
+        val c1Step = chip1Rect.height() / 5f
+        for (i in 1..4) {
+            val py = c1Top + i * c1Step
+            // Right breakout traces toward Chip 2 and vias
+            val targetY = h * 0.18f + i * 22f * density
+            createChamferedTrace(
+                chip1Rect.right, py,
+                w * 0.62f, targetY,
+                16f * density + i * 4f * density,
+                0.007f + (i * 0.0015f)
+            )
+            // Left breakout traces to edge vias
+            createChamferedTrace(
+                chip1Rect.left, py,
+                18f * density, py + (if (i % 2 == 0) 18f * density else -18f * density),
+                -(14f * density + i * 3f * density),
+                0.008f + (i * 0.0012f)
+            )
+        }
+
+        // Chip 2 breakout traces
+        val c2Top = chip2Rect.top
+        val c2Step = chip2Rect.height() / 4f
+        for (i in 1..3) {
+            val py = c2Top + i * c2Step
+            createChamferedTrace(
+                chip2Rect.right, py,
+                w - 18f * density, py + (if (i % 2 == 0) -20f * density else 20f * density),
+                15f * density + i * 5f * density,
+                0.0075f + (i * 0.001f)
+            )
+        }
+
+        // Top & bottom horizontal power/data buses
+        val busY1 = h * 0.12f
+        val busY2 = h * 0.88f
+        val busPath1 = Path().apply {
+            moveTo(0f, busY1)
+            lineTo(w * 0.45f, busY1)
+            lineTo(w * 0.45f + 16f * density, busY1 + 16f * density)
+            lineTo(w, busY1 + 16f * density)
+        }
+        val pm1 = PathMeasure(busPath1, false)
+        pcbTraces.add(PcbTrace(busPath1, pm1, pm1.length, 0.2f, 0.008f))
+
+        val busPath2 = Path().apply {
+            moveTo(w, busY2)
+            lineTo(w * 0.55f, busY2)
+            lineTo(w * 0.55f - 14f * density, busY2 - 14f * density)
+            lineTo(0f, busY2 - 14f * density)
+        }
+        val pm2 = PathMeasure(busPath2, false)
+        pcbTraces.add(PcbTrace(busPath2, pm2, pm2.length, 0.65f, 0.009f))
+
+        // 3. Circular Solder Vias (terminal pads)
+        val viaOuter = 3.6f * density
+        val viaInner = 1.6f * density
+        val viaCoords = floatArrayOf(
+            18f * density, h * 0.22f,
+            18f * density, h * 0.78f,
+            w * 0.48f, h * 0.16f,
+            w * 0.52f, h * 0.84f,
+            w * 0.62f, h * 0.25f,
+            w * 0.62f, h * 0.72f,
+            w - 18f * density, h * 0.28f,
+            w - 18f * density, h * 0.68f
+        )
+        for (i in viaCoords.indices step 2) {
+            pcbVias.add(PcbVia(viaCoords[i], viaCoords[i + 1], viaOuter, viaInner))
         }
     }
 
@@ -273,64 +451,210 @@ class HeaderSurfaceView @JvmOverloads constructor(
     }
 
     private fun drawMaze(canvas: Canvas) {
-        val h = height.toFloat()
+        val w = width.toFloat()
+        val density = resources.displayMetrics.density
+        mazeAnimTicks++
+
+        // 1. Draw Arcade Corridors
         paint.style = Paint.Style.STROKE
         paint.strokeCap = Paint.Cap.ROUND
-        paint.strokeWidth = 2f * resources.displayMetrics.density
-
-        // Subtle background maze
+        paint.strokeJoin = Paint.Join.ROUND
+        paint.strokeWidth = 2.4f * density
         paint.color = accentColor
-        paint.alpha = 45
-        for (line in mazeLines) {
-            canvas.drawLine(line.startX, line.startY, line.endX, line.endY, paint)
+        paint.alpha = 75
+        for (corridor in mazeCorridors) {
+            canvas.drawPath(corridor.path, paint)
         }
 
-        // Pulse scanline
-        mazeScanY += 1.8f
-        if (mazeScanY > h) mazeScanY = 0f
-
-        paint.alpha = 130
-        paint.strokeWidth = 3f * resources.displayMetrics.density
-        for (line in mazeLines) {
-            if (line.startY >= mazeScanY - 24f && line.startY <= mazeScanY + 24f) {
-                canvas.drawLine(line.startX, line.startY, line.endX, line.endY, paint)
+        // 2. Draw Pellets
+        paint.style = Paint.Style.FILL
+        for (pellet in mazePellets) {
+            if (pellet.isEaten) continue
+            if (pellet.isPower) {
+                // Pulsing power pellet
+                val pulseRadius = 3.6f * density + sin(mazeAnimTicks * 0.16f) * 1.2f * density
+                paint.color = Color.parseColor("#FFF59D")
+                paint.alpha = 240
+                canvas.drawCircle(pellet.x, pellet.y, pulseRadius, paint)
+            } else {
+                paint.color = Color.parseColor("#FFE082")
+                paint.alpha = 175
+                canvas.drawCircle(pellet.x, pellet.y, 1.8f * density, paint)
             }
         }
+
+        // 3. Update & Draw Pac-Man
+        pacMan.x += pacMan.speed * pacMan.direction
+        val wrapMargin = 28f * density
+        if (pacMan.x > w + wrapMargin) {
+            pacMan.x = -wrapMargin
+            // Respawn all pellets when wrapping screen tunnel
+            for (p in mazePellets) {
+                p.isEaten = false
+            }
+        }
+
+        // Eat pellets near mouth
+        val eatRadius = 13f * density
+        for (pellet in mazePellets) {
+            if (!pellet.isEaten && abs(pellet.x - pacMan.x) < eatRadius && abs(pellet.y - pacMan.y) < eatRadius) {
+                pellet.isEaten = true
+            }
+        }
+
+        // Animated mouth chomping
+        pacMan.mouthProgress += 0.24f
+        val mouthAngle = abs(sin(pacMan.mouthProgress)) * 42f
+        val pacRadius = 9f * density
+        pacRect.set(pacMan.x - pacRadius, pacMan.y - pacRadius, pacMan.x + pacRadius, pacMan.y + pacRadius)
+
+        paint.style = Paint.Style.FILL
+        paint.color = Color.parseColor("#FFD600")
+        paint.alpha = 240
+        val startAngle = if (pacMan.direction >= 0f) mouthAngle else 180f + mouthAngle
+        val sweepAngle = 360f - (mouthAngle * 2f)
+        canvas.drawArc(pacRect, startAngle, sweepAngle, true, paint)
+
+        // Pac-Man eye
+        paint.color = Color.parseColor("#212121")
+        paint.alpha = 240
+        val eyeX = pacMan.x + (if (pacMan.direction >= 0f) 1.5f * density else -1.5f * density)
+        val eyeY = pacMan.y - 4.5f * density
+        canvas.drawCircle(eyeX, eyeY, 1.2f * density, paint)
+
+        // 4. Update & Draw Ghost (Blinky trailing Pac-Man)
+        ghost.x += ghost.speed * ghost.direction
+        if (ghost.x > w + wrapMargin) {
+            ghost.x = -wrapMargin - 35f * density
+        }
+
+        val ghostW = 16f * density
+        val ghostH = 17f * density
+        val gx = ghost.x - ghostW / 2f
+        val gy = ghost.y - ghostH / 2f
+
+        ghostPath.reset()
+        // Top dome head
+        ghostPath.moveTo(gx, gy + ghostW / 2f)
+        val headRect = RectF(gx, gy, gx + ghostW, gy + ghostW)
+        ghostPath.arcTo(headRect, 180f, 180f, false)
+        // Right side down
+        ghostPath.lineTo(gx + ghostW, gy + ghostH)
+        // Wavy skirt at bottom
+        val waveW = ghostW / 3f
+        ghostPath.lineTo(gx + ghostW - (waveW * 0.5f), gy + ghostH - (3f * density))
+        ghostPath.lineTo(gx + ghostW - waveW, gy + ghostH)
+        ghostPath.lineTo(gx + (waveW * 1.5f), gy + ghostH - (3f * density))
+        ghostPath.lineTo(gx + waveW, gy + ghostH)
+        ghostPath.lineTo(gx + (waveW * 0.5f), gy + ghostH - (3f * density))
+        ghostPath.lineTo(gx, gy + ghostH)
+        ghostPath.close()
+
+        paint.style = Paint.Style.FILL
+        paint.color = ghost.color
+        paint.alpha = 230
+        canvas.drawPath(ghostPath, paint)
+
+        // Ghost eyes (white sclera)
+        paint.color = Color.WHITE
+        paint.alpha = 255
+        val leftEyeX = gx + 4.5f * density
+        val rightEyeX = gx + 11.5f * density
+        val eyesY = gy + 6f * density
+        canvas.drawCircle(leftEyeX, eyesY, 2.3f * density, paint)
+        canvas.drawCircle(rightEyeX, eyesY, 2.3f * density, paint)
+
+        // Ghost pupils (blue, glancing toward Pac-Man)
+        paint.color = Color.parseColor("#1565C0")
+        val lookOffset = 1.0f * density
+        canvas.drawCircle(leftEyeX + lookOffset, eyesY, 1.2f * density, paint)
+        canvas.drawCircle(rightEyeX + lookOffset, eyesY, 1.2f * density, paint)
     }
 
     private fun drawCircuit(canvas: Canvas) {
         val density = resources.displayMetrics.density
+
+        // 1. PCB Traces
         paint.style = Paint.Style.STROKE
         paint.strokeCap = Paint.Cap.ROUND
-
-        // Traces
-        paint.strokeWidth = 1.5f * density
+        paint.strokeJoin = Paint.Join.ROUND
+        paint.strokeWidth = 1.6f * density
         paint.color = accentColor
-        paint.alpha = 50
-        for (trace in circuitTraces) {
+        paint.alpha = 70
+        for (trace in pcbTraces) {
             canvas.drawPath(trace.path, paint)
         }
 
-        // Nodes
-        paint.style = Paint.Style.FILL
-        for (node in circuitNodes) {
-            if (node.isTerminal) {
-                paint.color = accentColor
-                paint.alpha = 90
-                canvas.drawCircle(node.x, node.y, 2.5f * density, paint)
+        // 2. SMD IC Chips
+        for (chip in pcbChips) {
+            // Chip body
+            paint.style = Paint.Style.FILL
+            paint.color = Color.parseColor("#0F1418")
+            paint.alpha = 190
+            canvas.drawRoundRect(chip.rect, 4f * density, 4f * density, paint)
+
+            paint.style = Paint.Style.STROKE
+            paint.strokeWidth = 1.2f * density
+            paint.color = accentColor
+            paint.alpha = 110
+            canvas.drawRoundRect(chip.rect, 4f * density, 4f * density, paint)
+
+            // Pin indicator / notch dot
+            paint.style = Paint.Style.FILL
+            paint.color = accentColor
+            paint.alpha = 160
+            canvas.drawCircle(chip.rect.left + 5f * density, chip.rect.top + 5f * density, 1.4f * density, paint)
+
+            // Chip label
+            textPaint.textSize = 7.5f * density
+            textPaint.color = accentColor
+            textPaint.alpha = 140
+            canvas.drawText(chip.label, chip.rect.centerX(), chip.rect.centerY() + 2.5f * density, textPaint)
+
+            // Side pins connecting to traces
+            paint.style = Paint.Style.STROKE
+            paint.strokeWidth = 1.5f * density
+            paint.color = Color.parseColor("#CFD8DC")
+            paint.alpha = 140
+            val cStep = chip.rect.height() / (chip.pinsLeft + 1)
+            for (i in 1..chip.pinsLeft) {
+                val py = chip.rect.top + i * cStep
+                canvas.drawLine(chip.rect.left - 3.5f * density, py, chip.rect.left, py, paint)
+                canvas.drawLine(chip.rect.right, py, chip.rect.right + 3.5f * density, py, paint)
             }
         }
 
-        // Animated pulses
-        paint.color = Color.WHITE
-        paint.alpha = 200
-        for (trace in circuitTraces) {
-            trace.pulseProgress += 0.012f
+        // 3. Circular Solder Vias
+        for (via in pcbVias) {
+            // Outer copper pad
+            paint.style = Paint.Style.FILL
+            paint.color = accentColor
+            paint.alpha = 150
+            canvas.drawCircle(via.x, via.y, via.outerRadius, paint)
+
+            // Inner dark drill hole through the PCB
+            paint.color = Color.parseColor("#090D0F")
+            paint.alpha = 240
+            canvas.drawCircle(via.x, via.y, via.innerRadius, paint)
+        }
+
+        // 4. Animated Data Packets / Electric Current Pulses
+        paint.style = Paint.Style.FILL
+        for (trace in pcbTraces) {
+            trace.pulseProgress += trace.pulseSpeed
             if (trace.pulseProgress > 1f) trace.pulseProgress = 0f
 
-            val px = trace.startNode.x + (trace.endNode.x - trace.startNode.x) * trace.pulseProgress
-            val py = trace.startNode.y + (trace.endNode.y - trace.startNode.y) * trace.pulseProgress
-            canvas.drawCircle(px, py, 2.8f * density, paint)
+            trace.pathMeasure.getPosTan(trace.pulseProgress * trace.length, pulsePos, pulseTan)
+
+            // Soft glow halo
+            paint.color = accentColor
+            paint.alpha = 100
+            canvas.drawCircle(pulsePos[0], pulsePos[1], 4.2f * density, paint)
+
+            // Bright core spark
+            paint.color = Color.WHITE
+            paint.alpha = 245
+            canvas.drawCircle(pulsePos[0], pulsePos[1], 2.2f * density, paint)
         }
     }
 

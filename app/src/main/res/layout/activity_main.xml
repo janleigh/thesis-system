@@ -28,14 +28,22 @@
                 <!-- TOP HERO HIGHLIGHT BANNER (Curved bottom corners matching screenshot) -->
                 <FrameLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/card_hero_highlight_bg"
+                    android:clipToOutline="true">
+
+                    <com.chate.thesis.ui.HeaderSurfaceView
+                        android:id="@+id/headerEffectView"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:clickable="false"
+                        android:focusable="false" />
 
                     <LinearLayout
                         android:id="@+id/heroHighlightCard"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:background="@drawable/card_hero_highlight_bg"
                         android:paddingHorizontal="20dp"
                         android:paddingTop="28dp"
                         android:paddingBottom="24dp">
@@ -131,13 +139,6 @@
                             android:alpha="0.85" />
                     </LinearLayout>
                 </LinearLayout>
-
-                <com.chate.thesis.ui.HeaderSurfaceView
-                    android:id="@+id/headerEffectView"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:clickable="false"
-                    android:focusable="false" />
             </FrameLayout>
 
                 <!-- Scrollable Body Content -->
@@ -153,7 +154,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Security controls"
+                        android:text="Security Controls"
                         android:textColor="?attr/colorOnBackground"
                         android:textSize="15sp"
                         android:fontFamily="sans-serif-medium"
@@ -432,7 +433,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Live continuous evaluations · Pull to refresh"
+                            android:text="Latest session events and scoring history"
                             android:textColor="?attr/colorOnSurfaceVariant"
                             android:textSize="12sp"
                             android:layout_marginTop="2dp"
@@ -1263,7 +1264,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="System integrations"
+                    android:text="System Integrations"
                     android:textColor="?attr/colorOnBackground"
                     android:textSize="14sp"
                     android:fontFamily="sans-serif-medium"
@@ -1415,7 +1416,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Profile management"
+                    android:text="Profile Management"
                     android:textColor="?attr/colorOnBackground"
                     android:textSize="14sp"
                     android:fontFamily="sans-serif-medium"

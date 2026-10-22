@@ -44,7 +44,8 @@ class KeystrokeIMEService : InputMethodService() {
 
     private val eventBuffer = mutableListOf<KeystrokeEvent>()
     private val featureExtractor = FeatureExtractor()
-    private var isShifted = false
+    private var capsMode = CapsMode.OFF
+    private val isShifted: Boolean get() = capsMode.isShifted()
     private var isSymbols = false
     private lateinit var keyboardView: View
     private lateinit var preferences: KeyboardPreferences
@@ -96,6 +97,8 @@ class KeystrokeIMEService : InputMethodService() {
     private lateinit var themedContext: Context
     private var currentPrimaryColor: Int = 0
     private var currentOnPrimaryColor: Int = 0
+    private var currentPrimaryContainer: Int = 0
+    private var currentOnPrimaryContainer: Int = 0
     private var currentKeyTextColor: Int = 0
     private var currentOnSurfaceVariant: Int = 0
     private var isAmoledActive: Boolean = false
@@ -323,9 +326,9 @@ class KeystrokeIMEService : InputMethodService() {
             true
         }
 
-        // Shift key
+        // Shift key (3 modes: OFF -> ON_ONCE -> LOCKED -> OFF)
         keyboardView.findViewById<TextView>(R.id.key_shift).setOnClickListener {
-            isShifted = !isShifted
+            capsMode = capsMode.nextMode()
             updateShiftKey(keyboardView)
         }
 
@@ -785,8 +788,8 @@ class KeystrokeIMEService : InputMethodService() {
                     eventBuffer.add(KeystrokeEvent(keyCode, 1, currentTime))
                     checkAndFlush()
 
-                    if (isShifted) {
-                        isShifted = false
+                    if (capsMode == CapsMode.ON_ONCE) {
+                        capsMode = CapsMode.OFF
                         updateShiftKey(keyboardView)
                     }
                 } else if (isRapidFiring) {
@@ -794,8 +797,8 @@ class KeystrokeIMEService : InputMethodService() {
                     eventBuffer.add(KeystrokeEvent(keyCode, 1, currentTime))
                     checkAndFlush()
 
-                    if (isShifted) {
-                        isShifted = false
+                    if (capsMode == CapsMode.ON_ONCE) {
+                        capsMode = CapsMode.OFF
                         updateShiftKey(keyboardView)
                     }
                 } else {
@@ -804,8 +807,8 @@ class KeystrokeIMEService : InputMethodService() {
                     eventBuffer.add(KeystrokeEvent(keyCode, 1, currentTime))
                     checkAndFlush()
 
-                    if (isShifted) {
-                        isShifted = false
+                    if (capsMode == CapsMode.ON_ONCE) {
+                        capsMode = CapsMode.OFF
                         updateShiftKey(keyboardView)
                     }
                 }
@@ -981,25 +984,32 @@ class KeystrokeIMEService : InputMethodService() {
 
     private fun updateShiftKey(view: View) {
         val shiftButton = view.findViewById<TextView>(R.id.key_shift) ?: return
-        if (isShifted) {
-            shiftButton.background = createAccentDrawable(currentPrimaryColor)
-            shiftButton.setTextColor(currentOnPrimaryColor)
-            shiftButton.text = "⬆"
-        } else {
-            if (isAmoledActive) {
-                shiftButton.background = createKeyDrawable(
-                    normalColor = Color.parseColor("#0C0E10"),
-                    pressedColor = Color.parseColor("#1F2327"),
-                    shadowColor = Color.BLACK,
-                    borderColor = Color.parseColor("#1D2024")
-                )
-                shiftButton.setTextColor(Color.parseColor("#DEE4E6"))
-            } else {
-                shiftButton.setBackgroundResource(R.drawable.key_background_special)
-                val specialTextColor = ContextCompat.getColor(if (::themedContext.isInitialized) themedContext else this, R.color.key_text_special)
-                shiftButton.setTextColor(specialTextColor)
+        when (capsMode) {
+            CapsMode.OFF -> {
+                if (isAmoledActive) {
+                    shiftButton.background = createKeyDrawable(
+                        normalColor = Color.parseColor("#0C0E10"),
+                        pressedColor = Color.parseColor("#1F2327"),
+                        shadowColor = Color.BLACK,
+                        borderColor = Color.parseColor("#1D2024")
+                    )
+                    shiftButton.setTextColor(Color.parseColor("#DEE4E6"))
+                } else {
+                    shiftButton.background = createSpecialKeyDrawable(currentPrimaryContainer)
+                    shiftButton.setTextColor(currentOnPrimaryContainer)
+                }
+                shiftButton.text = "⇧"
             }
-            shiftButton.text = "⇧"
+            CapsMode.ON_ONCE -> {
+                shiftButton.background = createAccentDrawable(currentPrimaryColor)
+                shiftButton.setTextColor(currentOnPrimaryColor)
+                shiftButton.text = "⬆"
+            }
+            CapsMode.LOCKED -> {
+                shiftButton.background = createAccentDrawable(currentPrimaryColor)
+                shiftButton.setTextColor(currentOnPrimaryColor)
+                shiftButton.text = "⇪"
+            }
         }
         updateKeyboardLabels(view)
     }
@@ -1199,7 +1209,7 @@ class KeystrokeIMEService : InputMethodService() {
     private fun reloadInputView() {
         if (!::keyboardRootFrame.isInitialized) return
 
-        val wasShifted = isShifted
+        val wasCapsMode = capsMode
         val wasSymbols = isSymbols
         val lastScore = if (::scoreText.isInitialized) scoreText.text?.toString() else null
         val lastStatus = if (::statusText.isInitialized) statusText.text?.toString() else null
@@ -1208,7 +1218,7 @@ class KeystrokeIMEService : InputMethodService() {
 
         val newView = onCreateInputView()
 
-        isShifted = wasShifted
+        capsMode = wasCapsMode
         isSymbols = wasSymbols
         if (::scoreText.isInitialized && lastScore != null) scoreText.text = lastScore
         if (::statusText.isInitialized && lastStatus != null) statusText.text = lastStatus
@@ -1273,6 +1283,16 @@ class KeystrokeIMEService : InputMethodService() {
             com.google.android.material.R.attr.colorOnPrimary,
             ContextCompat.getColor(ctx, R.color.md_theme_onPrimary)
         )
+        currentPrimaryContainer = MaterialColors.getColor(
+            ctx,
+            com.google.android.material.R.attr.colorPrimaryContainer,
+            ContextCompat.getColor(ctx, R.color.key_bg_special)
+        )
+        currentOnPrimaryContainer = MaterialColors.getColor(
+            ctx,
+            com.google.android.material.R.attr.colorOnPrimaryContainer,
+            ContextCompat.getColor(ctx, R.color.key_text_special)
+        )
         currentKeyTextColor = MaterialColors.getColor(
             ctx,
             com.google.android.material.R.attr.colorOnSurface,
@@ -1304,6 +1324,16 @@ class KeystrokeIMEService : InputMethodService() {
             mainContent?.setBackgroundColor(surfaceContainer)
             statusBar.setBackgroundColor(surfaceContainerLow)
             resizePanel.setBackgroundColor(surfaceContainerLow)
+
+            val specialDrawable = createSpecialKeyDrawable(currentPrimaryContainer)
+            keyboardView.findViewById<TextView>(R.id.key_delete)?.apply {
+                background = specialDrawable.constantState?.newDrawable()?.mutate() ?: specialDrawable
+                setTextColor(currentOnPrimaryContainer)
+            }
+            keyboardView.findViewById<TextView>(R.id.key_symbols)?.apply {
+                background = specialDrawable.constantState?.newDrawable()?.mutate() ?: specialDrawable
+                setTextColor(currentOnPrimaryContainer)
+            }
         }
 
         // Return / Enter Key
@@ -1312,6 +1342,9 @@ class KeystrokeIMEService : InputMethodService() {
             keyEnter.background = createAccentDrawable(currentPrimaryColor)
             keyEnter.setTextColor(currentOnPrimaryColor)
         }
+
+        // Shift key
+        updateShiftKey(keyboardView)
 
         // Mode toggle button
         updateModeToggleButton()
@@ -1442,6 +1475,60 @@ class KeystrokeIMEService : InputMethodService() {
             Color.red(primaryColor),
             Color.green(primaryColor),
             Color.blue(primaryColor)
+        )
+        return RippleDrawable(ColorStateList.valueOf(rippleColor), stateList, null)
+    }
+
+    private fun createSpecialKeyDrawable(
+        containerColor: Int,
+        cornerRadiusDp: Float = 7f
+    ): Drawable {
+        val density = resources.displayMetrics.density
+        val radiusPx = cornerRadiusDp * density
+        val strokePx = (0.75f * density).toInt().coerceAtLeast(1)
+        val insetPx = (1.5f * density).toInt().coerceAtLeast(1)
+
+        val pressedColor = adjustColorBrightness(containerColor, 0.88f)
+        val shadowColor = adjustColorBrightness(containerColor, 0.65f)
+        val borderColor = adjustColorBrightness(containerColor, 0.78f)
+
+        val pressedShape = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = radiusPx
+            setColor(pressedColor)
+            setStroke(strokePx, borderColor)
+        }
+        val pressedLayer = LayerDrawable(arrayOf(pressedShape)).apply {
+            setLayerInset(0, 0, insetPx, 0, 0)
+        }
+
+        val shadowShape = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = radiusPx
+            setColor(shadowColor)
+        }
+        val surfaceShape = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = radiusPx
+            setColor(containerColor)
+            setStroke(strokePx, borderColor)
+        }
+        val normalLayer = LayerDrawable(arrayOf(shadowShape, surfaceShape)).apply {
+            setLayerInset(0, 0, insetPx, 0, 0)
+            setLayerInset(1, 0, 0, 0, insetPx)
+        }
+
+        val stateList = StateListDrawable().apply {
+            addState(intArrayOf(android.R.attr.state_pressed), pressedLayer)
+            addState(intArrayOf(), normalLayer)
+        }
+
+        val rippleAlpha = 55
+        val rippleColor = Color.argb(
+            rippleAlpha,
+            Color.red(currentPrimaryColor),
+            Color.green(currentPrimaryColor),
+            Color.blue(currentPrimaryColor)
         )
         return RippleDrawable(ColorStateList.valueOf(rippleColor), stateList, null)
     }

@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Cyan Palette (AuthentiKey Electric Cyan) -->
-    <style name="Theme.Thesis.Palette.Cyan" parent="Theme.Thesis" />
+    <style name="Theme.Thesis.Palette.Cyan" parent="Theme.Thesis">
+        <item name="colorPrimary">@color/md_theme_primary</item>
+        <item name="colorOnPrimary">@color/md_theme_onPrimary</item>
+        <item name="colorPrimaryContainer">@color/md_theme_primaryContainer</item>
+        <item name="colorOnPrimaryContainer">@color/md_theme_onPrimaryContainer</item>
+    </style>
 
     <!-- Blue Palette (Cyber Blue) -->
     <style name="Theme.Thesis.Palette.Blue" parent="Theme.Thesis">
