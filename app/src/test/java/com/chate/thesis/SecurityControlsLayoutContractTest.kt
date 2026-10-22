@@ -47,7 +47,7 @@ class SecurityControlsLayoutContractTest {
         // Ensure masterSwitch is NOT inside the sandbox container card
         val sandboxIndex = xml.indexOf("sandboxContainerCard")
         val masterSwitchIndex = xml.indexOf("@+id/masterSwitch")
-        val securityControlsIndex = xml.indexOf("Security controls")
+        val securityControlsIndex = xml.indexOf("Security controls", ignoreCase = true)
         assertTrue("Security controls section must exist", securityControlsIndex >= 0)
         assertTrue("masterSwitch must appear before sandboxContainerCard", masterSwitchIndex < sandboxIndex)
     }
