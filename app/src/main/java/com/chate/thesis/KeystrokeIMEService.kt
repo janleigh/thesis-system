@@ -341,16 +341,6 @@ class KeystrokeIMEService : InputMethodService() {
             requestHideSelf(0)
         }
 
-        keyboardView.findViewById<TextView>(R.id.key_numpad)?.setOnClickListener {
-            if (!isSymbols) {
-                isSymbols = true
-                isAltSymbols = false
-            } else {
-                isAltSymbols = !isAltSymbols
-            }
-            updateKeyboardLabels(keyboardView)
-        }
-
         keyboardView.findViewById<TextView>(R.id.key_switch)?.setOnClickListener {
             val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
             imm?.showInputMethodPicker()
@@ -402,13 +392,18 @@ class KeystrokeIMEService : InputMethodService() {
             true
         }
 
-        // Shift key (3 modes: OFF -> ON_ONCE -> LOCKED -> OFF)
+        // Shift key (3 modes in alphabet: OFF -> ON_ONCE -> LOCKED -> OFF, or #+= toggle in symbols mode)
         keyboardView.findViewById<TextView>(R.id.key_shift).setOnClickListener {
-            capsMode = capsMode.nextMode()
-            updateShiftKey(keyboardView)
+            if (isSymbols) {
+                isAltSymbols = !isAltSymbols
+                updateShiftKey(keyboardView)
+            } else {
+                capsMode = capsMode.nextMode()
+                updateShiftKey(keyboardView)
+            }
         }
 
-        // Symbols (SYM / ABC) key
+        // Combined Symbols (?123 / ABC) key
         keyboardView.findViewById<TextView>(R.id.key_symbols).setOnClickListener {
             if (isSymbols) {
                 isSymbols = false
@@ -417,7 +412,7 @@ class KeystrokeIMEService : InputMethodService() {
                 isSymbols = true
                 isAltSymbols = false
             }
-            updateKeyboardLabels(keyboardView)
+            updateShiftKey(keyboardView)
         }
 
         // Dismiss variants popup on overlay touch outside
@@ -1182,6 +1177,26 @@ class KeystrokeIMEService : InputMethodService() {
 
     private fun updateShiftKey(view: View) {
         val shiftButton = view.findViewById<TextView>(R.id.key_shift) ?: return
+        if (isSymbols) {
+            if (isAmoledActive) {
+                shiftButton.background =
+                    createKeyDrawable(
+                        normalColor = Color.parseColor("#0C0E10"),
+                        pressedColor = Color.parseColor("#1F2327"),
+                        shadowColor = Color.BLACK,
+                        borderColor = Color.parseColor("#1D2024"),
+                    )
+                shiftButton.setTextColor(Color.parseColor("#DEE4E6"))
+            } else {
+                shiftButton.background = createSpecialKeyDrawable(currentPrimaryContainer)
+                shiftButton.setTextColor(currentOnPrimaryContainer)
+            }
+            shiftButton.textSize = 14f
+            shiftButton.text = if (isAltSymbols) "123" else "#+="
+            updateKeyboardLabels(view)
+            return
+        }
+        shiftButton.textSize = 18f
         when (capsMode) {
             CapsMode.OFF -> {
                 if (isAmoledActive) {
@@ -1230,17 +1245,7 @@ class KeystrokeIMEService : InputMethodService() {
         }
 
         val symbolsButton = view.findViewById<TextView>(R.id.key_symbols)
-        symbolsButton?.text = if (isSymbols) "ABC" else "SYM"
-
-        val numpadButton = view.findViewById<TextView>(R.id.key_numpad)
-        numpadButton?.text =
-            if (!isSymbols) {
-                "123"
-            } else if (isAltSymbols) {
-                "123"
-            } else {
-                "#+="
-            }
+        symbolsButton?.text = if (isSymbols) "ABC" else "?123"
 
         view.findViewById<TextView>(R.id.key_comma)?.let { btn ->
             btn.text = CharacterVariants.formatKeyLabel(",", isSymbols, showHints, ctx)
@@ -1572,10 +1577,6 @@ class KeystrokeIMEService : InputMethodService() {
                 background = specialDrawable.constantState?.newDrawable()?.mutate() ?: specialDrawable
                 setTextColor(currentOnPrimaryContainer)
             }
-            keyboardView.findViewById<TextView>(R.id.key_numpad)?.apply {
-                background = specialDrawable.constantState?.newDrawable()?.mutate() ?: specialDrawable
-                setTextColor(currentOnPrimaryContainer)
-            }
             keyboardView.findViewById<TextView>(R.id.key_switch)?.apply {
                 background = specialDrawable.constantState?.newDrawable()?.mutate() ?: specialDrawable
                 setTextColor(currentOnPrimaryContainer)
@@ -1662,10 +1663,6 @@ class KeystrokeIMEService : InputMethodService() {
             setTextColor(Color.parseColor("#DEE4E6"))
         }
         keyboardView.findViewById<TextView>(R.id.key_symbols)?.apply {
-            background = specialAmoledDrawable.constantState?.newDrawable()?.mutate() ?: specialAmoledDrawable
-            setTextColor(Color.parseColor("#DEE4E6"))
-        }
-        keyboardView.findViewById<TextView>(R.id.key_numpad)?.apply {
             background = specialAmoledDrawable.constantState?.newDrawable()?.mutate() ?: specialAmoledDrawable
             setTextColor(Color.parseColor("#DEE4E6"))
         }

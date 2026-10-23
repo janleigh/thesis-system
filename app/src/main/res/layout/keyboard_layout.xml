@@ -284,7 +284,7 @@
                 <TextView android:id="@+id/key_delete" style="@style/KeyStyle.Special" android:layout_weight="1.5" android:text="⌫"/>
             </LinearLayout>
 
-            <!-- Row 4: ?123 + #+= + , + SPACE + . + 🌐 + RETURN (7-key layout from reference) -->
+            <!-- Row 4: ?123 + , + SPACE + . + 🌐 + RETURN (6-key aligned layout) -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
@@ -294,16 +294,9 @@
                 <TextView
                     android:id="@+id/key_symbols"
                     style="@style/KeyStyle.Special"
-                    android:layout_weight="1.2"
-                    android:textSize="13sp"
-                    android:text="SYM"/>
-
-                <TextView
-                    android:id="@+id/key_numpad"
-                    style="@style/KeyStyle.Special"
-                    android:layout_weight="1.1"
-                    android:textSize="13sp"
-                    android:text="123"/>
+                    android:layout_weight="1.5"
+                    android:textSize="14sp"
+                    android:text="\?123"/>
 
                 <TextView
                     android:id="@+id/key_comma"
@@ -314,7 +307,7 @@
                 <TextView
                     android:id="@+id/key_space"
                     style="@style/KeyStyle.Space"
-                    android:layout_weight="3.4"
+                    android:layout_weight="4.0"
                     android:text="space"/>
 
                 <TextView
@@ -326,14 +319,14 @@
                 <TextView
                     android:id="@+id/key_switch"
                     style="@style/KeyStyle.Special"
-                    android:layout_weight="1.1"
+                    android:layout_weight="1.0"
                     android:textSize="14sp"
                     android:text="🌐"/>
 
                 <TextView
                     android:id="@+id/key_enter"
                     style="@style/KeyStyle.Accent"
-                    android:layout_weight="1.2"
+                    android:layout_weight="1.5"
                     android:textSize="16sp"
                     android:text="↵"/>
             </LinearLayout>
