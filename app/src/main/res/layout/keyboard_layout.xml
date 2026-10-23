@@ -295,15 +295,15 @@
                     android:id="@+id/key_symbols"
                     style="@style/KeyStyle.Special"
                     android:layout_weight="1.2"
-                    android:textSize="14sp"
-                    android:text="\?123"/>
+                    android:textSize="13sp"
+                    android:text="SYM"/>
 
                 <TextView
                     android:id="@+id/key_numpad"
                     style="@style/KeyStyle.Special"
                     android:layout_weight="1.1"
                     android:textSize="13sp"
-                    android:text="#+="/>
+                    android:text="123"/>
 
                 <TextView
                     android:id="@+id/key_comma"

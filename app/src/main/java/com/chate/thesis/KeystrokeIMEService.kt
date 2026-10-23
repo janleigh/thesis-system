@@ -47,6 +47,7 @@ class KeystrokeIMEService : InputMethodService() {
     private var capsMode = CapsMode.OFF
     private val isShifted: Boolean get() = capsMode.isShifted()
     private var isSymbols = false
+    private var isAltSymbols = false
     private lateinit var keyboardView: View
     private lateinit var preferences: KeyboardPreferences
 
@@ -250,6 +251,36 @@ class KeystrokeIMEService : InputMethodService() {
             R.id.key_m to Pair(KeyEvent.KEYCODE_PERIOD, "."),
         )
 
+    private val altSymbolsMap =
+        mapOf(
+            R.id.key_q to Pair(KeyEvent.KEYCODE_GRAVE, "~"),
+            R.id.key_w to Pair(KeyEvent.KEYCODE_GRAVE, "`"),
+            R.id.key_e to Pair(KeyEvent.KEYCODE_POUND, "|"),
+            R.id.key_r to Pair(KeyEvent.KEYCODE_6, "^"),
+            R.id.key_t to Pair(KeyEvent.KEYCODE_5, "%"),
+            R.id.key_y to Pair(KeyEvent.KEYCODE_7, "&"),
+            R.id.key_u to Pair(KeyEvent.KEYCODE_STAR, "*"),
+            R.id.key_i to Pair(KeyEvent.KEYCODE_LEFT_BRACKET, "{"),
+            R.id.key_o to Pair(KeyEvent.KEYCODE_RIGHT_BRACKET, "}"),
+            R.id.key_p to Pair(KeyEvent.KEYCODE_MINUS, "_"),
+            R.id.key_a to Pair(KeyEvent.KEYCODE_BACKSLASH, "\\"),
+            R.id.key_s to Pair(KeyEvent.KEYCODE_SLASH, "/"),
+            R.id.key_d to Pair(KeyEvent.KEYCODE_4, "€"),
+            R.id.key_f to Pair(KeyEvent.KEYCODE_4, "£"),
+            R.id.key_g to Pair(KeyEvent.KEYCODE_4, "¥"),
+            R.id.key_h to Pair(KeyEvent.KEYCODE_4, "₩"),
+            R.id.key_j to Pair(KeyEvent.KEYCODE_PLUS, "±"),
+            R.id.key_k to Pair(KeyEvent.KEYCODE_EQUALS, "≠"),
+            R.id.key_l to Pair(KeyEvent.KEYCODE_EQUALS, "≈"),
+            R.id.key_z to Pair(KeyEvent.KEYCODE_COMMA, "<"),
+            R.id.key_x to Pair(KeyEvent.KEYCODE_PERIOD, ">"),
+            R.id.key_c to Pair(KeyEvent.KEYCODE_APOSTROPHE, "“"),
+            R.id.key_v to Pair(KeyEvent.KEYCODE_APOSTROPHE, "”"),
+            R.id.key_b to Pair(KeyEvent.KEYCODE_SEMICOLON, "§"),
+            R.id.key_n to Pair(KeyEvent.KEYCODE_1, "¡"),
+            R.id.key_m to Pair(KeyEvent.KEYCODE_SLASH, "¿"),
+        )
+
     override fun onCreate() {
         super.onCreate()
         preferences = KeyboardPreferences(this)
@@ -311,7 +342,12 @@ class KeystrokeIMEService : InputMethodService() {
         }
 
         keyboardView.findViewById<TextView>(R.id.key_numpad)?.setOnClickListener {
-            isSymbols = !isSymbols
+            if (!isSymbols) {
+                isSymbols = true
+                isAltSymbols = false
+            } else {
+                isAltSymbols = !isAltSymbols
+            }
             updateKeyboardLabels(keyboardView)
         }
 
@@ -372,9 +408,15 @@ class KeystrokeIMEService : InputMethodService() {
             updateShiftKey(keyboardView)
         }
 
-        // Symbols key
+        // Symbols (SYM / ABC) key
         keyboardView.findViewById<TextView>(R.id.key_symbols).setOnClickListener {
-            isSymbols = !isSymbols
+            if (isSymbols) {
+                isSymbols = false
+                isAltSymbols = false
+            } else {
+                isSymbols = true
+                isAltSymbols = false
+            }
             updateKeyboardLabels(keyboardView)
         }
 
@@ -642,7 +684,12 @@ class KeystrokeIMEService : InputMethodService() {
         event: MotionEvent,
         buttonId: Int,
     ) {
-        val currentMap = if (isSymbols) symbolsMap else keyMap
+        val currentMap =
+            when {
+                !isSymbols -> keyMap
+                isAltSymbols -> altSymbolsMap
+                else -> symbolsMap
+            }
         val keyData = currentMap[buttonId] ?: Pair(0, "")
         val actualKeyCode = keyData.first
         val rawChar = keyData.second
@@ -1167,8 +1214,13 @@ class KeystrokeIMEService : InputMethodService() {
     }
 
     private fun updateKeyboardLabels(view: View) {
-        val currentMap = if (isSymbols) symbolsMap else keyMap
-        val showHints = preferences.showKeyHints
+        val currentMap =
+            when {
+                !isSymbols -> keyMap
+                isAltSymbols -> altSymbolsMap
+                else -> symbolsMap
+            }
+        val showHints = preferences.showKeyHints && !isSymbols
         val ctx = if (::themedContext.isInitialized) themedContext else this
 
         currentMap.forEach { (buttonId, keyData) ->
@@ -1178,10 +1230,17 @@ class KeystrokeIMEService : InputMethodService() {
         }
 
         val symbolsButton = view.findViewById<TextView>(R.id.key_symbols)
-        symbolsButton?.text = if (isSymbols) "ABC" else "?123"
+        symbolsButton?.text = if (isSymbols) "ABC" else "SYM"
 
         val numpadButton = view.findViewById<TextView>(R.id.key_numpad)
-        numpadButton?.text = if (isSymbols) "#+=" else "123"
+        numpadButton?.text =
+            if (!isSymbols) {
+                "123"
+            } else if (isAltSymbols) {
+                "123"
+            } else {
+                "#+="
+            }
 
         view.findViewById<TextView>(R.id.key_comma)?.let { btn ->
             btn.text = CharacterVariants.formatKeyLabel(",", isSymbols, showHints, ctx)
@@ -1379,6 +1438,7 @@ class KeystrokeIMEService : InputMethodService() {
 
         val wasCapsMode = capsMode
         val wasSymbols = isSymbols
+        val wasAltSymbols = isAltSymbols
         val lastScore = if (::scoreText.isInitialized) scoreText.text?.toString() else null
         val lastStatus = if (::statusText.isInitialized) statusText.text?.toString() else null
         val lastEnroll = if (::enrollmentText.isInitialized) enrollmentText.text?.toString() else null
@@ -1388,6 +1448,7 @@ class KeystrokeIMEService : InputMethodService() {
 
         capsMode = wasCapsMode
         isSymbols = wasSymbols
+        isAltSymbols = wasAltSymbols
         if (::scoreText.isInitialized && lastScore != null) scoreText.text = lastScore
         if (::statusText.isInitialized && lastStatus != null) statusText.text = lastStatus
         if (::enrollmentText.isInitialized && lastEnroll != null) enrollmentText.text = lastEnroll
