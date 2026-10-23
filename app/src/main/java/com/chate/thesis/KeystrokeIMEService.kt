@@ -101,6 +101,20 @@ class KeystrokeIMEService : InputMethodService() {
     private var currentKeyTextColor: Int = 0
     private var currentOnSurfaceVariant: Int = 0
     private var isAmoledActive: Boolean = false
+    private var lastThemedConfig: String = ""
+
+    private fun getThemeSignature(): String {
+        val themePrefs = ThemePreferences(this)
+        val isNight =
+            when (themePrefs.themeMode) {
+                ThemeMode.LIGHT -> false
+                ThemeMode.DARK -> true
+                ThemeMode.SYSTEM -> {
+                    (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+                }
+            }
+        return "${themePrefs.themeMode.id}_${themePrefs.palette.id}_${themePrefs.isAmoledBlackEnabled}_$isNight"
+    }
 
     private val themePreferenceListener =
         SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
@@ -378,6 +392,7 @@ class KeystrokeIMEService : InputMethodService() {
             setIndicatorColor(R.color.text_secondary)
         }
 
+        lastThemedConfig = getThemeSignature()
         return keyboardView
     }
 
@@ -386,6 +401,9 @@ class KeystrokeIMEService : InputMethodService() {
         restarting: Boolean,
     ) {
         super.onStartInputView(info, restarting)
+        if (getThemeSignature() != lastThemedConfig) {
+            reloadInputView()
+        }
         applyKeyboardPreferences()
     }
 
@@ -1275,9 +1293,7 @@ class KeystrokeIMEService : InputMethodService() {
         updateKeyboardLabels(newView)
         updateShiftKey(newView)
 
-        if (isInputViewShown) {
-            setInputView(newView)
-        }
+        setInputView(newView)
     }
 
     private fun getThemedContext(): Context {
