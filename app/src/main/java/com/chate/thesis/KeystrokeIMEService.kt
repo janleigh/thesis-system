@@ -16,9 +16,14 @@ import android.graphics.drawable.LayerDrawable
 import android.graphics.drawable.RippleDrawable
 import android.graphics.drawable.StateListDrawable
 import android.inputmethodservice.InputMethodService
+import android.media.AudioManager
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.util.Log
 import android.view.ContextThemeWrapper
 import android.view.Gravity
@@ -29,7 +34,6 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
 import android.view.ViewGroup
-import android.view.inputmethod.InputMethodManager
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -50,6 +54,16 @@ class KeystrokeIMEService : InputMethodService() {
     private var isAltSymbols = false
     private lateinit var keyboardView: View
     private lateinit var preferences: KeyboardPreferences
+    private var audioManager: AudioManager? = null
+    private val vibrator: Vibrator? by lazy {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val vibratorManager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
+            vibratorManager?.defaultVibrator
+        } else {
+            @Suppress("DEPRECATION")
+            getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+        }
+    }
 
     // Main layout containers
     private lateinit var keyboardRootFrame: FrameLayout
@@ -284,6 +298,7 @@ class KeystrokeIMEService : InputMethodService() {
     override fun onCreate() {
         super.onCreate()
         preferences = KeyboardPreferences(this)
+        audioManager = getSystemService(Context.AUDIO_SERVICE) as? AudioManager
         profileManager = ProfileManager(this, testingMode = true)
         riskScorer = RiskScorer()
         securityLogger = SecurityLogger(this)
@@ -338,12 +353,8 @@ class KeystrokeIMEService : InputMethodService() {
         tvPreviewChar = keyboardView.findViewById(R.id.tv_preview_char)
 
         keyboardView.findViewById<View>(R.id.btn_keyboard_dismiss)?.setOnClickListener {
+            triggerKeyFeedback(it)
             requestHideSelf(0)
-        }
-
-        keyboardView.findViewById<TextView>(R.id.key_switch)?.setOnClickListener {
-            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
-            imm?.showInputMethodPicker()
         }
 
         setupResizeControls()
@@ -394,6 +405,7 @@ class KeystrokeIMEService : InputMethodService() {
 
         // Shift key (3 modes in alphabet: OFF -> ON_ONCE -> LOCKED -> OFF, or #+= toggle in symbols mode)
         keyboardView.findViewById<TextView>(R.id.key_shift).setOnClickListener {
+            triggerKeyFeedback(it)
             if (isSymbols) {
                 isAltSymbols = !isAltSymbols
                 updateShiftKey(keyboardView)
@@ -405,6 +417,7 @@ class KeystrokeIMEService : InputMethodService() {
 
         // Combined Symbols (?123 / ABC) key
         keyboardView.findViewById<TextView>(R.id.key_symbols).setOnClickListener {
+            triggerKeyFeedback(it)
             if (isSymbols) {
                 isSymbols = false
                 isAltSymbols = false
@@ -674,6 +687,40 @@ class KeystrokeIMEService : InputMethodService() {
     // TOUCH & LONG-PRESS (RAPID-FIRE / VARIANTS) HANDLING
     // =========================================================================
 
+    private fun triggerKeyFeedback(
+        view: View,
+        keyCode: Int = 0,
+    ) {
+        if (preferences.isVibrationEnabled) {
+            val hapticSuccess =
+                view.performHapticFeedback(
+                    HapticFeedbackConstants.KEYBOARD_TAP,
+                    HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING,
+                )
+            if (!hapticSuccess) {
+                try {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        vibrator?.vibrate(VibrationEffect.createOneShot(20L, VibrationEffect.DEFAULT_AMPLITUDE))
+                    } else {
+                        @Suppress("DEPRECATION")
+                        vibrator?.vibrate(20L)
+                    }
+                } catch (_: Exception) {
+                }
+            }
+        }
+        if (preferences.isSoundEnabled) {
+            val effect =
+                when (keyCode) {
+                    KeyEvent.KEYCODE_SPACE -> AudioManager.FX_KEYPRESS_SPACEBAR
+                    KeyEvent.KEYCODE_DEL -> AudioManager.FX_KEYPRESS_DELETE
+                    KeyEvent.KEYCODE_ENTER -> AudioManager.FX_KEYPRESS_RETURN
+                    else -> AudioManager.FX_KEYPRESS_STANDARD
+                }
+            audioManager?.playSoundEffect(effect)
+        }
+    }
+
     private fun handleKeyTouch(
         view: View,
         event: MotionEvent,
@@ -731,6 +778,7 @@ class KeystrokeIMEService : InputMethodService() {
         val currentTime = event.eventTime.toDouble()
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
+                triggerKeyFeedback(view, keyCode)
                 view.isPressed = true
                 cancelAllRunnables()
                 eventBuffer.add(KeystrokeEvent(keyCode, 0, currentTime))
@@ -745,7 +793,7 @@ class KeystrokeIMEService : InputMethodService() {
                                 object : Runnable {
                                     override fun run() {
                                         commitAction()
-                                        view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                        triggerKeyFeedback(view, keyCode)
                                         eventBuffer.add(KeystrokeEvent(keyCode, 0, SystemClock.uptimeMillis().toDouble()))
                                         eventBuffer.add(KeystrokeEvent(keyCode, 1, (SystemClock.uptimeMillis() + 15).toDouble()))
                                         mainHandler.postDelayed(this, repeatInterval)
@@ -782,6 +830,7 @@ class KeystrokeIMEService : InputMethodService() {
         val currentTime = event.eventTime.toDouble()
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
+                triggerKeyFeedback(view, KeyEvent.KEYCODE_DEL)
                 view.isPressed = true
                 cancelAllRunnables()
                 currentInputConnection?.deleteSurroundingText(1, 0)
@@ -797,7 +846,7 @@ class KeystrokeIMEService : InputMethodService() {
                             object : Runnable {
                                 override fun run() {
                                     currentInputConnection?.deleteSurroundingText(1, 0)
-                                    view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                    triggerKeyFeedback(view, KeyEvent.KEYCODE_DEL)
                                     val now = SystemClock.uptimeMillis().toDouble()
                                     eventBuffer.add(KeystrokeEvent(KeyEvent.KEYCODE_DEL, 0, now))
                                     eventBuffer.add(KeystrokeEvent(KeyEvent.KEYCODE_DEL, 1, now + 10))
@@ -834,6 +883,7 @@ class KeystrokeIMEService : InputMethodService() {
         val currentTime = event.eventTime.toDouble()
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
+                triggerKeyFeedback(view, keyCode)
                 view.isPressed = true
                 cancelAllRunnables()
                 isLongPressActive = false
@@ -854,7 +904,12 @@ class KeystrokeIMEService : InputMethodService() {
                     Runnable {
                         isLongPressActive = true
                         hideKeyPreview()
-                        view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                        if (preferences.isVibrationEnabled) {
+                            view.performHapticFeedback(
+                                HapticFeedbackConstants.LONG_PRESS,
+                                HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING,
+                            )
+                        }
 
                         if (mode == KeyboardPreferences.MODE_RAPID_FIRE || variants.isEmpty()) {
                             // Rapid-fire key repeat
@@ -864,7 +919,7 @@ class KeystrokeIMEService : InputMethodService() {
                                 object : Runnable {
                                     override fun run() {
                                         commitAction()
-                                        view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                        triggerKeyFeedback(view, keyCode)
                                         val now = SystemClock.uptimeMillis().toDouble()
                                         eventBuffer.add(KeystrokeEvent(keyCode, 0, now))
                                         eventBuffer.add(KeystrokeEvent(keyCode, 1, now + 15))
@@ -900,6 +955,7 @@ class KeystrokeIMEService : InputMethodService() {
                     val chosen = getSelectedVariant()
                     hideVariantsPopup()
                     if (chosen != null) {
+                        triggerKeyFeedback(view, keyCode)
                         currentInputConnection?.commitText(chosen, 1)
                     } else {
                         commitAction()
@@ -1577,10 +1633,6 @@ class KeystrokeIMEService : InputMethodService() {
                 background = specialDrawable.constantState?.newDrawable()?.mutate() ?: specialDrawable
                 setTextColor(currentOnPrimaryContainer)
             }
-            keyboardView.findViewById<TextView>(R.id.key_switch)?.apply {
-                background = specialDrawable.constantState?.newDrawable()?.mutate() ?: specialDrawable
-                setTextColor(currentOnPrimaryContainer)
-            }
         }
 
         // Return / Enter Key
@@ -1663,10 +1715,6 @@ class KeystrokeIMEService : InputMethodService() {
             setTextColor(Color.parseColor("#DEE4E6"))
         }
         keyboardView.findViewById<TextView>(R.id.key_symbols)?.apply {
-            background = specialAmoledDrawable.constantState?.newDrawable()?.mutate() ?: specialAmoledDrawable
-            setTextColor(Color.parseColor("#DEE4E6"))
-        }
-        keyboardView.findViewById<TextView>(R.id.key_switch)?.apply {
             background = specialAmoledDrawable.constantState?.newDrawable()?.mutate() ?: specialAmoledDrawable
             setTextColor(Color.parseColor("#DEE4E6"))
         }

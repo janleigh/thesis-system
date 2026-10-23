@@ -150,6 +150,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var settingsDelayLabel: TextView
     private lateinit var sliderLongPressDelay: Slider
     private lateinit var switchKeyHints: SwitchMaterial
+    private lateinit var switchVibration: SwitchMaterial
+    private lateinit var switchSound: SwitchMaterial
     private lateinit var keyboardPreferences: KeyboardPreferences
 
     // Enhanced Theming & IME Settings UI
@@ -406,6 +408,8 @@ class MainActivity : AppCompatActivity() {
         settingsDelayLabel = findViewById(R.id.settingsDelayLabel)
         sliderLongPressDelay = findViewById(R.id.sliderLongPressDelay)
         switchKeyHints = findViewById(R.id.switchKeyHints)
+        switchVibration = findViewById(R.id.switchVibration)
+        switchSound = findViewById(R.id.switchSound)
 
         themeModeToggleGroup = findViewById(R.id.themeModeToggleGroup)
         btnThemeAuto = findViewById(R.id.btnThemeAuto)
@@ -746,6 +750,16 @@ class MainActivity : AppCompatActivity() {
             notifyChange()
         }
 
+        switchVibration.setOnCheckedChangeListener { _, isChecked ->
+            keyboardPreferences.isVibrationEnabled = isChecked
+            notifyChange()
+        }
+
+        switchSound.setOnCheckedChangeListener { _, isChecked ->
+            keyboardPreferences.isSoundEnabled = isChecked
+            notifyChange()
+        }
+
         syncKeyboardSettingsUI()
     }
 
@@ -779,6 +793,8 @@ class MainActivity : AppCompatActivity() {
         sliderLongPressDelay.value = snapToSlider(sliderLongPressDelay, delay.toFloat())
 
         switchKeyHints.isChecked = keyboardPreferences.showKeyHints
+        switchVibration.isChecked = keyboardPreferences.isVibrationEnabled
+        switchSound.isChecked = keyboardPreferences.isSoundEnabled
     }
 
     private fun setupOnboardingFlow() {

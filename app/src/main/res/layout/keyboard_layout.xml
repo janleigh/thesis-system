@@ -284,7 +284,7 @@
                 <TextView android:id="@+id/key_delete" style="@style/KeyStyle.Special" android:layout_weight="1.5" android:text="⌫"/>
             </LinearLayout>
 
-            <!-- Row 4: ?123 + , + SPACE + . + 🌐 + RETURN (6-key aligned layout) -->
+            <!-- Row 4: ?123 + , + SPACE + . + RETURN (5-key symmetrical layout without globe key) -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
@@ -307,7 +307,7 @@
                 <TextView
                     android:id="@+id/key_space"
                     style="@style/KeyStyle.Space"
-                    android:layout_weight="4.0"
+                    android:layout_weight="5.0"
                     android:text="space"/>
 
                 <TextView
@@ -315,13 +315,6 @@
                     style="@style/KeyStyle.Normal"
                     android:layout_weight="1.0"
                     android:text="."/>
-
-                <TextView
-                    android:id="@+id/key_switch"
-                    style="@style/KeyStyle.Special"
-                    android:layout_weight="1.0"
-                    android:textSize="14sp"
-                    android:text="🌐"/>
 
                 <TextView
                     android:id="@+id/key_enter"

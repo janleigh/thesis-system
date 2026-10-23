@@ -220,5 +220,7 @@ class ExampleUnitTest {
         assertEquals("RAPID_FIRE", KeyboardPreferences.MODE_RAPID_FIRE)
         assertEquals(350L, KeyboardPreferences.DEFAULT_LONG_PRESS_DELAY)
         assertEquals(50L, KeyboardPreferences.DEFAULT_REPEAT_INTERVAL)
+        assertTrue(KeyboardPreferences.DEFAULT_VIBRATION_ENABLED)
+        assertTrue(KeyboardPreferences.DEFAULT_SOUND_ENABLED)
     }
 }

@@ -13,6 +13,8 @@ class KeyboardPreferences(context: Context) {
         const val KEY_LONG_PRESS_DELAY = "long_press_delay_ms"
         const val KEY_REPEAT_INTERVAL = "repeat_interval_ms"
         const val KEY_SHOW_KEY_HINTS = "show_key_hints"
+        const val KEY_VIBRATION_ENABLED = "vibration_enabled"
+        const val KEY_SOUND_ENABLED = "sound_enabled"
 
         const val DEFAULT_HEIGHT_DP = 280
         const val MIN_HEIGHT_DP = 190
@@ -23,6 +25,8 @@ class KeyboardPreferences(context: Context) {
 
         const val DEFAULT_LONG_PRESS_DELAY = 350L // ms
         const val DEFAULT_REPEAT_INTERVAL = 50L // ms
+        const val DEFAULT_VIBRATION_ENABLED = true
+        const val DEFAULT_SOUND_ENABLED = true
 
         const val ACTION_SETTINGS_CHANGED = "com.chate.thesis.KEYBOARD_SETTINGS_CHANGED"
     }
@@ -46,4 +50,12 @@ class KeyboardPreferences(context: Context) {
     var showKeyHints: Boolean
         get() = prefs.getBoolean(KEY_SHOW_KEY_HINTS, false)
         set(value) = prefs.edit().putBoolean(KEY_SHOW_KEY_HINTS, value).apply()
+
+    var isVibrationEnabled: Boolean
+        get() = prefs.getBoolean(KEY_VIBRATION_ENABLED, DEFAULT_VIBRATION_ENABLED)
+        set(value) = prefs.edit().putBoolean(KEY_VIBRATION_ENABLED, value).apply()
+
+    var isSoundEnabled: Boolean
+        get() = prefs.getBoolean(KEY_SOUND_ENABLED, DEFAULT_SOUND_ENABLED)
+        set(value) = prefs.edit().putBoolean(KEY_SOUND_ENABLED, value).apply()
 }
