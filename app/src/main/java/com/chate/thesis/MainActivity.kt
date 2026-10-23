@@ -9,7 +9,11 @@ import android.content.IntentFilter
 import android.content.res.Configuration
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.os.Build
 import android.os.Bundle
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.provider.Settings
 import android.text.Editable
 import android.text.Spannable
@@ -151,6 +155,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var sliderLongPressDelay: Slider
     private lateinit var switchKeyHints: SwitchMaterial
     private lateinit var switchVibration: SwitchMaterial
+    private lateinit var layoutVibrationStrength: View
+    private lateinit var settingsVibrationLabel: TextView
+    private lateinit var sliderVibrationDuration: Slider
     private lateinit var switchSound: SwitchMaterial
     private lateinit var keyboardPreferences: KeyboardPreferences
 
@@ -409,6 +416,9 @@ class MainActivity : AppCompatActivity() {
         sliderLongPressDelay = findViewById(R.id.sliderLongPressDelay)
         switchKeyHints = findViewById(R.id.switchKeyHints)
         switchVibration = findViewById(R.id.switchVibration)
+        layoutVibrationStrength = findViewById(R.id.layoutVibrationStrength)
+        settingsVibrationLabel = findViewById(R.id.settingsVibrationLabel)
+        sliderVibrationDuration = findViewById(R.id.sliderVibrationDuration)
         switchSound = findViewById(R.id.switchSound)
 
         themeModeToggleGroup = findViewById(R.id.themeModeToggleGroup)
@@ -752,7 +762,36 @@ class MainActivity : AppCompatActivity() {
 
         switchVibration.setOnCheckedChangeListener { _, isChecked ->
             keyboardPreferences.isVibrationEnabled = isChecked
+            layoutVibrationStrength.visibility = if (isChecked) View.VISIBLE else View.GONE
             notifyChange()
+        }
+
+        sliderVibrationDuration.addOnChangeListener { _, value, fromUser ->
+            val duration = value.toLong()
+            settingsVibrationLabel.text = "$duration ms"
+            if (fromUser) {
+                keyboardPreferences.vibrationDurationMs = duration
+                notifyChange()
+                try {
+                    val vib =
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                            val vm = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
+                            vm?.defaultVibrator ?: (getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator)
+                        } else {
+                            @Suppress("DEPRECATION")
+                            getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+                        }
+                    if (vib != null && vib.hasVibrator()) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            vib.vibrate(VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE))
+                        } else {
+                            @Suppress("DEPRECATION")
+                            vib.vibrate(duration)
+                        }
+                    }
+                } catch (_: Exception) {
+                }
+            }
         }
 
         switchSound.setOnCheckedChangeListener { _, isChecked ->
@@ -794,6 +833,10 @@ class MainActivity : AppCompatActivity() {
 
         switchKeyHints.isChecked = keyboardPreferences.showKeyHints
         switchVibration.isChecked = keyboardPreferences.isVibrationEnabled
+        layoutVibrationStrength.visibility = if (keyboardPreferences.isVibrationEnabled) View.VISIBLE else View.GONE
+        val vibDuration = keyboardPreferences.vibrationDurationMs
+        settingsVibrationLabel.text = "$vibDuration ms"
+        sliderVibrationDuration.value = snapToSlider(sliderVibrationDuration, vibDuration.toFloat())
         switchSound.isChecked = keyboardPreferences.isSoundEnabled
     }
 

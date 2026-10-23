@@ -23,7 +23,6 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
-import android.os.VibrationAttributes
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
@@ -762,54 +761,29 @@ class KeystrokeIMEService : InputMethodService() {
         keyCode: Int = 0,
     ) {
         if (preferences.isVibrationEnabled) {
-            try {
-                view.isHapticFeedbackEnabled = true
-                view.performHapticFeedback(
-                    HapticFeedbackConstants.KEYBOARD_TAP,
-                    @Suppress("DEPRECATION")
-                    HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING,
-                )
-            } catch (_: Exception) {
-            }
-
+            val durationMs = preferences.vibrationDurationMs.coerceAtLeast(10L)
             try {
                 val vib = vibrator
                 if (vib != null && vib.hasVibrator()) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                        val effect = VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK)
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            val attrs =
-                                VibrationAttributes.Builder()
-                                    .setUsage(VibrationAttributes.USAGE_TOUCH)
-                                    .build()
-                            vib.vibrate(effect, attrs)
-                        } else {
-                            @Suppress("DEPRECATION")
-                            val audioAttrs =
-                                AudioAttributes.Builder()
-                                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                                    .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
-                                    .build()
-                            vib.vibrate(effect, audioAttrs)
-                        }
-                    } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        @Suppress("DEPRECATION")
-                        val audioAttrs =
-                            AudioAttributes.Builder()
-                                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                                .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
-                                .build()
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         vib.vibrate(
-                            VibrationEffect.createOneShot(25L, VibrationEffect.DEFAULT_AMPLITUDE),
-                            audioAttrs,
+                            VibrationEffect.createOneShot(durationMs, VibrationEffect.DEFAULT_AMPLITUDE),
                         )
                     } else {
                         @Suppress("DEPRECATION")
-                        vib.vibrate(25L)
+                        vib.vibrate(durationMs)
                     }
+                } else {
+                    view.isHapticFeedbackEnabled = true
+                    view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                 }
             } catch (e: Exception) {
                 Log.w("KeystrokeIME", "Vibration failed: ${e.message}")
+                try {
+                    view.isHapticFeedbackEnabled = true
+                    view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                } catch (_: Exception) {
+                }
             }
         }
 
@@ -840,45 +814,28 @@ class KeystrokeIMEService : InputMethodService() {
 
     private fun triggerLongPressFeedback(view: View) {
         if (!preferences.isVibrationEnabled) return
-        try {
-            view.isHapticFeedbackEnabled = true
-            view.performHapticFeedback(
-                HapticFeedbackConstants.LONG_PRESS,
-                @Suppress("DEPRECATION")
-                HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING,
-            )
-        } catch (_: Exception) {
-        }
-
+        val durationMs = (preferences.vibrationDurationMs * 1.5).toLong().coerceIn(30L, 100L)
         try {
             val vib = vibrator
             if (vib != null && vib.hasVibrator()) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    val effect = VibrationEffect.createPredefined(VibrationEffect.EFFECT_HEAVY_CLICK)
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        val attrs =
-                            VibrationAttributes.Builder()
-                                .setUsage(VibrationAttributes.USAGE_TOUCH)
-                                .build()
-                        vib.vibrate(effect, attrs)
-                    } else {
-                        @Suppress("DEPRECATION")
-                        val audioAttrs =
-                            AudioAttributes.Builder()
-                                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                                .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
-                                .build()
-                        vib.vibrate(effect, audioAttrs)
-                    }
-                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    @Suppress("DEPRECATION")
-                    vib.vibrate(VibrationEffect.createOneShot(40L, VibrationEffect.DEFAULT_AMPLITUDE))
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    vib.vibrate(
+                        VibrationEffect.createOneShot(durationMs, VibrationEffect.DEFAULT_AMPLITUDE),
+                    )
                 } else {
                     @Suppress("DEPRECATION")
-                    vib.vibrate(40L)
+                    vib.vibrate(durationMs)
                 }
+            } else {
+                view.isHapticFeedbackEnabled = true
+                view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
             }
         } catch (_: Exception) {
+            try {
+                view.isHapticFeedbackEnabled = true
+                view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+            } catch (_: Exception) {
+            }
         }
     }
 

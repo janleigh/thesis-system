@@ -226,6 +226,9 @@ class ExampleUnitTest {
         assertEquals(350L, KeyboardPreferences.DEFAULT_LONG_PRESS_DELAY)
         assertEquals(50L, KeyboardPreferences.DEFAULT_REPEAT_INTERVAL)
         assertTrue(KeyboardPreferences.DEFAULT_VIBRATION_ENABLED)
+        assertEquals(35L, KeyboardPreferences.DEFAULT_VIBRATION_DURATION)
+        assertEquals(10L, KeyboardPreferences.MIN_VIBRATION_DURATION)
+        assertEquals(80L, KeyboardPreferences.MAX_VIBRATION_DURATION)
         assertTrue(KeyboardPreferences.DEFAULT_SOUND_ENABLED)
     }
 }
