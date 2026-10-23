@@ -16,11 +16,14 @@ import android.graphics.drawable.LayerDrawable
 import android.graphics.drawable.RippleDrawable
 import android.graphics.drawable.StateListDrawable
 import android.inputmethodservice.InputMethodService
+import android.media.AudioAttributes
 import android.media.AudioManager
+import android.media.SoundPool
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
+import android.os.VibrationAttributes
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
@@ -55,10 +58,15 @@ class KeystrokeIMEService : InputMethodService() {
     private lateinit var keyboardView: View
     private lateinit var preferences: KeyboardPreferences
     private var audioManager: AudioManager? = null
+    private var soundPool: SoundPool? = null
+    private var soundStandardId: Int = 0
+    private var soundSpacebarId: Int = 0
+    private var soundDeleteId: Int = 0
+    private var soundReturnId: Int = 0
     private val vibrator: Vibrator? by lazy {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val vibratorManager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
-            vibratorManager?.defaultVibrator
+            vibratorManager?.defaultVibrator ?: (getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator)
         } else {
             @Suppress("DEPRECATION")
             getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
@@ -250,19 +258,19 @@ class KeystrokeIMEService : InputMethodService() {
             R.id.key_a to Pair(KeyEvent.KEYCODE_AT, "@"),
             R.id.key_s to Pair(KeyEvent.KEYCODE_POUND, "#"),
             R.id.key_d to Pair(KeyEvent.KEYCODE_4, "$"),
-            R.id.key_f to Pair(KeyEvent.KEYCODE_STAR, "*"),
-            R.id.key_g to Pair(KeyEvent.KEYCODE_MINUS, "-"),
-            R.id.key_h to Pair(KeyEvent.KEYCODE_PLUS, "+"),
-            R.id.key_j to Pair(KeyEvent.KEYCODE_EQUALS, "="),
-            R.id.key_k to Pair(KeyEvent.KEYCODE_SLASH, "/"),
-            R.id.key_l to Pair(KeyEvent.KEYCODE_BACKSLASH, "\\"),
-            R.id.key_z to Pair(KeyEvent.KEYCODE_LEFT_BRACKET, "["),
-            R.id.key_x to Pair(KeyEvent.KEYCODE_RIGHT_BRACKET, "]"),
+            R.id.key_f to Pair(KeyEvent.KEYCODE_5, "%"),
+            R.id.key_g to Pair(KeyEvent.KEYCODE_7, "&"),
+            R.id.key_h to Pair(KeyEvent.KEYCODE_MINUS, "-"),
+            R.id.key_j to Pair(KeyEvent.KEYCODE_PLUS, "+"),
+            R.id.key_k to Pair(KeyEvent.KEYCODE_NUMPAD_LEFT_PAREN, "("),
+            R.id.key_l to Pair(KeyEvent.KEYCODE_NUMPAD_RIGHT_PAREN, ")"),
+            R.id.key_z to Pair(KeyEvent.KEYCODE_STAR, "*"),
+            R.id.key_x to Pair(KeyEvent.KEYCODE_APOSTROPHE, "\""),
             R.id.key_c to Pair(KeyEvent.KEYCODE_APOSTROPHE, "'"),
-            R.id.key_v to Pair(KeyEvent.KEYCODE_GRAVE, "`"),
+            R.id.key_v to Pair(KeyEvent.KEYCODE_SEMICOLON, ":"),
             R.id.key_b to Pair(KeyEvent.KEYCODE_SEMICOLON, ";"),
-            R.id.key_n to Pair(KeyEvent.KEYCODE_COMMA, ","),
-            R.id.key_m to Pair(KeyEvent.KEYCODE_PERIOD, "."),
+            R.id.key_n to Pair(KeyEvent.KEYCODE_1, "!"),
+            R.id.key_m to Pair(KeyEvent.KEYCODE_SLASH, "?"),
         )
 
     private val altSymbolsMap =
@@ -271,26 +279,26 @@ class KeystrokeIMEService : InputMethodService() {
             R.id.key_w to Pair(KeyEvent.KEYCODE_GRAVE, "`"),
             R.id.key_e to Pair(KeyEvent.KEYCODE_POUND, "|"),
             R.id.key_r to Pair(KeyEvent.KEYCODE_6, "^"),
-            R.id.key_t to Pair(KeyEvent.KEYCODE_5, "%"),
-            R.id.key_y to Pair(KeyEvent.KEYCODE_7, "&"),
-            R.id.key_u to Pair(KeyEvent.KEYCODE_STAR, "*"),
+            R.id.key_t to Pair(KeyEvent.KEYCODE_EQUALS, "="),
+            R.id.key_y to Pair(KeyEvent.KEYCODE_SLASH, "/"),
+            R.id.key_u to Pair(KeyEvent.KEYCODE_BACKSLASH, "\\"),
             R.id.key_i to Pair(KeyEvent.KEYCODE_LEFT_BRACKET, "{"),
             R.id.key_o to Pair(KeyEvent.KEYCODE_RIGHT_BRACKET, "}"),
             R.id.key_p to Pair(KeyEvent.KEYCODE_MINUS, "_"),
-            R.id.key_a to Pair(KeyEvent.KEYCODE_BACKSLASH, "\\"),
-            R.id.key_s to Pair(KeyEvent.KEYCODE_SLASH, "/"),
-            R.id.key_d to Pair(KeyEvent.KEYCODE_4, "€"),
-            R.id.key_f to Pair(KeyEvent.KEYCODE_4, "£"),
-            R.id.key_g to Pair(KeyEvent.KEYCODE_4, "¥"),
-            R.id.key_h to Pair(KeyEvent.KEYCODE_4, "₩"),
+            R.id.key_a to Pair(KeyEvent.KEYCODE_4, "€"),
+            R.id.key_s to Pair(KeyEvent.KEYCODE_4, "£"),
+            R.id.key_d to Pair(KeyEvent.KEYCODE_4, "¥"),
+            R.id.key_f to Pair(KeyEvent.KEYCODE_4, "₩"),
+            R.id.key_g to Pair(KeyEvent.KEYCODE_POUND, "§"),
+            R.id.key_h to Pair(KeyEvent.KEYCODE_0, "°"),
             R.id.key_j to Pair(KeyEvent.KEYCODE_PLUS, "±"),
-            R.id.key_k to Pair(KeyEvent.KEYCODE_EQUALS, "≠"),
-            R.id.key_l to Pair(KeyEvent.KEYCODE_EQUALS, "≈"),
+            R.id.key_k to Pair(KeyEvent.KEYCODE_LEFT_BRACKET, "["),
+            R.id.key_l to Pair(KeyEvent.KEYCODE_RIGHT_BRACKET, "]"),
             R.id.key_z to Pair(KeyEvent.KEYCODE_COMMA, "<"),
             R.id.key_x to Pair(KeyEvent.KEYCODE_PERIOD, ">"),
             R.id.key_c to Pair(KeyEvent.KEYCODE_APOSTROPHE, "“"),
             R.id.key_v to Pair(KeyEvent.KEYCODE_APOSTROPHE, "”"),
-            R.id.key_b to Pair(KeyEvent.KEYCODE_SEMICOLON, "§"),
+            R.id.key_b to Pair(KeyEvent.KEYCODE_EQUALS, "≠"),
             R.id.key_n to Pair(KeyEvent.KEYCODE_1, "¡"),
             R.id.key_m to Pair(KeyEvent.KEYCODE_SLASH, "¿"),
         )
@@ -299,6 +307,7 @@ class KeystrokeIMEService : InputMethodService() {
         super.onCreate()
         preferences = KeyboardPreferences(this)
         audioManager = getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+        initSoundFeedback()
         profileManager = ProfileManager(this, testingMode = true)
         riskScorer = RiskScorer()
         securityLogger = SecurityLogger(this)
@@ -318,6 +327,7 @@ class KeystrokeIMEService : InputMethodService() {
     }
 
     override fun onDestroy() {
+        releaseSoundFeedback()
         val themePrefs = getSharedPreferences(ThemePreferences.PREFS_NAME, Context.MODE_PRIVATE)
         themePrefs.unregisterOnSharedPreferenceChangeListener(themePreferenceListener)
         cancelAllRunnables()
@@ -363,6 +373,7 @@ class KeystrokeIMEService : InputMethodService() {
         // Wire up all letter keys with touch listener
         keyMap.keys.forEach { buttonId ->
             val button = keyboardView.findViewById<TextView>(buttonId)
+            button?.isHapticFeedbackEnabled = true
             button?.setOnTouchListener { v, event ->
                 handleKeyTouch(v, event, v.id)
                 true
@@ -370,62 +381,83 @@ class KeystrokeIMEService : InputMethodService() {
         }
 
         // Space bar
-        keyboardView.findViewById<TextView>(R.id.key_space).setOnTouchListener { v, event ->
-            handleSpecialKeyTouch(v, event, KeyEvent.KEYCODE_SPACE, " ", allowRepeat = true) {
-                currentInputConnection?.commitText(" ", 1)
+        keyboardView.findViewById<TextView>(R.id.key_space)?.let { keySpace ->
+            keySpace.isHapticFeedbackEnabled = true
+            keySpace.setOnTouchListener { v, event ->
+                handleSpecialKeyTouch(v, event, KeyEvent.KEYCODE_SPACE, " ", allowRepeat = true) {
+                    currentInputConnection?.commitText(" ", 1)
+                }
+                true
             }
-            true
         }
 
         // Delete key (Rapid-Fire repeat enabled!)
-        keyboardView.findViewById<TextView>(R.id.key_delete).setOnTouchListener { v, event ->
-            handleDeleteKeyTouch(v, event)
-            true
+        keyboardView.findViewById<TextView>(R.id.key_delete)?.let { keyDelete ->
+            keyDelete.isHapticFeedbackEnabled = true
+            keyDelete.setOnTouchListener { v, event ->
+                handleDeleteKeyTouch(v, event)
+                true
+            }
         }
 
         // Enter key
-        keyboardView.findViewById<TextView>(R.id.key_enter).setOnTouchListener { v, event ->
-            handleSpecialKeyTouch(v, event, KeyEvent.KEYCODE_ENTER, "ENTER", allowRepeat = false) {
-                currentInputConnection?.commitText("\n", 1)
+        keyboardView.findViewById<TextView>(R.id.key_enter)?.let { keyEnter ->
+            keyEnter.isHapticFeedbackEnabled = true
+            keyEnter.setOnTouchListener { v, event ->
+                handleSpecialKeyTouch(v, event, KeyEvent.KEYCODE_ENTER, "ENTER", allowRepeat = false) {
+                    currentInputConnection?.commitText("\n", 1)
+                }
+                true
             }
-            true
         }
 
         // Comma key
-        keyboardView.findViewById<TextView>(R.id.key_comma).setOnTouchListener { v, event ->
-            handleKeyWithVariantsTouch(v, event, KeyEvent.KEYCODE_COMMA, ",")
-            true
+        keyboardView.findViewById<TextView>(R.id.key_comma)?.let { keyComma ->
+            keyComma.isHapticFeedbackEnabled = true
+            keyComma.setOnTouchListener { v, event ->
+                handleKeyWithVariantsTouch(v, event, KeyEvent.KEYCODE_COMMA, ",")
+                true
+            }
         }
 
         // Period key
-        keyboardView.findViewById<TextView>(R.id.key_period).setOnTouchListener { v, event ->
-            handleKeyWithVariantsTouch(v, event, KeyEvent.KEYCODE_PERIOD, ".")
-            true
+        keyboardView.findViewById<TextView>(R.id.key_period)?.let { keyPeriod ->
+            keyPeriod.isHapticFeedbackEnabled = true
+            keyPeriod.setOnTouchListener { v, event ->
+                handleKeyWithVariantsTouch(v, event, KeyEvent.KEYCODE_PERIOD, ".")
+                true
+            }
         }
 
         // Shift key (3 modes in alphabet: OFF -> ON_ONCE -> LOCKED -> OFF, or #+= toggle in symbols mode)
-        keyboardView.findViewById<TextView>(R.id.key_shift).setOnClickListener {
-            triggerKeyFeedback(it)
-            if (isSymbols) {
-                isAltSymbols = !isAltSymbols
-                updateShiftKey(keyboardView)
-            } else {
-                capsMode = capsMode.nextMode()
-                updateShiftKey(keyboardView)
+        keyboardView.findViewById<TextView>(R.id.key_shift)?.let { keyShift ->
+            keyShift.isHapticFeedbackEnabled = true
+            keyShift.setOnClickListener {
+                triggerKeyFeedback(it)
+                if (isSymbols) {
+                    isAltSymbols = !isAltSymbols
+                    updateShiftKey(keyboardView)
+                } else {
+                    capsMode = capsMode.nextMode()
+                    updateShiftKey(keyboardView)
+                }
             }
         }
 
         // Combined Symbols (?123 / ABC) key
-        keyboardView.findViewById<TextView>(R.id.key_symbols).setOnClickListener {
-            triggerKeyFeedback(it)
-            if (isSymbols) {
-                isSymbols = false
-                isAltSymbols = false
-            } else {
-                isSymbols = true
-                isAltSymbols = false
+        keyboardView.findViewById<TextView>(R.id.key_symbols)?.let { keySymbols ->
+            keySymbols.isHapticFeedbackEnabled = true
+            keySymbols.setOnClickListener {
+                triggerKeyFeedback(it)
+                if (isSymbols) {
+                    isSymbols = false
+                    isAltSymbols = false
+                } else {
+                    isSymbols = true
+                    isAltSymbols = false
+                }
+                updateShiftKey(keyboardView)
             }
-            updateShiftKey(keyboardView)
         }
 
         // Dismiss variants popup on overlay touch outside
@@ -687,37 +719,166 @@ class KeystrokeIMEService : InputMethodService() {
     // TOUCH & LONG-PRESS (RAPID-FIRE / VARIANTS) HANDLING
     // =========================================================================
 
+    private fun initSoundFeedback() {
+        try {
+            val audioAttrs =
+                AudioAttributes.Builder()
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
+                    .build()
+            val sp =
+                SoundPool.Builder()
+                    .setMaxStreams(8)
+                    .setAudioAttributes(audioAttrs)
+                    .build()
+            soundStandardId = sp.load(this, R.raw.keypress_standard, 1)
+            soundSpacebarId = sp.load(this, R.raw.keypress_spacebar, 1)
+            soundDeleteId = sp.load(this, R.raw.keypress_delete, 1)
+            soundReturnId = sp.load(this, R.raw.keypress_return, 1)
+            soundPool = sp
+        } catch (e: Exception) {
+            Log.w("KeystrokeIME", "Failed to init SoundPool: ${e.message}")
+        }
+        try {
+            audioManager?.loadSoundEffects()
+        } catch (_: Exception) {
+        }
+    }
+
+    private fun releaseSoundFeedback() {
+        try {
+            soundPool?.release()
+            soundPool = null
+        } catch (_: Exception) {
+        }
+        try {
+            audioManager?.unloadSoundEffects()
+        } catch (_: Exception) {
+        }
+    }
+
     private fun triggerKeyFeedback(
         view: View,
         keyCode: Int = 0,
     ) {
         if (preferences.isVibrationEnabled) {
-            val hapticSuccess =
+            try {
+                view.isHapticFeedbackEnabled = true
                 view.performHapticFeedback(
                     HapticFeedbackConstants.KEYBOARD_TAP,
+                    @Suppress("DEPRECATION")
                     HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING,
                 )
-            if (!hapticSuccess) {
-                try {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        vibrator?.vibrate(VibrationEffect.createOneShot(20L, VibrationEffect.DEFAULT_AMPLITUDE))
+            } catch (_: Exception) {
+            }
+
+            try {
+                val vib = vibrator
+                if (vib != null && vib.hasVibrator()) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        val effect = VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK)
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            val attrs =
+                                VibrationAttributes.Builder()
+                                    .setUsage(VibrationAttributes.USAGE_TOUCH)
+                                    .build()
+                            vib.vibrate(effect, attrs)
+                        } else {
+                            @Suppress("DEPRECATION")
+                            val audioAttrs =
+                                AudioAttributes.Builder()
+                                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                                    .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
+                                    .build()
+                            vib.vibrate(effect, audioAttrs)
+                        }
+                    } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        @Suppress("DEPRECATION")
+                        val audioAttrs =
+                            AudioAttributes.Builder()
+                                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                                .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
+                                .build()
+                        vib.vibrate(
+                            VibrationEffect.createOneShot(25L, VibrationEffect.DEFAULT_AMPLITUDE),
+                            audioAttrs,
+                        )
                     } else {
                         @Suppress("DEPRECATION")
-                        vibrator?.vibrate(20L)
+                        vib.vibrate(25L)
                     }
-                } catch (_: Exception) {
                 }
+            } catch (e: Exception) {
+                Log.w("KeystrokeIME", "Vibration failed: ${e.message}")
             }
         }
+
         if (preferences.isSoundEnabled) {
-            val effect =
+            val soundId =
                 when (keyCode) {
-                    KeyEvent.KEYCODE_SPACE -> AudioManager.FX_KEYPRESS_SPACEBAR
-                    KeyEvent.KEYCODE_DEL -> AudioManager.FX_KEYPRESS_DELETE
-                    KeyEvent.KEYCODE_ENTER -> AudioManager.FX_KEYPRESS_RETURN
-                    else -> AudioManager.FX_KEYPRESS_STANDARD
+                    KeyEvent.KEYCODE_SPACE -> soundSpacebarId
+                    KeyEvent.KEYCODE_DEL -> soundDeleteId
+                    KeyEvent.KEYCODE_ENTER -> soundReturnId
+                    else -> soundStandardId
                 }
-            audioManager?.playSoundEffect(effect)
+            if (soundId != 0) {
+                soundPool?.play(soundId, 1.0f, 1.0f, 1, 0, 1.0f)
+            }
+            try {
+                val effect =
+                    when (keyCode) {
+                        KeyEvent.KEYCODE_SPACE -> AudioManager.FX_KEYPRESS_SPACEBAR
+                        KeyEvent.KEYCODE_DEL -> AudioManager.FX_KEYPRESS_DELETE
+                        KeyEvent.KEYCODE_ENTER -> AudioManager.FX_KEYPRESS_RETURN
+                        else -> AudioManager.FX_KEYPRESS_STANDARD
+                    }
+                audioManager?.playSoundEffect(effect, 1.0f)
+            } catch (_: Exception) {
+            }
+        }
+    }
+
+    private fun triggerLongPressFeedback(view: View) {
+        if (!preferences.isVibrationEnabled) return
+        try {
+            view.isHapticFeedbackEnabled = true
+            view.performHapticFeedback(
+                HapticFeedbackConstants.LONG_PRESS,
+                @Suppress("DEPRECATION")
+                HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING,
+            )
+        } catch (_: Exception) {
+        }
+
+        try {
+            val vib = vibrator
+            if (vib != null && vib.hasVibrator()) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    val effect = VibrationEffect.createPredefined(VibrationEffect.EFFECT_HEAVY_CLICK)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        val attrs =
+                            VibrationAttributes.Builder()
+                                .setUsage(VibrationAttributes.USAGE_TOUCH)
+                                .build()
+                        vib.vibrate(effect, attrs)
+                    } else {
+                        @Suppress("DEPRECATION")
+                        val audioAttrs =
+                            AudioAttributes.Builder()
+                                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                                .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
+                                .build()
+                        vib.vibrate(effect, audioAttrs)
+                    }
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    @Suppress("DEPRECATION")
+                    vib.vibrate(VibrationEffect.createOneShot(40L, VibrationEffect.DEFAULT_AMPLITUDE))
+                } else {
+                    @Suppress("DEPRECATION")
+                    vib.vibrate(40L)
+                }
+            }
+        } catch (_: Exception) {
         }
     }
 
@@ -904,12 +1065,7 @@ class KeystrokeIMEService : InputMethodService() {
                     Runnable {
                         isLongPressActive = true
                         hideKeyPreview()
-                        if (preferences.isVibrationEnabled) {
-                            view.performHapticFeedback(
-                                HapticFeedbackConstants.LONG_PRESS,
-                                HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING,
-                            )
-                        }
+                        triggerLongPressFeedback(view)
 
                         if (mode == KeyboardPreferences.MODE_RAPID_FIRE || variants.isEmpty()) {
                             // Rapid-fire key repeat

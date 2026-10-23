@@ -176,9 +176,14 @@ class ExampleUnitTest {
         assertTrue(eShifted.contains("È"))
         assertFalse(eShifted.contains("é"))
 
-        // Spanish / International accents
+        // Spanish / International accents & punctuation variants
         val nVariants = CharacterVariants.getVariants("n", isShifted = false)
         assertTrue(nVariants.contains("ñ"))
+        assertTrue(nVariants.contains("!"))
+
+        val mVariants = CharacterVariants.getVariants("m", isShifted = false)
+        assertTrue(mVariants.contains("?"))
+        assertTrue(mVariants.contains("¿"))
 
         val cVariants = CharacterVariants.getVariants("c", isShifted = false)
         assertTrue(cVariants.contains("ç"))
