@@ -1,11 +1,12 @@
 package com.chate.thesis
 
 import android.content.Context
+import android.graphics.Typeface
 import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.style.ForegroundColorSpan
 import android.text.style.RelativeSizeSpan
-import android.text.style.SuperscriptSpan
+import android.text.style.StyleSpan
 import androidx.core.content.ContextCompat
 
 object CharacterVariants {
@@ -132,15 +133,16 @@ object CharacterVariants {
         if (!showHint) return baseChar
 
         val hint = getKeyHint(baseChar, isSymbols) ?: return baseChar
-        val ssb = SpannableStringBuilder(baseChar)
-        val start = ssb.length
-        ssb.append(hint)
-        val end = ssb.length
+        val text = "$hint\n$baseChar"
+        val ssb = SpannableStringBuilder(text)
+        val hintEnd = hint.length
 
         val hintColor = ContextCompat.getColor(context, R.color.key_text_hint)
-        ssb.setSpan(RelativeSizeSpan(0.42f), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-        ssb.setSpan(SuperscriptSpan(), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-        ssb.setSpan(ForegroundColorSpan(hintColor), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        ssb.setSpan(RelativeSizeSpan(0.44f), 0, hintEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        ssb.setSpan(ForegroundColorSpan(hintColor), 0, hintEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+
+        ssb.setSpan(StyleSpan(Typeface.BOLD), hintEnd + 1, text.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        ssb.setSpan(RelativeSizeSpan(0.92f), hintEnd + 1, text.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
 
         return ssb
     }

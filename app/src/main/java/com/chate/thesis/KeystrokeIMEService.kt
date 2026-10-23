@@ -29,6 +29,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -55,6 +56,8 @@ class KeystrokeIMEService : InputMethodService() {
     private lateinit var resizePanel: LinearLayout
     private lateinit var keyboardOverlayContainer: FrameLayout
     private lateinit var variantsPopupCard: LinearLayout
+    private lateinit var keyPreviewBubble: FrameLayout
+    private lateinit var tvPreviewChar: TextView
 
     // Resize controls
     private lateinit var btnResizeToggle: ImageView
@@ -300,6 +303,22 @@ class KeystrokeIMEService : InputMethodService() {
         btnResizeReset = keyboardView.findViewById(R.id.btn_resize_reset)
         btnResizeDone = keyboardView.findViewById(R.id.btn_resize_done)
         btnModeToggle = keyboardView.findViewById(R.id.btn_mode_toggle)
+        keyPreviewBubble = keyboardView.findViewById(R.id.key_preview_bubble)
+        tvPreviewChar = keyboardView.findViewById(R.id.tv_preview_char)
+
+        keyboardView.findViewById<View>(R.id.btn_keyboard_dismiss)?.setOnClickListener {
+            requestHideSelf(0)
+        }
+
+        keyboardView.findViewById<TextView>(R.id.key_numpad)?.setOnClickListener {
+            isSymbols = !isSymbols
+            updateKeyboardLabels(keyboardView)
+        }
+
+        keyboardView.findViewById<TextView>(R.id.key_switch)?.setOnClickListener {
+            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+            imm?.showInputMethodPicker()
+        }
 
         setupResizeControls()
         setupModeToggle()
@@ -697,6 +716,7 @@ class KeystrokeIMEService : InputMethodService() {
             }
             MotionEvent.ACTION_UP -> {
                 cancelAllRunnables()
+                hideKeyPreview()
                 view.isPressed = false
                 if (!isRapidFiring) {
                     commitAction()
@@ -781,6 +801,8 @@ class KeystrokeIMEService : InputMethodService() {
                 initialTouchY = event.y
 
                 eventBuffer.add(KeystrokeEvent(keyCode, 0, currentTime))
+                val outputChar = if (isShifted && !isSymbols && keyChar.length == 1 && keyChar[0].isLetter()) keyChar.uppercase() else keyChar
+                showKeyPreview(view, outputChar)
 
                 val delay = preferences.longPressDelayMs
                 val mode = preferences.longPressMode
@@ -789,6 +811,7 @@ class KeystrokeIMEService : InputMethodService() {
                 activeLongPressRunnable =
                     Runnable {
                         isLongPressActive = true
+                        hideKeyPreview()
                         view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
 
                         if (mode == KeyboardPreferences.MODE_RAPID_FIRE || variants.isEmpty()) {
@@ -822,11 +845,13 @@ class KeystrokeIMEService : InputMethodService() {
                     val dy = abs(event.y - initialTouchY)
                     if (dx > touchSlop * 2 || dy > touchSlop * 2) {
                         cancelAllRunnables()
+                        hideKeyPreview()
                     }
                 }
             }
             MotionEvent.ACTION_UP -> {
                 cancelAllRunnables()
+                hideKeyPreview()
                 view.isPressed = false
 
                 if (isVariantsPopupShowing()) {
@@ -867,6 +892,7 @@ class KeystrokeIMEService : InputMethodService() {
             }
             MotionEvent.ACTION_CANCEL -> {
                 cancelAllRunnables()
+                hideKeyPreview()
                 hideVariantsPopup()
                 isRapidFiring = false
                 isLongPressActive = false
@@ -887,7 +913,66 @@ class KeystrokeIMEService : InputMethodService() {
     // =========================================================================
 
     private fun isVariantsPopupShowing(): Boolean {
-        return ::keyboardOverlayContainer.isInitialized && keyboardOverlayContainer.visibility == View.VISIBLE
+        return ::variantsPopupCard.isInitialized && variantsPopupCard.visibility == View.VISIBLE && variantsPopupCard.childCount > 0
+    }
+
+    private fun isKeyPreviewShowing(): Boolean {
+        return ::keyPreviewBubble.isInitialized && keyPreviewBubble.visibility == View.VISIBLE
+    }
+
+    private fun showKeyPreview(
+        anchorKey: View,
+        char: String,
+    ) {
+        if (!::keyPreviewBubble.isInitialized || !::tvPreviewChar.isInitialized) return
+        tvPreviewChar.text = char
+        keyPreviewBubble.visibility = View.VISIBLE
+        if (::keyboardOverlayContainer.isInitialized) {
+            keyboardOverlayContainer.visibility = View.VISIBLE
+        }
+
+        val density = resources.displayMetrics.density
+        val bubbleWidth = (56 * density).toInt()
+        val bubbleHeight = (56 * density).toInt()
+
+        val rootLocation = IntArray(2)
+        keyboardRootFrame.getLocationInWindow(rootLocation)
+
+        val keyLocation = IntArray(2)
+        anchorKey.getLocationInWindow(keyLocation)
+
+        val relKeyX = keyLocation[0] - rootLocation[0]
+        val relKeyY = keyLocation[1] - rootLocation[1]
+        val rootWidth = keyboardRootFrame.width.takeIf { it > 0 } ?: resources.displayMetrics.widthPixels
+
+        val margin = (4 * density).toInt()
+        val maxPosX = (rootWidth - bubbleWidth - margin).coerceAtLeast(margin)
+        val rawPosX = relKeyX + (anchorKey.width / 2) - (bubbleWidth / 2)
+        val posX = rawPosX.coerceIn(margin, maxPosX)
+
+        var posY = relKeyY - bubbleHeight - (8 * density).toInt()
+        if (posY < (2 * density).toInt()) {
+            posY = (2 * density).toInt()
+        }
+
+        val lp =
+            (keyPreviewBubble.layoutParams as? FrameLayout.LayoutParams)
+                ?: FrameLayout.LayoutParams(bubbleWidth, bubbleHeight)
+        lp.width = bubbleWidth
+        lp.height = bubbleHeight
+        lp.gravity = Gravity.TOP or Gravity.START
+        lp.leftMargin = posX
+        lp.topMargin = posY
+        keyPreviewBubble.layoutParams = lp
+    }
+
+    private fun hideKeyPreview() {
+        if (::keyPreviewBubble.isInitialized) {
+            keyPreviewBubble.visibility = View.GONE
+        }
+        if (!isVariantsPopupShowing() && ::keyboardOverlayContainer.isInitialized) {
+            keyboardOverlayContainer.visibility = View.GONE
+        }
     }
 
     private fun showVariantsPopup(
@@ -895,6 +980,7 @@ class KeystrokeIMEService : InputMethodService() {
         variants: List<String>,
     ) {
         if (!::keyboardOverlayContainer.isInitialized || variants.isEmpty()) return
+        hideKeyPreview()
 
         currentVariantsList = variants
         variantsPopupCard.removeAllViews()
@@ -1030,10 +1116,17 @@ class KeystrokeIMEService : InputMethodService() {
     }
 
     private fun hideVariantsPopup() {
-        if (::keyboardOverlayContainer.isInitialized) {
+        if (!::keyboardOverlayContainer.isInitialized) return
+        if (::variantsPopupCard.isInitialized) {
+            variantsPopupCard.visibility = View.GONE
+            variantsPopupCard.removeAllViews()
+        }
+        currentVariantsList = emptyList()
+        selectedVariantIndex = 0
+        isLongPressActive = false
+        if (!isKeyPreviewShowing()) {
             keyboardOverlayContainer.visibility = View.GONE
         }
-        isLongPressActive = false
     }
 
     // =========================================================================
@@ -1085,7 +1178,17 @@ class KeystrokeIMEService : InputMethodService() {
         }
 
         val symbolsButton = view.findViewById<TextView>(R.id.key_symbols)
-        symbolsButton?.text = if (isSymbols) "ABC" else "123"
+        symbolsButton?.text = if (isSymbols) "ABC" else "?123"
+
+        val numpadButton = view.findViewById<TextView>(R.id.key_numpad)
+        numpadButton?.text = if (isSymbols) "#+=" else "123"
+
+        view.findViewById<TextView>(R.id.key_comma)?.let { btn ->
+            btn.text = CharacterVariants.formatKeyLabel(",", isSymbols, showHints, ctx)
+        }
+        view.findViewById<TextView>(R.id.key_period)?.let { btn ->
+            btn.text = CharacterVariants.formatKeyLabel(".", isSymbols, showHints, ctx)
+        }
     }
 
     // =========================================================================
@@ -1408,6 +1511,14 @@ class KeystrokeIMEService : InputMethodService() {
                 background = specialDrawable.constantState?.newDrawable()?.mutate() ?: specialDrawable
                 setTextColor(currentOnPrimaryContainer)
             }
+            keyboardView.findViewById<TextView>(R.id.key_numpad)?.apply {
+                background = specialDrawable.constantState?.newDrawable()?.mutate() ?: specialDrawable
+                setTextColor(currentOnPrimaryContainer)
+            }
+            keyboardView.findViewById<TextView>(R.id.key_switch)?.apply {
+                background = specialDrawable.constantState?.newDrawable()?.mutate() ?: specialDrawable
+                setTextColor(currentOnPrimaryContainer)
+            }
         }
 
         // Return / Enter Key
@@ -1490,6 +1601,14 @@ class KeystrokeIMEService : InputMethodService() {
             setTextColor(Color.parseColor("#DEE4E6"))
         }
         keyboardView.findViewById<TextView>(R.id.key_symbols)?.apply {
+            background = specialAmoledDrawable.constantState?.newDrawable()?.mutate() ?: specialAmoledDrawable
+            setTextColor(Color.parseColor("#DEE4E6"))
+        }
+        keyboardView.findViewById<TextView>(R.id.key_numpad)?.apply {
+            background = specialAmoledDrawable.constantState?.newDrawable()?.mutate() ?: specialAmoledDrawable
+            setTextColor(Color.parseColor("#DEE4E6"))
+        }
+        keyboardView.findViewById<TextView>(R.id.key_switch)?.apply {
             background = specialAmoledDrawable.constantState?.newDrawable()?.mutate() ?: specialAmoledDrawable
             setTextColor(Color.parseColor("#DEE4E6"))
         }
